@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python \"C:\\Users\\hodowns\\Claude Projects VS CODE\\pm-agent-system\\extract_webex.py\" *)",
+      "Bash(python \"C:\\Users\\hodowns\\Claude Projects VS CODE\\pm-agent-system\\fetch_webex_transcript.py\" *)",
+      "Bash(python \"C:\\Users\\hodowns\\Claude Projects VS CODE\\pm-agent-system\\enrich_webex.py\" *)",
+      "Bash(python \"C:\\Users\\hodowns\\Claude Projects VS CODE\\pm-agent-system\\create_outlook_draft.py\" *)",
+      "Bash(python *)",
+      "Read",
+      "Write",
+      "Glob",
+      "Grep",
+      "Edit"
+    ]
+  }
+}

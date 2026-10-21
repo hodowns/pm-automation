@@ -1,0 +1,746 @@
+<title>CX AI Hub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg:       #F4F6F9;
+    --surface:  #FFFFFF;
+    --text:     #14202E;
+    --text-2:   #4A5668;
+    --accent:   #0C6B5C;
+    --accent-2: #E2F0EE;
+    --rule:     #DDE2EA;
+    --shift-bg: #EEF2F7;
+    --tag-bg:   #E2F0EE;
+    --tag-text: #085A4D;
+    --concern-bg: #F8F9FC;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:       #0F1720;
+      --surface:  #17212E;
+      --text:     #E8EDF5;
+      --text-2:   #8A97A8;
+      --accent:   #2DD4BF;
+      --accent-2: #0D2926;
+      --rule:     #232F3E;
+      --shift-bg: #1C2A38;
+      --tag-bg:   #0D2926;
+      --tag-text: #2DD4BF;
+      --concern-bg: #141E29;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:       #0F1720;
+    --surface:  #17212E;
+    --text:     #E8EDF5;
+    --text-2:   #8A97A8;
+    --accent:   #2DD4BF;
+    --accent-2: #0D2926;
+    --rule:     #232F3E;
+    --shift-bg: #1C2A38;
+    --tag-bg:   #0D2926;
+    --tag-text: #2DD4BF;
+    --concern-bg: #141E29;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+  }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    margin-bottom: 52px;
+    padding-bottom: 36px;
+    border-bottom: 1.5px solid var(--rule);
+  }
+
+  .doc-label {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  .masthead h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(36px, 6vw, 52px);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -.02em;
+    color: var(--text);
+    text-wrap: balance;
+    margin-bottom: 16px;
+  }
+
+  .masthead h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+  }
+
+  .masthead .lede {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text-2);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section {
+    margin-bottom: 44px;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    margin-bottom: 16px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  h2 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--text);
+    margin-bottom: 12px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 5px;
+    letter-spacing: .01em;
+  }
+
+  p {
+    color: var(--text-2);
+    margin-bottom: 12px;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  /* ── THREE SHIFTS ── */
+  .shifts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 4px;
+  }
+
+  .shift {
+    background: var(--shift-bg);
+    padding: 22px 20px;
+  }
+
+  .shift:first-child { border-radius: 6px 0 0 6px; }
+  .shift:last-child  { border-radius: 0 6px 6px 0; }
+
+  .shift-num {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 28px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .shift h3 {
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .shift-arrow {
+    font-size: 11px;
+    color: var(--text-2);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .shift-arrow .from { text-decoration: line-through; opacity: .6; }
+  .shift-arrow .sep { color: var(--accent); }
+
+  .shift p {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-2);
+    margin: 0;
+  }
+
+  /* ── RULE DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 44px 0;
+  }
+
+  /* ── PROBLEM LIST ── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 4px;
+  }
+
+  .problem-item {
+    background: var(--shift-bg);
+    padding: 16px 18px;
+    border-radius: 0;
+  }
+
+  .problem-item:nth-child(1) { border-radius: 6px 0 0 0; }
+  .problem-item:nth-child(2) { border-radius: 0 6px 0 0; }
+  .problem-item:nth-child(5) { border-radius: 0 0 0 6px; }
+  .problem-item:nth-child(6) { border-radius: 0 0 6px 0; }
+
+  .problem-item h3 {
+    font-size: 12.5px;
+    margin-bottom: 4px;
+  }
+
+  .problem-item p {
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* ── PLATFORM CAPABILITIES ── */
+  .caps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .cap-tag {
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 5px 11px;
+    border-radius: 4px;
+    letter-spacing: .02em;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .arch-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .arch-step {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 28px;
+    padding-top: 2px;
+  }
+
+  .arch-content h3 { margin-bottom: 3px; }
+  .arch-content p { font-size: 13px; margin: 0; }
+
+  /* ── SCORES ── */
+  .scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin: 16px 0;
+  }
+
+  .score-card {
+    background: var(--accent-2);
+    padding: 24px 22px;
+  }
+
+  .score-card:first-child { border-radius: 6px 0 0 6px; }
+  .score-card:last-child  { border-radius: 0 6px 6px 0; }
+
+  .score-num {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 42px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .score-card h3 { font-size: 13px; margin-bottom: 6px; }
+  .score-card p { font-size: 12px; margin: 0; line-height: 1.5; }
+
+  /* ── GOVERNANCE LADDER ── */
+  .ladder {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 4px;
+  }
+
+  .rung {
+    padding: 16px 18px;
+    background: var(--shift-bg);
+    position: relative;
+  }
+
+  .rung:nth-child(1) { border-radius: 6px 0 0 0; }
+  .rung:nth-child(2) { border-radius: 0 6px 0 0; }
+  .rung:nth-child(3) { border-radius: 0 0 0 6px; }
+  .rung:nth-child(4) { border-radius: 0 0 6px 0; }
+
+  .rung-level {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .rung h3 { font-size: 12.5px; margin-bottom: 3px; }
+  .rung p { font-size: 11.5px; margin: 0; line-height: 1.5; }
+
+  .rung-badge {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-top: 8px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+  }
+
+  .rung-badge.review {
+    background: #FEF3C7;
+    color: #92400E;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .rung-badge.review {
+      background: #2D1F07;
+      color: #FCD34D;
+    }
+  }
+
+  :root[data-theme="dark"] .rung-badge.review {
+    background: #2D1F07;
+    color: #FCD34D;
+  }
+
+  /* ── FLYWHEEL ── */
+  .flywheel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 4px;
+  }
+
+  .fly-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .fly-step:last-child { border-bottom: none; }
+
+  .fly-num {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 20px;
+    font-style: italic;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 24px;
+    line-height: 1.2;
+  }
+
+  .fly-step h3 { font-size: 13px; margin-bottom: 3px; }
+  .fly-step p { font-size: 12.5px; margin: 0; line-height: 1.5; }
+
+  /* ── THREE CONCERNS ── */
+  .concerns {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+  }
+
+  .concern {
+    background: var(--concern-bg);
+    padding: 18px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .concern:first-child { border-radius: 6px 6px 0 0; }
+  .concern:last-child  { border-radius: 0 0 6px 6px; }
+
+  .concern-icon {
+    font-size: 14px;
+    min-width: 22px;
+    padding-top: 1px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .concern h3 { font-size: 13px; margin-bottom: 4px; }
+  .concern p { font-size: 12.5px; margin: 0; line-height: 1.55; }
+
+  .concern .q {
+    font-size: 11.5px;
+    font-style: italic;
+    color: var(--text-2);
+    margin-bottom: 4px;
+    margin-top: 0;
+  }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    margin-top: 52px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: .03em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 540px) {
+    .page { padding: 36px 20px 60px; }
+    .shifts, .problem-grid, .scores, .ladder { grid-template-columns: 1fr; }
+    .shift:first-child, .shift:last-child,
+    .problem-item, .score-card:first-child, .score-card:last-child,
+    .rung { border-radius: 6px !important; }
+  }
+
+  @media print {
+    body { background: white; color: black; }
+    .page { padding: 32px; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="doc-label">Cisco CX · Internal Platform Brief</div>
+    <h1>CX AI Hub<br><em>From Executors to Orchestrators</em></h1>
+    <p class="lede">A governed AI platform that shifts every CX role — NCEs, architects, PMs, SDAs, and leaders — from manually doing work to directing agents that do it. One CLI. Every Cisco tool. Real telemetry.</p>
+  </div>
+
+  <!-- THREE SHIFTS -->
+  <div class="section">
+    <div class="section-label">The Vision</div>
+    <h2>Three Shifts, One Direction</h2>
+    <p>The platform is built around a single arc: more judging, less doing. It delivers this across three dimensions simultaneously.</p>
+    <div class="shifts">
+      <div class="shift">
+        <div class="shift-num">1</div>
+        <h3>The Work Shift</h3>
+        <div class="shift-arrow"><span class="from">Executors</span><span class="sep">→</span> Judges</div>
+        <p>NCEs stop hand-drafting configs. Architects stop writing HLDs manually. PMs stop assembling dashboards. Agents handle the rote; humans review, approve, and redirect.</p>
+      </div>
+      <div class="shift">
+        <div class="shift-num">2</div>
+        <h3>The Surface Shift</h3>
+        <div class="shift-arrow"><span class="from">7 portals</span><span class="sep">→</span> 1 CLI</div>
+        <p>SharePoint, Cisco IQ, ServiceNow, Webex, DDA, Outlook — callable from one surface. The integration layer moves from the person to the platform.</p>
+      </div>
+      <div class="shift">
+        <div class="shift-num">3</div>
+        <h3>The Intelligence Shift</h3>
+        <div class="shift-arrow"><span class="from">Anecdotes</span><span class="sep">→</span> Data</div>
+        <p>Every agent run produces telemetry. Best prompt patterns become skills pushed to all 660 laptops. Leadership sees real adoption — not surveys.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- THE PROBLEM -->
+  <div class="section">
+    <div class="section-label">The Problem</div>
+    <h2>Six Gaps We Can't Ignore</h2>
+    <p>Despite significant AI investment, CX leadership can't answer basic questions about ROI, adoption, or risk — because the infrastructure to answer them doesn't exist yet.</p>
+    <div class="problem-grid">
+      <div class="problem-item">
+        <h3>No Usage Telemetry</h3>
+        <p>We know token cost, not hours saved. No mechanism to track when agents run, who runs them, or what value they deliver.</p>
+      </div>
+      <div class="problem-item">
+        <h3>No Efficiency Insight</h3>
+        <p>Prompt quality, model selection, cache utilization — invisible. Skill gaps stay hidden; coaching opportunities missed.</p>
+      </div>
+      <div class="problem-item">
+        <h3>No Governance</h3>
+        <p>A read-only agent and one that modifies production infra are treated identically. No risk classification, no audit trail.</p>
+      </div>
+      <div class="problem-item">
+        <h3>No Transformation Signal</h3>
+        <p>Is the org actually shifting? No adoption tiers, no progression tracking, no readiness signals. Leadership has anecdotes, not data.</p>
+      </div>
+      <div class="problem-item">
+        <h3>Fragmented Discovery</h3>
+        <p>Useful agents live in GHE repos found through Webex threads. MCP servers documented across dozens of Cisco wikis. No catalog.</p>
+      </div>
+      <div class="problem-item">
+        <h3>Configuration Friction</h3>
+        <p>Found a useful agent? Manually edit settings.json, clone repos, configure env vars. Non-technical roles can't start at all.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- THE PLATFORM -->
+  <div class="section">
+    <div class="section-label">The Platform</div>
+    <h2>What You Actually Get</h2>
+    <p>A web hub behind Cisco Duo SSO with eight pillars — plus an AI-powered search, role-based onboarding, and a live extension catalog consolidating all scattered Cisco sources into one place.</p>
+    <div class="caps">
+      <span class="cap-tag">Plugins</span>
+      <span class="cap-tag">MCP Servers</span>
+      <span class="cap-tag">Agents</span>
+      <span class="cap-tag">Skills</span>
+      <span class="cap-tag">Collections</span>
+      <span class="cap-tag">Docs</span>
+      <span class="cap-tag">Stats</span>
+      <span class="cap-tag">Governance Console</span>
+    </div>
+    <p><strong style="color: var(--text)">AI-powered search:</strong> Type "what helps me audit a customer's BGP design?" and get ranked extensions with plain-English rationales — not a phone-book filter.</p>
+    <p><strong style="color: var(--text)">Role-based onboarding:</strong> Pick "NCE" on first login → the CLI auto-loads the tools senior peers actually use. Productive on day one, without 4 weeks of Slack DMs.</p>
+    <p><strong style="color: var(--text)">The CLI is the only AI surface:</strong> No separate chat UIs, no role-specific portals. Every capability is a Claude Code extension. The hub is the catalog and telemetry cockpit; the CLI is the runtime.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- HOW IT WORKS -->
+  <div class="section">
+    <div class="section-label">Architecture</div>
+    <h2>How the Pieces Fit</h2>
+    <div class="arch-row">
+      <div class="arch-step">A</div>
+      <div class="arch-content">
+        <h3>Config Repo → Every Laptop</h3>
+        <p>One GHE repo (<code>CX-Engr/claude-code-config</code>) holds the approved toolbox. A SessionStart hook syncs it to all 660 laptops automatically — no manual install, no drift. One PR adds or removes a capability org-wide.</p>
+      </div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-step">B</div>
+      <div class="arch-content">
+        <h3>Agents Wrap Existing Tools — Never Replace Them</h3>
+        <p>Every approved agent is a thin wrapper over a Cisco IQ module: DDA (Documentation Automation), DRG (Requirements Gathering), RAIDN (Assessments), SLAM, DDS, SaC. An HLD request calls DDA through the MCP — it doesn't hallucinate a document.</p>
+      </div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-step">C</div>
+      <div class="arch-content">
+        <h3>LiteLLM Proxy → AWS Bedrock / Anthropic Claude</h3>
+        <p>Every prompt passes through the proxy: per-user virtual keys, budget caps, model allowlist, audit logging, and redaction. Swap model providers with zero code changes — model choice is runtime config, not architecture.</p>
+      </div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-step">D</div>
+      <div class="arch-content">
+        <h3>Telemetry Closes the Loop</h3>
+        <p>Managed hooks + Claude Code OTEL + LiteLLM OTEL feed the hub dashboard. Underused tools get pruned; overused ones get hardened; rogue behavior gets quarantined in one commit.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- MEASUREMENT -->
+  <div class="section">
+    <div class="section-label">Measurement</div>
+    <h2>Two Scores. One Story.</h2>
+    <p>Leadership doesn't need 20 dashboards. Two headline numbers — computed from real telemetry, trendable weekly — tell the transformation story.</p>
+    <div class="scores">
+      <div class="score-card">
+        <div class="score-num">0–100</div>
+        <h3>AI Intensity Score</h3>
+        <p>Per person, team, and org. Composite of tokens consumed, AI-authored code, productive AI time, adoption tier, and efficiency. Answers: <em>"How deeply is AI integrated into this person's work?"</em></p>
+      </div>
+      <div class="score-card">
+        <div class="score-num">0–100</div>
+        <h3>Role Agentic Maturity</h3>
+        <p>Per role. How much of this role is agentified? NCEs might score 78; PMs might score 12. Answers: <em>"Which roles are ready — and which are the biggest investment opportunity?"</em></p>
+      </div>
+    </div>
+    <p style="margin-top: 14px">Supporting composites include: manager effect (which managers' teams adopt fastest), stuck users detector (active but tier-stalled 4+ weeks), ROI headline (spend vs. hours saved), and week-over-week flywheel momentum.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GOVERNANCE -->
+  <div class="section">
+    <div class="section-label">Governance</div>
+    <h2>Every Extension Classified by Risk</h2>
+    <p>A four-level autonomy ladder applies to every extension in the catalog. An admin can quarantine any extension in one commit — it drops from all 660 laptops within one session cycle.</p>
+    <div class="ladder">
+      <div class="rung">
+        <div class="rung-level">Level 1</div>
+        <h3>Read-Only / Drafts</h3>
+        <p>Text, answers, file reads. No tool use. Example: status report generator, doc summarizer.</p>
+        <span class="rung-badge">Auto-approved</span>
+      </div>
+      <div class="rung">
+        <div class="rung-level">Level 2</div>
+        <h3>Reads Internal Systems</h3>
+        <p>APIs, databases, repos — read-only, no writes. Example: config analyzer, Cisco IQ query.</p>
+        <span class="rung-badge">Auto-approved</span>
+      </div>
+      <div class="rung">
+        <div class="rung-level">Level 3</div>
+        <h3>Proposes Changes</h3>
+        <p>Creates PRs, tickets, files — human in the loop at every step. Example: PR creator, deployment planner.</p>
+        <span class="rung-badge review">Admin review</span>
+      </div>
+      <div class="rung">
+        <div class="rung-level">Level 4</div>
+        <h3>Bounded Autonomy</h3>
+        <p>Takes action without per-step confirmation within defined limits. Example: auto-committer (branches only).</p>
+        <span class="rung-badge review">Admin approval + blast-radius docs</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- FLYWHEEL -->
+  <div class="section">
+    <div class="section-label">The Operating Model</div>
+    <h2>How It Compounds Each Quarter</h2>
+    <p>The hub, config repo, and governance form one self-reinforcing loop. Every quarter, the org floor rises automatically — without management intervention.</p>
+    <div class="flywheel">
+      <div class="fly-step">
+        <div class="fly-num">1</div>
+        <div>
+          <h3>Engineering ships the toolbox</h3>
+          <p>Config repo holds the curated default. SessionStart hook syncs to every laptop. No manual install, no drift across 660 machines.</p>
+        </div>
+      </div>
+      <div class="fly-step">
+        <div class="fly-num">2</div>
+        <div>
+          <h3>Hub measures everything that runs</h3>
+          <p>Managed hooks beacon every agent run, tool call, and skill invocation. Local state harvest sees what's installed — curated or otherwise.</p>
+        </div>
+      </div>
+      <div class="fly-step">
+        <div class="fly-num">3</div>
+        <div>
+          <h3>Patterns surface from the data</h3>
+          <p>Similarity clustering finds duplicates. "47 people built the same NCE config helper" becomes visible, not invisible repeated effort.</p>
+        </div>
+      </div>
+      <div class="fly-step">
+        <div class="fly-num">4</div>
+        <div>
+          <h3>Best practice gets promoted</h3>
+          <p>Curation pipeline lifts the strongest version into the catalog with author attribution. Governance review classifies risk by autonomy level.</p>
+        </div>
+      </div>
+      <div class="fly-step">
+        <div class="fly-num">5</div>
+        <div>
+          <h3>Pushed to every laptop — loop restarts</h3>
+          <p>Approved version distributed via config repo. Telemetry restarts on the new baseline. One person solves a problem once; 660 benefit immediately.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- THREE CONCERNS -->
+  <div class="section">
+    <div class="section-label">Hard Questions</div>
+    <h2>Three Concerns, Already Addressed</h2>
+    <div class="concerns">
+      <div class="concern">
+        <div class="concern-icon">①</div>
+        <div>
+          <p class="q">"What about employee monitoring concerns?"</p>
+          <h3>Privacy by Construction</h3>
+          <p>No prompt content captured in MVP — hard block at the ingest boundary, not a policy. File paths, code, OAuth tokens never reach hub storage. SOC2-ready audit log from day one.</p>
+        </div>
+      </div>
+      <div class="concern">
+        <div class="concern-icon">②</div>
+        <div>
+          <p class="q">"What if Anthropic raises prices or a better model ships?"</p>
+          <h3>No Vendor Lock-in</h3>
+          <p>LiteLLM proxy as the abstraction layer. Swap Anthropic → Bedrock → Azure OpenAI → Gemini with zero code changes. Model choice becomes runtime config, not architecture commitment.</p>
+        </div>
+      </div>
+      <div class="concern">
+        <div class="concern-icon">③</div>
+        <div>
+          <p class="q">"How do we keep AI spend predictable?"</p>
+          <h3>Cost Discipline by Design</h3>
+          <p>Per-user virtual keys bound spend per individual. Budget alerts fire at 80% and 100% — team leads paged before keys are cut. The dashboard shows ROI, not just cost.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <span>Cisco CX · CX AI Hub Overview</span>
+    <span>Deck v1.12 · PRD v1.13</span>
+  </div>
+
+</div>

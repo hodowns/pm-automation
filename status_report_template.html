@@ -1,0 +1,2110 @@
+<title>LCS Status Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ── TOKENS — Champions dark palette ─────────────────────────── */
+/* Layout: sticky top-nav + stacked full-height slides           */
+:root {
+  color-scheme: dark;
+  --navy:    #06080f;
+  --blue:    #00e5ff;
+  --blue-lt: #071422;
+  --green:   #00ff88;
+  --amber:   #ffb800;
+  --red:     #ff2d7a;
+  --teal:    #00e5c0;
+  --surface: #0c1119;
+  --bg:      #06080f;
+  --text:    #b0c8e8;
+  --muted:   #4a6580;
+  --border:  #18253c;
+  --head-bg: #0c1119;
+  --head-fg: #b0c8e8;
+  --nav-bg:  #06080f;
+  --nav-fg:  #b0c8e8;
+  --glow-c:  rgba(0,229,255,.4);
+  --badge-ns-bg: #121e2e; --badge-ns-fg: #6a9ab8;
+  --badge-ip-bg: #071a2a; --badge-ip-fg: #00e5ff;
+  --badge-cp-bg: #051a10; --badge-cp-fg: #00ff88;
+  --badge-oh-bg: #1e1000; --badge-oh-fg: #ffb800;
+  --badge-cl-bg: #0e1620; --badge-cl-fg: #4a6580;
+  --badge-pl-bg: #041624; --badge-pl-fg: #00e5c0;
+  --badge-og-bg: #051a10; --badge-og-fg: #00ff88;
+  --ff-display: 'Rajdhani', system-ui, sans-serif;
+  --ff-body:    'Inter', system-ui, sans-serif;
+  --ff-mono:    'JetBrains Mono', monospace;
+}
+
+/* ── RESET + BASE ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--ff-body);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+  position: relative;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 4px);
+  pointer-events: none; z-index: 0;
+}
+#report-nav, #slides, .modal-overlay { position: relative; z-index: 1; }
+[contenteditable]:focus { outline: 1px solid var(--blue); outline-offset: 1px; border-radius: 2px; box-shadow: 0 0 6px var(--glow-c); }
+[hidden] { display: none !important; }
+button { cursor: pointer; font-family: var(--ff-body); }
+
+/* ── TOP NAV ──────────────────────────────────────────────────── */
+#report-nav {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 100;
+  background: var(--nav-bg);
+  color: var(--nav-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 max(16px, env(safe-area-inset-left, 0px));
+  height: 44px;
+  font-family: var(--ff-mono);
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+}
+#report-nav::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg,transparent,var(--blue) 40%,var(--blue) 60%,transparent);
+  opacity: .3;
+}
+#nav-title { flex: 1; font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--blue); letter-spacing: .04em; text-transform: uppercase; }
+#nav-counter { color: var(--muted); white-space: nowrap; font-size: 11px; }
+.nav-btn {
+  background: rgba(0,229,255,.08);
+  border: 1px solid rgba(0,229,255,.2);
+  color: var(--blue);
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--ff-mono);
+  white-space: nowrap;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: background .15s, box-shadow .15s;
+}
+.nav-btn:hover { background: rgba(0,229,255,.18); box-shadow: 0 0 8px rgba(0,229,255,.2); }
+.nav-btn.print-btn { background: rgba(0,229,255,.15); border-color: var(--blue); }
+.nav-btn.print-btn:hover { background: rgba(0,229,255,.28); box-shadow: 0 0 12px var(--glow-c); }
+#nav-arrows { display: flex; gap: 4px; }
+#nav-arrows button { background: rgba(0,229,255,.06); border: 1px solid var(--border); color: var(--muted); width: 28px; height: 28px; border-radius: 3px; font-size: 12px; display: grid; place-items: center; transition: color .15s, border-color .15s; }
+#nav-arrows button:hover { color: var(--blue); border-color: var(--blue); }
+
+/* ── SLIDES ───────────────────────────────────────────────────── */
+.slide {
+  min-height: 90vh;
+  padding: 48px max(24px, env(safe-area-inset-left, 0px));
+  background: var(--surface);
+  position: relative;
+}
+.slide + .slide { border-top: 1px solid var(--border); }
+
+/* ── SLIDE HEADERS ────────────────────────────────────────────── */
+.slide-header {
+  background: var(--head-bg);
+  color: var(--head-fg);
+  margin: -48px -24px 32px;
+  padding: 16px 24px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.slide-header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg,var(--blue),transparent 70%);
+  opacity: .35;
+}
+.slide-header h2 {
+  font-family: var(--ff-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-wrap: balance;
+  color: #dce8f5;
+  text-shadow: 0 0 24px rgba(0,229,255,.12);
+}
+.slide-header .meta { font-family: var(--ff-mono); font-size: 10.5px; color: var(--muted); text-align: right; line-height: 1.7; }
+.slide-header .meta strong { color: var(--text); display: block; font-size: 11px; }
+
+/* ── SLIDE 1: QUOTE ───────────────────────────────────────────── */
+#slide-1 {
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 90vh;
+  padding: 60px max(40px, env(safe-area-inset-left, 0px));
+  position: relative;
+}
+#slide-1::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 30%, rgba(0,229,255,.12) 0%, transparent 55%),
+              radial-gradient(ellipse at 20% 80%, rgba(0,255,136,.06) 0%, transparent 45%);
+  pointer-events: none;
+}
+.quote-header {
+  position: absolute; top: 20px; left: 28px;
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--blue);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+.quote-text {
+  font-family: var(--ff-display);
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 600;
+  color: #dce8f5;
+  line-height: 1.45;
+  max-width: 820px;
+  text-wrap: balance;
+  text-shadow: 0 0 40px rgba(0,229,255,.08);
+}
+.quote-text::before { content: '\201C'; color: var(--blue); opacity: .6; }
+.quote-text::after  { content: '\201D'; color: var(--blue); opacity: .6; }
+.quote-author {
+  margin-top: 24px;
+  font-family: var(--ff-mono);
+  font-size: 12px;
+  color: var(--blue);
+  letter-spacing: .08em;
+  opacity: .75;
+}
+.quote-edit-btns { margin-top: 20px; display: flex; gap: 8px; }
+.ghost-btn {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.8);
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--ff-body);
+  transition: background .15s;
+}
+.ghost-btn:hover { background: rgba(255,255,255,.2); }
+
+/* ── SLIDE 2: TOP OF MIND ─────────────────────────────────────── */
+.tom-list { list-style: none; display: flex; flex-direction: column; gap: 10px; max-width: 960px; }
+.tom-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--blue-lt);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: border-color .15s, background .15s;
+}
+.tom-item:hover { border-color: var(--green); }
+.tom-item .item-text { flex: 1; min-width: 0; }
+.tom-item .item-text[contenteditable="true"] { cursor: text; }
+.del-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 0 4px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.tom-item:hover .del-btn, li:hover .del-btn { opacity: 1; }
+.del-btn:hover { color: var(--red); }
+.add-item-row { margin-top: 8px; }
+.add-btn {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--blue);
+  padding: 7px 16px;
+  border-radius: 5px;
+  font-size: 13px;
+  transition: background .15s, border-color .15s;
+}
+.add-btn:hover { background: var(--blue-lt); border-color: var(--blue); }
+
+/* ── SLIDE 3: TOKEN CONSUMPTION ───────────────────────────────── */
+.token-summary { display: flex; gap: 24px; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; }
+.token-summary .total-label { font-family: var(--ff-display); font-size: 28px; font-weight: 700; color: var(--blue); text-shadow: 0 0 20px var(--glow-c); }
+.token-summary .meta-pill {
+  background: var(--blue-lt);
+  color: var(--blue);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.token-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+.token-tile {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.token-tile .track-name {
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  opacity: .7;
+}
+.token-fraction {
+  font-family: var(--ff-display);
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.token-fraction .consumed { color: var(--blue); }
+.token-fraction .sep { color: var(--border); font-weight: 300; }
+.token-fraction .total  { font-size: 14px; color: var(--muted); }
+.token-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.token-bar { height: 100%; border-radius: 2px; transition: width .3s; }
+.token-pct { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.editable-num { cursor: pointer; }
+.editable-num:focus { outline: 2px solid var(--blue); border-radius: 2px; }
+
+/* ── SLIDE 4: INITIATIVES ─────────────────────────────────────── */
+.initiatives-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+@media (max-width: 680px) { .initiatives-grid { grid-template-columns: 1fr; } }
+.initiatives-col h3 {
+  font-family: var(--ff-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.initiative-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.initiative-row:last-child { border-bottom: none; }
+.init-name {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.35;
+  min-width: 0;
+}
+.init-name[contenteditable="true"] { cursor: text; }
+.progress-track {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.progress-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.progress-dot.filled { background: var(--green); border-color: var(--green); }
+.progress-dot:hover { border-color: var(--blue); }
+.sub-col { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.sub-col li { padding: 4px 0; border-bottom: 1px solid var(--border); }
+.sub-col li:last-child { border-bottom: none; }
+.init-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.toggle-completed-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.toggle-completed-btn.active { background: rgba(0,229,255,.15); color: var(--blue); border-color: var(--blue); }
+.complete-badge {
+  display: inline-block;
+  background: var(--badge-cp-bg);
+  color: var(--badge-cp-fg);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+/* ── TRACK SLIDES ─────────────────────────────────────────────── */
+.track-body {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+}
+@media (max-width: 700px) { .track-body { grid-template-columns: 1fr; } }
+.track-right { display: flex; flex-direction: column; gap: 20px; }
+.section-label {
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 8px;
+  opacity: .7;
+}
+
+/* Key Activities Table */
+.ka-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ka-table th {
+  background: var(--head-bg);
+  color: var(--blue);
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 7px 10px;
+  opacity: .7;
+  border-bottom: 1px solid rgba(0,229,255,.15);
+}
+.ka-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.35;
+}
+.ka-table tr:nth-child(even) td { background: var(--bg); }
+.ka-table .num-col { width: 28px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+.ka-table .status-col { width: 110px; }
+.ka-table .del-col { width: 28px; }
+.ka-table td[contenteditable="true"]:empty::before { content: attr(data-placeholder); color: var(--border); }
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  font-family: var(--ff-display);
+}
+.s-ns  { background: var(--badge-ns-bg); color: var(--badge-ns-fg); }
+.s-ip  { background: var(--badge-ip-bg); color: var(--badge-ip-fg); }
+.s-cp  { background: var(--badge-cp-bg); color: var(--badge-cp-fg); }
+.s-oh  { background: var(--badge-oh-bg); color: var(--badge-oh-fg); }
+.s-cl  { background: var(--badge-cl-bg); color: var(--badge-cl-fg); }
+.s-pl  { background: var(--badge-pl-bg); color: var(--badge-pl-fg); }
+.s-og  { background: var(--badge-og-bg); color: var(--badge-og-fg); }
+
+/* Bullet lists */
+.bullet-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.bullet-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 3px 0;
+}
+.bullet-list li::before { content: '▸'; color: var(--blue); flex-shrink: 0; margin-top: 1px; font-size: 11px; }
+.bullet-list li .item-text { flex: 1; min-width: 0; }
+.item-date { font-size: 9px; color: #c0c0c0; flex-shrink: 0; white-space: nowrap; padding: 0 4px; font-style: italic; align-self: center; }
+.bullet-list li[contenteditable] { cursor: text; }
+.ns-list li::before { content: '→'; color: var(--amber); }
+
+/* Progress footer */
+.track-footer {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.budget-bar-wrap { flex: 1; min-width: 200px; }
+.budget-label {
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  opacity: .7;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.prog-pct-val {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--blue);
+  text-shadow: 0 0 10px var(--glow-c);
+  opacity: 1;
+  font-variant-numeric: tabular-nums;
+}
+/* ── Drag slider ── */
+.prog-slider-wrap {
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.prog-track-bg {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.prog-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--blue);
+  box-shadow: 0 0 8px rgba(0,229,255,.5);
+  pointer-events: none;
+  transition: width .05s;
+}
+.prog-thumb {
+  position: absolute;
+  top: 50%;
+  width: 14px; height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--blue);
+  box-shadow: 0 0 10px var(--glow-c);
+  transform: translateY(-50%);
+  cursor: grab;
+  transition: box-shadow .15s, transform .1s;
+  z-index: 2;
+}
+.prog-thumb:hover, .prog-thumb.dragging {
+  box-shadow: 0 0 16px var(--glow-c), 0 0 4px var(--blue);
+}
+.prog-thumb.dragging { cursor: grabbing; transform: translateY(-50%) scale(1.2); }
+
+/* ── Checkmark & done states ── */
+.chk-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 0 3px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+tr:hover .chk-btn, li:hover .chk-btn { opacity: .6; }
+.chk-btn:hover { color: var(--green) !important; opacity: 1 !important; }
+tr.row-done td { opacity: .5; }
+tr.row-done .status-badge.s-cp { opacity: 1; box-shadow: 0 0 6px rgba(0,255,136,.3); }
+li.bullet-done .item-text { text-decoration: line-through; opacity: .45; }
+li.bullet-done::before { content: '✓' !important; color: var(--green) !important; opacity: 1; }
+/* .tom-item checkmark */
+.tom-item .tom-chk { opacity: 0; transition: opacity .15s, color .15s; }
+.tom-item:hover .tom-chk { opacity: .6; }
+.tom-item.done .tom-chk { opacity: 1 !important; color: var(--green) !important; }
+.tom-item.done .item-text { text-decoration: line-through; opacity: .45; }
+/* Calendar slide */
+.sc-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
+.sc-leg-item { display: flex; align-items: center; gap: 5px; font-family: var(--ff-mono); font-size: 9.5px; color: var(--muted); letter-spacing: .04em; }
+.sc-leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sc-day-hdrs { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 2px; }
+.sc-dh { text-align: center; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 3px 0; }
+.sc-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.sc-cell { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 5px 4px 4px; min-height: 78px; }
+.sc-cell.empty { background: transparent; border-color: transparent; }
+.sc-cell.we { background: rgba(255,255,255,.02); }
+.sc-cell.today { border-color: var(--blue); }
+.sc-dn { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
+.sc-cell.today .sc-dn { color: var(--blue); }
+.sc-chip { display: block; border-radius: 3px; padding: 2px 4px; margin-bottom: 2px; font-size: 9px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
+.sc-chip-t { font-size: 8px; opacity: .75; display: block; }
+.exec-summary-toggle {
+  margin-top: 12px;
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 12px;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.exec-summary-toggle::before { content: '▶'; font-size: 10px; transition: transform .2s; }
+.exec-summary-toggle.open::before { transform: rotate(90deg); }
+.exec-summary-body {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-left: 3px solid var(--border);
+  background: var(--bg);
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── MODALS ───────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-box {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal-box h3 { font-family: var(--ff-display); font-size: 16px; font-weight: 700; }
+.modal-box label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+.modal-box input, .modal-box textarea, .modal-box select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-family: var(--ff-body);
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+}
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.btn-primary {
+  background: var(--blue);
+  border: none;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 5px;
+  font-family: var(--ff-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-cancel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-family: var(--ff-body);
+  font-size: 13px;
+}
+
+/* ── PRINT ────────────────────────────────────────────────────── */
+@media print {
+  @page { size: landscape; margin: 0.35in; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: white; font-size: 9pt; padding: 0; }
+  #report-nav, .del-btn, .chk-btn, .add-btn, .add-item-row,
+  .nav-btn, .ghost-btn, .toggle-completed-btn, .exec-summary-toggle,
+  .del-col, .init-actions, .quote-edit-btns, .ka-table tfoot,
+  .prog-slider-wrap, .gh-banner { display: none !important; }
+  .slide {
+    padding: 0;
+    min-height: 0;
+    height: 100%;
+    page-break-after: always;
+    border-top: none !important;
+    overflow: hidden;
+  }
+  .slide-header { margin: 0 0 12pt; }
+  .slide-header h2 { font-size: 14pt; }
+  .ka-table { font-size: 8pt; }
+  .ka-table th, .ka-table td { padding: 4px 6px; }
+  .bullet-list li { font-size: 8pt; }
+  .track-body { gap: 14pt; }
+  #slide-1 { background: #06080f !important; }
+  .quote-text { font-size: 18pt; }
+  .token-grid { grid-template-columns: repeat(4, 1fr); gap: 8pt; }
+  .initiatives-grid { gap: 16pt; }
+  .tom-item { font-size: 11pt; padding: 8px 10px; }
+}
+
+/* ── GITHUB COLLABORATION ─────────────────────────────────────── */
+#gh-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--muted); transition: background .3s, box-shadow .3s;
+}
+#gh-dot.saved    { background: var(--green); box-shadow: 0 0 6px rgba(0,255,136,.5); }
+#gh-dot.saving   { background: var(--amber); animation: gh-pulse .8s infinite; }
+#gh-dot.unsaved  { background: var(--amber); }
+#gh-dot.error    { background: var(--red); }
+#gh-dot.conflict { background: var(--red); animation: gh-pulse .5s infinite; }
+@keyframes gh-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+#gh-status-label { font-family: var(--ff-mono); font-size: 9px; letter-spacing:.06em; color: var(--muted); }
+.gh-banner {
+  position: sticky; top: 44px; z-index: 90;
+  padding: 8px max(16px, env(safe-area-inset-left, 0px));
+  font-family: var(--ff-mono); font-size: 11px;
+  display: none; align-items: center; gap: 10px;  /* hidden until JS shows them */
+  border-bottom: 1px solid var(--border);
+}
+.gh-banner.visible { display: flex; }
+#gh-refresh-banner { background: rgba(0,229,255,.08); color: var(--blue); border-color: rgba(0,229,255,.2); }
+#gh-conflict-banner { background: rgba(255,45,122,.08); color: var(--red); border-color: rgba(255,45,122,.2); }
+.gh-banner button {
+  background: rgba(255,255,255,.1); border: 1px solid currentColor;
+  color: inherit; padding: 3px 10px; border-radius: 3px;
+  font-family: var(--ff-mono); font-size: 10px; cursor: pointer;
+}
+.gh-banner button:hover { background: rgba(255,255,255,.18); }
+
+/* PDF capture mode — hides editing UI while html2pdf renders */
+body.pdf-mode #report-nav,
+body.pdf-mode .del-btn,
+body.pdf-mode .chk-btn,
+body.pdf-mode .add-btn,
+body.pdf-mode .add-item-row,
+body.pdf-mode .ghost-btn,
+body.pdf-mode .toggle-completed-btn,
+body.pdf-mode .exec-summary-toggle,
+body.pdf-mode .del-col,
+body.pdf-mode .init-actions,
+body.pdf-mode .quote-edit-btns,
+body.pdf-mode .ka-table tfoot,
+body.pdf-mode .prog-slider-wrap,
+body.pdf-mode .gh-banner { display: none !important; }
+body.pdf-mode [contenteditable] { outline: none !important; box-shadow: none !important; }
+body.pdf-mode .item-date { color: #aaa !important; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<!-- ── LAYOUT ───────────────────────────────────────────────────── -->
+<nav id="report-nav">
+  <span id="nav-title">LCS Status Report</span>
+  <span id="nav-counter"></span>
+  <div id="nav-arrows">
+    <button id="btn-prev" title="Previous slide" aria-label="Previous">▲</button>
+    <button id="btn-next" title="Next slide" aria-label="Next">▼</button>
+  </div>
+  <button class="nav-btn" id="btn-add-track">+ Track</button>
+  <button class="nav-btn" id="btn-export">Export</button>
+  <button id="btn-pdf" title="Save as PDF" style="
+      background:none;border:none;cursor:pointer;padding:4px 8px;
+      display:flex;align-items:center;gap:5px;color:var(--nav-fg,#fff);
+      font-size:12px;font-family:var(--ff-body);border-radius:6px;
+      transition:background .15s;white-space:nowrap;
+    " onmouseover="this.style.background='rgba(255,255,255,.15)'"
+       onmouseout="this.style.background='none'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 17v-1h8v1H8zm0-3v-1h8v1H8zm4-5h4v1h-4v-1zm-5 5.5l1.5 1.5L10 13l-3 3zm0-3l1.5 1.5L10 10l-3 3z"/>
+      <path d="M12 13l-4 4h2.5v3h3v-3H16l-4-4z"/>
+    </svg>
+    Save as PDF
+  </button>
+  <button class="nav-btn" id="btn-import">Import</button>
+  <!-- GitHub collaboration controls — revealed only when GH_ENABLED=true -->
+  <span id="gh-dot" hidden style="display:none"></span>
+  <span id="gh-status-label" hidden style="display:none">Synced</span>
+  <button class="nav-btn" id="btn-gh-save" hidden style="display:none" title="Commit current state to GitHub">Save ↑</button>
+  <button class="nav-btn" id="btn-gh-refresh" hidden style="display:none" title="Pull latest from GitHub">↺</button>
+  <button class="nav-btn" id="btn-gh-pat" hidden style="display:none" title="GitHub token settings">⚙ Token</button>
+  <button class="nav-btn print-btn" onclick="window.print()">Print / PDF</button>
+</nav>
+
+<!-- GitHub status banners (injected below nav) -->
+<div id="gh-refresh-banner" class="gh-banner" hidden>
+  <span>↓ Updates available from another editor</span>
+  <button id="gh-banner-apply">Apply now</button>
+  <button id="gh-banner-dismiss" style="opacity:.5">Dismiss</button>
+</div>
+<div id="gh-conflict-banner" class="gh-banner" hidden>
+  <span>⚠ Conflict — the file was updated while you edited. Your changes are in the export below.</span>
+  <button id="gh-conflict-export">Export my version</button>
+  <button id="gh-conflict-force">Overwrite with mine</button>
+  <button id="gh-conflict-dismiss" style="opacity:.5">Dismiss</button>
+</div>
+
+<div id="slides"></div>
+
+<!-- GitHub PAT Modal -->
+<div id="modal-gh-pat" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <h3>GitHub Access Token</h3>
+    <p style="font-size:12px;color:var(--muted);line-height:1.5">
+      A Personal Access Token (PAT) lets this report read from and write to the
+      shared GitHub repo. Your token is stored only in this browser's localStorage —
+      it never leaves your machine.
+    </p>
+    <div>
+      <label>Personal Access Token</label>
+      <input id="gh-pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+             autocomplete="off" spellcheck="false">
+    </div>
+    <p style="font-size:11px;color:var(--muted)">
+      Create one at: <strong>wwwin-github.cisco.com → Settings → Developer settings → Personal access tokens</strong><br>
+      Scope needed: <code style="background:var(--bg);padding:1px 4px;border-radius:2px">repo</code>
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="gh-pat-cancel">Cancel</button>
+      <button class="btn-primary" id="gh-pat-save">Save Token</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Track Modal -->
+<div id="modal-add-track" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <h3>Add Technology Track</h3>
+    <div>
+      <label>Track Title</label>
+      <input id="new-track-title" type="text" placeholder="e.g. Contact Center">
+    </div>
+    <div>
+      <label>CoH Engineer</label>
+      <input id="new-track-coh" type="text" placeholder="Name">
+    </div>
+    <div>
+      <label>Cisco Engineers</label>
+      <input id="new-track-cisco" type="text" placeholder="Name(s)">
+    </div>
+    <div>
+      <label>PID</label>
+      <input id="new-track-pid" type="text" value="F51119">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-primary" id="modal-confirm">Add Track</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Initiative Modal -->
+<div id="modal-add-init" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <h3>Add Initiative</h3>
+    <div>
+      <label>Initiative Name</label>
+      <input id="new-init-name" type="text" placeholder="e.g. Contact Center Migration">
+    </div>
+    <div>
+      <label>Sub-initiative / Description</label>
+      <input id="new-init-sub" type="text" placeholder="Brief description">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="init-modal-cancel">Cancel</button>
+      <button class="btn-primary" id="init-modal-confirm">Add</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="import-file-input" hidden accept=".json">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+const REPORT_DATA = __REPORT_DATA__;
+
+// ── GITHUB COLLABORATION CONFIG ───────────────────────────────────
+// Placeholders replaced by status_report.py --deploy-pages
+// If still __GH_ORG__ the report runs in local-only mode.
+const GH = {
+  org:    '__GH_ORG__',
+  repo:   '__GH_REPO__',
+  branch: '__GH_BRANCH__',
+  path:   `data/${(REPORT_DATA.meta||{}).pid||'F51119'}_state.json`,
+  base:   'https://wwwin-github.cisco.com/api/v3',
+};
+const GH_ENABLED = !GH.org.startsWith('__');
+let _ghSha        = null;   // current file SHA from GitHub
+let _ghDirty      = false;  // unsaved local edits
+let _ghPending    = null;   // { sha, content } if remote has newer version
+let _ghPollTimer  = null;
+let _ghSaveTimer  = null;
+
+function ghToken()   { return localStorage.getItem('sr_gh_pat') || ''; }
+function ghHeaders() {
+  return { Authorization: `token ${ghToken()}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+}
+
+function setGhStatus(s) {
+  const dot   = document.getElementById('gh-dot');
+  const label = document.getElementById('gh-status-label');
+  if (!dot || !label) return;
+  dot.className = s;
+  const map = { saved:'Synced', saving:'Saving…', unsaved:'Unsaved', error:'Error', conflict:'Conflict', loading:'Loading…' };
+  label.textContent = map[s] || s;
+}
+
+async function ghLoad() {
+  setGhStatus('loading');
+  try {
+    const r = await fetch(`${GH.base}/repos/${GH.org}/${GH.repo}/contents/${GH.path}`, { headers: ghHeaders() });
+    if (r.status === 401) { showPatModal('Token expired or missing.'); setGhStatus('error'); return null; }
+    if (!r.ok) { setGhStatus('error'); return null; }
+    const d = await r.json();
+    _ghSha = d.sha;
+    return JSON.parse(atob(d.content.replace(/\n/g, '')));
+  } catch(e) { setGhStatus('error'); return null; }
+}
+
+async function ghSave(s) {
+  if (!GH_ENABLED) return;
+  if (!ghToken()) { showPatModal(); return; }
+  setGhStatus('saving');
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(s, null, 2))));
+    const body    = { message: `Status update ${new Date().toISOString().slice(0,16).replace('T',' ')}`, content, branch: GH.branch };
+    if (_ghSha) body.sha = _ghSha;
+    const r = await fetch(`${GH.base}/repos/${GH.org}/${GH.repo}/contents/${GH.path}`, {
+      method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      _ghSha   = d.content.sha;
+      _ghDirty = false;
+      setGhStatus('saved');
+    } else if (r.status === 409) {
+      setGhStatus('conflict');
+      document.getElementById('gh-conflict-banner').classList.add('visible');
+    } else if (r.status === 401) {
+      showPatModal('Token rejected (401).'); setGhStatus('error');
+    } else {
+      setGhStatus('error');
+    }
+  } catch(e) { setGhStatus('error'); }
+}
+
+async function ghPoll() {
+  if (_ghDirty || document.hidden) return;
+  try {
+    const r = await fetch(`${GH.base}/repos/${GH.org}/${GH.repo}/contents/${GH.path}`, { headers: ghHeaders() });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d.sha && d.sha !== _ghSha) {
+      _ghPending = d;
+      document.getElementById('gh-refresh-banner').classList.add('visible');
+    }
+  } catch(e) {}
+}
+
+function scheduleGhSave() {
+  if (!GH_ENABLED) return;
+  _ghDirty = true;
+  setGhStatus('unsaved');
+  clearTimeout(_ghSaveTimer);
+  _ghSaveTimer = setTimeout(() => ghSave(state), 4000); // auto-save after 4s idle
+}
+
+function showPatModal(msg) {
+  if (msg) {
+    const p = document.querySelector('#modal-gh-pat p');
+    if (p) p.textContent = msg + ' Enter a valid token below.';
+  }
+  document.getElementById('modal-gh-pat').hidden = false;
+}
+
+// ── STATE ────────────────────────────────────────────────────────
+const PID = (REPORT_DATA.meta && REPORT_DATA.meta.pid) || 'F51119';
+function weekKey() {
+  const d = new Date(), y = d.getFullYear();
+  const start = new Date(y, 0, 1);
+  const w = Math.ceil((((d - start) / 86400000) + start.getDay() + 1) / 7);
+  return y + 'W' + String(w).padStart(2, '0');
+}
+// Key includes the generated date so each fresh script run starts clean.
+// Old keys from previous runs are orphaned (harmless, browser GCs them).
+const STORAGE_KEY = 'sr_' + PID + '_' + ((REPORT_DATA.meta||{}).generated || weekKey());
+
+let state;
+function loadState() {
+  if (GH_ENABLED) {
+    // Use embedded data immediately so the page renders without waiting
+    state = JSON.parse(JSON.stringify(REPORT_DATA));
+    // Async: fetch latest from GitHub and re-render
+    ghLoad().then(s => {
+      if (s) { state = s; renderAll(); setGhStatus('saved'); }
+      // Start polling for remote changes every 30s
+      _ghPollTimer = setInterval(ghPoll, 30000);
+    });
+    return;
+  }
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      state = JSON.parse(s);
+      // Calendar meetings are scan data — always refresh from the current HTML.
+      // They are never user-edited so localStorage should never win here.
+      if (REPORT_DATA.slide_cal) {
+        state.slide_cal = JSON.parse(JSON.stringify(REPORT_DATA.slide_cal));
+      }
+      return;
+    }
+  } catch(e) {}
+  state = JSON.parse(JSON.stringify(REPORT_DATA));
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  if (GH_ENABLED) scheduleGhSave();
+}
+let saveTimer;
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 1200); }
+
+// ── STATUS CYCLING ────────────────────────────────────────────────
+const STATUS_CYCLE = ['Not Started','Planned','In Progress','Ongoing','Completed','On Hold','Closed'];
+const STATUS_CLASS = {
+  'Not Started':'s-ns','Planned':'s-pl','In Progress':'s-ip',
+  'Ongoing':'s-og','Completed':'s-cp','On Hold':'s-oh','Closed':'s-cl'
+};
+function nextStatus(s) {
+  const i = STATUS_CYCLE.indexOf(s);
+  return STATUS_CYCLE[(i + 1) % STATUS_CYCLE.length];
+}
+function statusBadge(s) {
+  const cls = STATUS_CLASS[s] || 's-ns';
+  return `<span class="status-badge ${cls}" title="Click to cycle">${s}</span>`;
+}
+
+// ── TOKEN COLORS ─────────────────────────────────────────────────
+function tokenBarColor(pct) {
+  if (pct >= 85) return 'var(--red)';
+  if (pct >= 60) return 'var(--amber)';
+  return 'var(--blue)';
+}
+
+// ── RENDERERS ────────────────────────────────────────────────────
+function renderSlide1() {
+  const d = state.slide1 || {};
+  return `<section class="slide" id="slide-1" data-slide-id="slide1">
+    <span class="quote-header" contenteditable="true" data-s1="header">${esc(d.header||'')}</span>
+    <p class="quote-text" contenteditable="true" data-s1="quote">${esc(d.quote||'')}</p>
+    <p class="quote-author" contenteditable="true" data-s1="author">${esc(d.author||'')}</p>
+    <div class="quote-edit-btns">
+      <button class="ghost-btn" id="btn-prev-quote">← Previous Quote</button>
+      <button class="ghost-btn" id="btn-next-quote">Next Quote →</button>
+    </div>
+  </section>`;
+}
+
+function renderSlide2() {
+  const d = state.slide2 || {};
+  const items = (d.items || []).map((item, i) => {
+    const txt  = typeof item === 'string' ? item : (item.text || '');
+    const done = typeof item === 'object' && !!item.done;
+    return `<li class="tom-item${done?' done':''}">
+      <button class="chk-btn tom-chk" data-s2-done="${i}" title="${done?'Mark incomplete':'Mark complete'}">✓</button>
+      <span class="item-text" contenteditable="true" data-s2="item" data-idx="${i}">${esc(txt)}</span>
+      <button class="del-btn" data-s2-del="${i}" title="Remove">✕</button>
+    </li>`;
+  }).join('');
+  return `<section class="slide" id="slide-2" data-slide-id="slide2">
+    <div class="slide-header">
+      <h2>${esc(d.title||'TOP of MINDs')}</h2>
+      <div class="meta"><strong>${esc((state.meta||{}).period||'')}</strong>${esc((state.meta||{}).account||'')}</div>
+    </div>
+    <ul class="tom-list">${items}</ul>
+    <div class="add-item-row"><button class="add-btn" id="btn-add-tom">+ Add Item</button></div>
+  </section>`;
+}
+
+function renderSlide3() {
+  const d = state.slide3 || {};
+  const total = d.total || 1500;
+  const tiles = (d.tracks || []).map((t, ti) => {
+    const pct = t.total > 0 ? Math.round((t.consumed / t.total) * 100) : 0;
+    const color = tokenBarColor(pct);
+    return `<div class="token-tile" style="position:relative">
+      <div class="track-name" contenteditable="true" data-s3-tile="${ti}" data-field="label"
+           title="Click to edit label">${esc(t.label)}</div>
+      <div class="token-fraction">
+        <span class="consumed editable-num" contenteditable="true"
+              data-s3-tile="${ti}" data-field="consumed"
+              title="Click to edit">${t.consumed}</span>
+        <span class="sep">&thinsp;/&thinsp;</span>
+        <span class="total editable-num" contenteditable="true"
+              data-s3-tile="${ti}" data-field="total"
+              title="Click to edit">${t.total}</span>
+      </div>
+      <div class="token-bar-wrap"><div class="token-bar" style="width:${pct}%;background:${color}"></div></div>
+      <div class="token-pct">${pct}% consumed</div>
+      <button class="del-btn" data-s3del="${ti}" title="Remove initiative"
+              style="position:absolute;top:4px;right:4px;font-size:9px;padding:1px 4px">✕</button>
+    </div>`;
+  }).join('');
+  return `<section class="slide" id="slide-3" data-slide-id="slide3">
+    <div class="slide-header">
+      <h2>${esc(d.title||'Token Consumption')} &mdash; ${total}</h2>
+      <div class="meta">
+        <strong>Report: <span contenteditable="true" data-s3="report_date"
+                title="Click to edit report date">${esc(d.report_date||'')}</span></strong>
+        &nbsp;&nbsp;Time Elapsed:
+        <span contenteditable="true" data-s3="time_consumed_pct_hdr"
+              title="Click to edit time elapsed %">${d.time_consumed_pct||0}</span>%
+      </div>
+    </div>
+    <div class="token-summary">
+      <span class="total-label">${total} Total Tokens</span>
+      <span class="meta-pill" contenteditable="true" data-s3="time_consumed_pct"
+            title="Click to edit time consumed %">${d.time_consumed_pct||0}% Time Elapsed</span>
+    </div>
+    <div class="token-grid">${tiles}</div>
+    <div class="add-item-row" style="margin-top:12px">
+      <button class="add-btn" id="btn-s3-add">+ Add Initiative</button>
+    </div>
+  </section>`;
+}
+
+function renderSlideCal() {
+  const d = state.slide_cal || {};
+  const meetings = d.meetings || [];
+  const yr  = d.year  || new Date().getFullYear();
+  const mo  = d.month_num || (new Date().getMonth() + 1);
+  const monthStr = d.month || new Date(yr, mo-1, 1).toLocaleString('default',{month:'long',year:'numeric'});
+  const SC = {
+    sdwan:  {label:'SD-WAN',      color:'#1D5BD4'},
+    lcs:    {label:'LCS Review',  color:'#0A7490'},
+    code:   {label:'As Code',     color:'#6D28D9'},
+    cat:    {label:'Cat Center',  color:'#047857'},
+    aaas:   {label:'Arch AaaS',   color:'#BE185D'},
+    aci:    {label:'ACI Hours',   color:'#C2410C'},
+    meraki: {label:'Meraki',      color:'#3730A3'},
+    iq:     {label:'Cisco IQ',    color:'#0369A1'},
+    hpw:    {label:'HPW/ACI',     color:'#B45309'},
+    ise:    {label:'ISE',         color:'#065F46'},
+    curwb:  {label:'CURWB',       color:'#7C3AED'},
+  };
+  function gs(s) {
+    const t = s.toLowerCase();
+    if (t.includes('sdwan support')||t.includes('sd-wan support')) return 'sdwan';
+    if (t.includes('lcs status')||t.includes('coh lcs')||t.includes('weekly coh')) return 'lcs';
+    if (t.includes('as code lab')||t.includes('sdwan as code')||t.includes('service as code')) return 'code';
+    if (t.includes('cat center')||t.includes('catalyst center')||t.includes('dnac')) return 'cat';
+    if (t.includes('architect as a service')||t.includes('aas session')||t.includes('arch aas')) return 'aaas';
+    if (t.includes('aci office')||t.includes('aci hours')) return 'aci';
+    if (t.includes('meraki')) return 'meraki';
+    if (t.includes('cisco iq')||t.includes('iq working')||t.includes('monthly cisco')) return 'iq';
+    if (t.includes('hpw')||(t.includes('ucs')&&t.includes('review'))||t.includes('vmm migration')) return 'hpw';
+    if (t.includes('ise')) return 'ise';
+    if (t.includes('curwb')||t.includes('ultra-reliable')) return 'curwb';
+    return null;
+  }
+  // For uncategorized: extract a short readable title from the subject
+  function shortTitle(subj) {
+    return (subj||'')
+      .replace(/\[EXTERNAL\]|\[External\]|\[external\]/gi,'')
+      .replace(/\bF\d{5}\b/g,'')
+      .replace(/City of Houston/gi,'CoH')
+      .replace(/\s{2,}/g,' ').trim().slice(0,18) || 'Meeting';
+  }
+  function ft(iso) {
+    const m = (iso||'').match(/T(\d{2}):(\d{2})/);
+    if (!m) return '';
+    const h=parseInt(m[1]),mn=parseInt(m[2]),ap=h>=12?'PM':'AM',h12=h%12||12;
+    return h12+(mn?':'+String(mn).padStart(2,'0'):'')+ap;
+  }
+  const byDay = {};
+  meetings.forEach(m => { const d=parseInt((m.start||'').slice(8,10)); if(!isNaN(d))(byDay[d]||(byDay[d]=[])).push(m); });
+  const dim = new Date(yr, mo, 0).getDate();
+  const off = (new Date(yr, mo-1, 1).getDay()+6)%7;
+  const tot = Math.ceil((off+dim)/7)*7;
+  const td  = new Date(); const tdN = (td.getFullYear()===yr&&td.getMonth()+1===mo)?td.getDate():-1;
+  let cells='';
+  for (let i=0;i<tot;i++) {
+    const n=i-off+1;
+    if(n<1||n>dim){cells+=`<div class="sc-cell empty"></div>`;continue;}
+    const dw=i%7,we=dw>=5,tdy=n===tdN;
+    const ms=(byDay[n]||[]).slice().sort((a,b)=>a.start.localeCompare(b.start));
+    cells+=`<div class="sc-cell${we?' we':''}${tdy?' today':''}">
+      <div class="sc-dn">${n}</div>
+      ${ms.map(m=>{const sk=gs(m.subject||'');const sc=sk?SC[sk]:null;
+        const chipLabel = sc ? sc.label : shortTitle(m.subject);
+        const chipColor = sc ? sc.color : '#4B5563';
+        const tipText   = esc((m.subject||'').replace(/\[EXTERNAL\]|\[External\]|F\d{5}/gi,'').trim()) + ' — ' + ft(m.start) + (m.duration ? ` (${m.duration}min)` : '');
+        return `<div class="sc-chip" style="background:${chipColor}" title="${tipText}">${esc(chipLabel)}<span class="sc-chip-t">${ft(m.start)}</span></div>`;
+      }).join('')}
+    </div>`;
+  }
+  // Build legend from categories that actually appear this month
+  const usedKeys = new Set(meetings.map(m => gs(m.subject||'')).filter(Boolean));
+  const legendItems = Object.entries(SC)
+    .filter(([k]) => usedKeys.has(k))
+    .map(([,v]) => `<span class="sc-leg-item"><span class="sc-leg-dot" style="background:${v.color}"></span>${esc(v.label)}</span>`)
+    .join('');
+
+  return `<section class="slide" id="slide-cal" data-slide-id="slide_cal">
+    <div class="slide-header">
+      <h2>${esc(d.title||'Meeting Calendar')}</h2>
+      <div class="meta"><strong>${esc(monthStr)}</strong>${meetings.length} external meetings · ${esc((state.meta||{}).pid||'')}</div>
+    </div>
+    ${legendItems ? `<div class="sc-legend">${legendItems}</div>` : ''}
+    <div class="sc-day-hdrs">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<div class="sc-dh">${x}</div>`).join('')}</div>
+    <div class="sc-grid">${cells}</div>
+  </section>`;
+}
+
+function renderSlide4() {
+  const d = state.slide4 || {};
+  const showCompleted = d.show_completed || false;
+  const flights = (d.in_flight || []).map((init, i) => {
+    const dots = [0,1,2,3,4].map(j =>
+      `<span class="progress-dot ${j < (init.progress||0) ? 'filled' : ''}"
+             data-s4-dot="${i}" data-dotval="${j}" title="Set progress ${j}"></span>`
+    ).join('');
+    return `<div class="initiative-row">
+      <span class="init-name" contenteditable="true" data-s4-name="${i}">${esc(init.name)}</span>
+      <div class="progress-track">${dots}</div>
+      <button class="del-btn" data-s4-del="${i}" title="Delete">✕</button>
+    </div>`;
+  }).join('');
+
+  const subs = (d.in_flight || []).map(init =>
+    `<li><strong>${esc(init.name)}</strong><br><span style="color:var(--muted)">${esc(init.sub||'')}</span></li>`
+  ).join('');
+
+  let completedHtml = '';
+  if (showCompleted) {
+    completedHtml = `<div style="margin-top:20px"><h3 style="font-family:var(--ff-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Completed</h3>` +
+    (d.completed || []).map((c, ci) =>
+      `<div class="initiative-row">
+        <span class="init-name">${esc(c.name)}<span class="complete-badge">DONE</span></span>
+        <span style="font-size:11px;color:var(--muted)">${esc(c.completed_date||'')}</span>
+        <button class="del-btn" data-s4-compdel="${ci}" title="Delete">✕</button>
+      </div>`
+    ).join('') + '</div>';
+  }
+
+  return `<section class="slide" id="slide-4" data-slide-id="slide4">
+    <div class="slide-header">
+      <h2>${esc(d.title||'Workstreams & Initiatives')}</h2>
+      <div class="meta"><strong>Total Credits: ${d.total_credits||1500}</strong>${esc((state.meta||{}).account||'')}</div>
+    </div>
+    <div class="initiatives-grid">
+      <div class="initiatives-col">
+        <h3>In-Flight Initiatives</h3>
+        ${flights}
+        ${completedHtml}
+        <div class="init-actions">
+          <button class="add-btn" id="btn-add-init">+ Add Initiative</button>
+          <button class="toggle-completed-btn${showCompleted?' active':''}" id="btn-toggle-completed">
+            ${showCompleted ? '▲ Hide' : '▼ Show'} Completed
+          </button>
+        </div>
+      </div>
+      <div class="initiatives-col sub-col">
+        <h3>Sub-Initiatives</h3>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0">${subs}</ul>
+      </div>
+    </div>
+  </section>`;
+}
+
+function renderTrack(track, isCompleted) {
+  const completedBanner = isCompleted
+    ? `<div style="background:var(--badge-cp-bg);color:var(--badge-cp-fg);padding:6px 12px;font-size:12px;font-weight:600;margin-bottom:12px;border-radius:4px">✓ COMPLETED ${esc(track.completed_date||'')}</div>`
+    : '';
+
+  const activities = (track.key_activities || []).map((row, ri) =>
+    `<tr${row._done?' class="row-done"':''}>
+      <td class="num-col">${row.num||ri+1}</td>
+      <td contenteditable="true" data-tr="${track.id}" data-ri="${ri}" data-rf="task"
+          data-placeholder="Task name">${esc(row.task||'')}</td>
+      <td class="status-col">
+        <span class="status-badge ${STATUS_CLASS[row.status]||'s-ns'}"
+              data-tr="${track.id}" data-ri="${ri}" data-rf="status"
+              title="Click to cycle status">${esc(row.status||'Not Started')}</span>
+      </td>
+      <td contenteditable="true" data-tr="${track.id}" data-ri="${ri}" data-rf="outcome"
+          data-placeholder="Outcome">${esc(row.outcome||'')}</td>
+      <td class="del-col">
+        <button class="chk-btn" data-trcomplete="${track.id}" data-ri="${ri}" title="Mark complete">✓</button>
+        <button class="del-btn" data-trdel="${track.id}" data-ri="${ri}" title="Delete row">✕</button>
+      </td>
+    </tr>`
+  ).join('');
+
+  const statusBullets = (track.project_status || []).map((b, bi) => {
+    const _bt = typeof b==='object'?(b.text||''):b;
+    const _bd = typeof b==='object'?(b.added||''):'';
+    return `<li>
+      <span class="item-text" contenteditable="true" data-tr="${track.id}" data-li="ps" data-bi="${bi}">${esc(_bt)}</span>${_bd?`<span class="item-date">${_bd}</span>`:''}
+      <button class="chk-btn chk-bullet" data-trldone="${track.id}" data-lf="project_status" data-bi="${bi}" title="Mark done">✓</button>
+      <button class="del-btn" data-trldel="${track.id}" data-lf="project_status" data-bi="${bi}" title="Remove">✕</button>
+    </li>`;
+  }).join('');
+
+  const nsBullets = (track.next_steps || []).map((b, bi) => {
+    const _bt = typeof b==='object'?(b.text||''):b;
+    const _bd = typeof b==='object'?(b.added||''):'';
+    return `<li>
+      <span class="item-text" contenteditable="true" data-tr="${track.id}" data-li="ns" data-bi="${bi}">${esc(_bt)}</span>${_bd?`<span class="item-date">${_bd}</span>`:''}
+      <button class="chk-btn chk-bullet" data-trldone="${track.id}" data-lf="next_steps" data-bi="${bi}" title="Mark done">✓</button>
+      <button class="del-btn" data-trldel="${track.id}" data-lf="next_steps" data-bi="${bi}" title="Remove">✕</button>
+    </li>`;
+  }).join('');
+
+  const budgetPct = Math.min(track.budget_consumed || 0, 100);
+  const budgetColor = budgetPct >= 90 ? 'var(--red)' : budgetPct >= 70 ? 'var(--amber)' : 'var(--blue)';
+
+  return `<section class="slide" id="track-${track.id}" data-slide-id="track-${track.id}" data-track="${track.id}">
+    <div class="slide-header">
+      <h2 contenteditable="true" data-trh="${track.id}" data-hf="title">${esc(track.title||'')}</h2>
+      <div class="meta">
+        <strong>Date: <span contenteditable="true" data-trh="${track.id}" data-hf="date">${esc(track.date||'')}</span></strong>
+        CoH: <span contenteditable="true" data-trh="${track.id}" data-hf="coh_engineer">${esc(track.coh_engineer||'')}</span><br>
+        Cisco: <span contenteditable="true" data-trh="${track.id}" data-hf="cisco_engineers">${esc(track.cisco_engineers||'')}</span>
+        &nbsp;|&nbsp; PID: <span contenteditable="true" data-trh="${track.id}" data-hf="pid">${esc(track.pid||'')}</span>
+      </div>
+    </div>
+    ${completedBanner}
+    <div class="track-body">
+      <div>
+        <div class="section-label">Key Activities</div>
+        <table class="ka-table">
+          <thead><tr><th>#</th><th>Task Name</th><th>Status</th><th>Outcome / Comments</th><th class="del-col"></th></tr></thead>
+          <tbody id="ka-${track.id}">${activities}</tbody>
+          <tfoot><tr><td colspan="5" style="padding:6px 0">
+            <button class="add-btn" data-trkadd="${track.id}">+ Add Activity</button>
+          </td></tr></tfoot>
+        </table>
+      </div>
+      <div class="track-right">
+        <div>
+          <div class="section-label">Project Status</div>
+          <ul class="bullet-list" id="ps-${track.id}">${statusBullets}</ul>
+          <div class="add-item-row">
+            <button class="add-btn" data-trladd="${track.id}" data-lf="project_status">+ Add Status</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-label">Next Steps / Action Items</div>
+          <ul class="bullet-list ns-list" id="ns-${track.id}">${nsBullets}</ul>
+          <div class="add-item-row">
+            <button class="add-btn" data-trladd="${track.id}" data-lf="next_steps">+ Add Step</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="track-footer">
+      <div class="budget-bar-wrap">
+        <div class="budget-label">
+          <span>Initiative Progress</span>
+          <span class="prog-pct-val" id="progval-${track.id}">${budgetPct}%</span>
+        </div>
+        <div class="prog-slider-wrap" id="progslider-${track.id}">
+          <div class="prog-track-bg">
+            <div class="prog-fill" id="progfill-${track.id}" style="width:${budgetPct}%"></div>
+            <div class="prog-thumb" id="progthumb-${track.id}" style="left:${budgetPct}%" data-trackid="${track.id}"></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:140px;font-family:var(--ff-mono);font-size:10px;color:var(--muted)">
+        <span contenteditable="true" data-trh="${track.id}" data-hf="project_start">${esc(track.project_start||'')}</span>
+        &nbsp;→&nbsp;
+        <span contenteditable="true" data-trh="${track.id}" data-hf="project_end">${esc(track.project_end||'')}</span>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="exec-summary-toggle" data-es-toggle="${track.id}">Executive Summary</button>
+      <div class="exec-summary-body" id="es-${track.id}" hidden>
+        <span contenteditable="true" data-trh="${track.id}" data-hf="executive_summary">${esc(track.executive_summary||'')}</span>
+      </div>
+    </div>
+  </section>`;
+}
+
+// ── FULL RENDER ────────────────────────────────────────────────────
+const allSlides = [];
+function renderAll() {
+  let html = renderSlide1() + renderSlide2() + renderSlide3() + renderSlideCal() + renderSlide4();
+  (state.tracks || []).forEach(t => { html += renderTrack(t, false); });
+  if (state.slide4 && state.slide4.show_completed) {
+    (state.completed_tracks || []).forEach(t => { html += renderTrack(t, true); });
+  }
+  document.getElementById('slides').innerHTML = html;
+  updateNav();
+  attachSlideObserver();
+  attachQuoteBtns();
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────
+let currentSlideIdx = 0;
+function getSlideEls() { return Array.from(document.querySelectorAll('.slide')); }
+function updateNav() {
+  const slides = getSlideEls();
+  document.getElementById('nav-counter').textContent = `${currentSlideIdx + 1} / ${slides.length}`;
+  const meta = state.meta || {};
+  document.getElementById('nav-title').textContent = `LCS Status — ${meta.account||PID} · ${meta.period||''}`;
+}
+function scrollToSlide(idx) {
+  const slides = getSlideEls();
+  if (slides[idx]) {
+    slides[idx].scrollIntoView({behavior:'smooth'});
+    currentSlideIdx = idx;
+    updateNav();
+  }
+}
+function attachSlideObserver() {
+  const slides = getSlideEls();
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        currentSlideIdx = slides.indexOf(e.target);
+        updateNav();
+      }
+    });
+  }, {threshold: 0.4});
+  slides.forEach(s => obs.observe(s));
+}
+document.getElementById('btn-prev').onclick = () => scrollToSlide(Math.max(0, currentSlideIdx - 1));
+document.getElementById('btn-next').onclick = () => scrollToSlide(Math.min(getSlideEls().length - 1, currentSlideIdx + 1));
+
+// ── HTML ESCAPE ────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── QUOTE CYCLING ─────────────────────────────────────────────────
+const QUOTES_LIST = (function() {
+  // Injected quotes from state; fall back to empty
+  return REPORT_DATA._quotes || [];
+})();
+let quoteOffset = 0;
+function attachQuoteBtns() {
+  const pBtn = document.getElementById('btn-prev-quote');
+  const nBtn = document.getElementById('btn-next-quote');
+  if (!pBtn || !nBtn) return;
+  pBtn.onclick = () => shiftQuote(-1);
+  nBtn.onclick = () => shiftQuote(1);
+}
+function shiftQuote(dir) {
+  quoteOffset += dir;
+  const week = new Date().getFullYear() * 53 + Math.ceil((new Date() - new Date(new Date().getFullYear(),0,1))/604800000);
+  const pool = REPORT_DATA._quotes || [];
+  if (!pool.length) return;
+  const idx = ((week + quoteOffset) % pool.length + pool.length) % pool.length;
+  state.slide1.quote  = pool[idx].text;
+  state.slide1.author = pool[idx].author;
+  const qEl = document.querySelector('[data-s1="quote"]');
+  const aEl = document.querySelector('[data-s1="author"]');
+  if (qEl) qEl.textContent = state.slide1.quote;
+  if (aEl) aEl.textContent = state.slide1.author;
+  scheduleSave();
+}
+
+// ── MAIN EVENT DELEGATION ─────────────────────────────────────────
+document.getElementById('slides').addEventListener('click', function(e) {
+  const t = e.target;
+
+  // Status badge cycling
+  if (t.classList.contains('status-badge') && t.dataset.rf === 'status') {
+    const track = findTrack(t.dataset.tr);
+    if (!track) return;
+    const row = track.key_activities[parseInt(t.dataset.ri)];
+    if (!row) return;
+    row.status = nextStatus(row.status || 'Not Started');
+    t.textContent = row.status;
+    t.className = 'status-badge ' + (STATUS_CLASS[row.status] || 's-ns');
+    scheduleSave();
+    return;
+  }
+
+  // Progress dots on slide 4
+  if (t.dataset.s4Dot !== undefined) {
+    const initIdx = parseInt(t.dataset.s4Dot);
+    const dotVal  = parseInt(t.dataset.dotval) + 1; // clicking dot i sets progress to i+1
+    const init = (state.slide4.in_flight || [])[initIdx];
+    if (init) {
+      // toggle: if already at this level, go to 0
+      init.progress = (init.progress === dotVal) ? 0 : dotVal;
+      // re-render just the dots
+      t.closest('.initiative-row').querySelectorAll('.progress-dot').forEach((d, j) => {
+        d.classList.toggle('filled', j < init.progress);
+      });
+      scheduleSave();
+    }
+    return;
+  }
+
+  // Toggle completed initiatives
+  // Delete token tile
+  if (t.dataset.s3del !== undefined) {
+    const ti = parseInt(t.dataset.s3del);
+    if (!isNaN(ti) && state.slide3 && state.slide3.tracks) {
+      state.slide3.tracks.splice(ti, 1);
+      reRenderSlide('slide3', renderSlide3);
+      scheduleSave();
+    }
+    return;
+  }
+
+  // Add new token initiative
+  if (t.id === 'btn-s3-add') {
+    if (!state.slide3.tracks) state.slide3.tracks = [];
+    state.slide3.tracks.push({id: 'new_' + Date.now(), label: 'New Initiative', consumed: 0, total: 100});
+    reRenderSlide('slide3', renderSlide3);
+    scheduleSave();
+    return;
+  }
+
+  if (t.id === 'btn-toggle-completed') {
+    state.slide4.show_completed = !state.slide4.show_completed;
+    renderAll();
+    scheduleSave();
+    return;
+  }
+
+  // Add Top of Mind item
+  if (t.id === 'btn-add-tom') {
+    state.slide2.items.push({text: 'New agenda item', done: false});
+    reRenderSlide('slide2', renderSlide2);
+    const items = document.querySelectorAll('[data-s2="item"]');
+    if (items.length) { const last = items[items.length-1]; last.focus(); selectAll(last); }
+    scheduleSave();
+    return;
+  }
+
+  // Toggle Top of Mind done
+  if (t.dataset.s2Done !== undefined) {
+    const idx = parseInt(t.dataset.s2Done);
+    const cur = state.slide2.items[idx];
+    if (typeof cur === 'string') { state.slide2.items[idx] = {text: cur, done: true}; }
+    else { cur.done = !cur.done; }
+    reRenderSlide('slide2', renderSlide2);
+    scheduleSave();
+    return;
+  }
+  // Delete Top of Mind item
+  if (t.dataset.s2Del !== undefined) {
+    state.slide2.items.splice(parseInt(t.dataset.s2Del), 1);
+    reRenderSlide('slide2', renderSlide2);
+    scheduleSave();
+    return;
+  }
+
+  // Add Key Activity row
+  if (t.dataset.trkadd) {
+    const track = findTrack(t.dataset.trkadd);
+    if (!track) return;
+    track.key_activities.push({ num: track.key_activities.length + 1, task: '', status: 'Not Started', outcome: '' });
+    const tbody = document.getElementById('ka-' + track.id);
+    if (tbody) {
+      const newIdx = track.key_activities.length - 1;
+      const row = track.key_activities[newIdx];
+      tbody.insertAdjacentHTML('beforeend', `<tr>
+        <td class="num-col">${row.num}</td>
+        <td contenteditable="true" data-tr="${track.id}" data-ri="${newIdx}" data-rf="task" data-placeholder="Task name"></td>
+        <td class="status-col"><span class="status-badge s-ns" data-tr="${track.id}" data-ri="${newIdx}" data-rf="status" title="Click to cycle">Not Started</span></td>
+        <td contenteditable="true" data-tr="${track.id}" data-ri="${newIdx}" data-rf="outcome" data-placeholder="Outcome"></td>
+        <td class="del-col"><button class="del-btn" data-trdel="${track.id}" data-ri="${newIdx}" title="Delete row">✕</button></td>
+      </tr>`);
+      const newTask = tbody.lastElementChild.querySelector('[data-rf="task"]');
+      if (newTask) newTask.focus();
+    }
+    scheduleSave();
+    return;
+  }
+
+  // Delete Key Activity row
+  if (t.dataset.trdel) {
+    const track = findTrack(t.dataset.trdel);
+    if (!track) return;
+    track.key_activities.splice(parseInt(t.dataset.ri), 1);
+    track.key_activities.forEach((r, i) => r.num = i + 1);
+    const tbody = document.getElementById('ka-' + track.id);
+    if (tbody) tbody.innerHTML = track.key_activities.map((row, ri) => `
+      <tr${row._done?' class="row-done"':''}>
+        <td class="num-col">${row.num}</td>
+        <td contenteditable="true" data-tr="${track.id}" data-ri="${ri}" data-rf="task" data-placeholder="Task name">${esc(row.task||'')}</td>
+        <td class="status-col"><span class="status-badge ${STATUS_CLASS[row.status]||'s-ns'}" data-tr="${track.id}" data-ri="${ri}" data-rf="status">${esc(row.status||'Not Started')}</span></td>
+        <td contenteditable="true" data-tr="${track.id}" data-ri="${ri}" data-rf="outcome" data-placeholder="Outcome">${esc(row.outcome||'')}</td>
+        <td class="del-col">
+          <button class="chk-btn" data-trcomplete="${track.id}" data-ri="${ri}" title="Mark complete">✓</button>
+          <button class="del-btn" data-trdel="${track.id}" data-ri="${ri}" title="Delete row">✕</button>
+        </td>
+      </tr>`).join('');
+    scheduleSave();
+    return;
+  }
+
+  // Add bullet to project_status or next_steps
+  if (t.dataset.trladd) {
+    const track = findTrack(t.dataset.trladd);
+    if (!track) return;
+    const lf = t.dataset.lf;
+    if (!track[lf]) track[lf] = [];
+    const _iad=new Date(),_ids=(_iad.getMonth()+1).toString().padStart(2,'0')+'/'+_iad.getDate().toString().padStart(2,'0');
+    track[lf].push({text:'',added:_ids});
+    const listEl = document.getElementById((lf === 'project_status' ? 'ps-' : 'ns-') + track.id);
+    if (listEl) {
+      const ni = track[lf].length - 1;
+      const cls = lf === 'next_steps' ? 'ns-list' : '';
+      listEl.insertAdjacentHTML('beforeend', `<li>
+        <span class="item-text" contenteditable="true" data-tr="${track.id}" data-li="${lf==='project_status'?'ps':'ns'}" data-bi="${ni}"></span><span class="item-date">${_ids}</span>
+        <button class="del-btn" data-trldel="${track.id}" data-lf="${lf}" data-bi="${ni}" title="Remove">✕</button>
+      </li>`);
+      const newSpan = listEl.lastElementChild.querySelector('[contenteditable]');
+      if (newSpan) newSpan.focus();
+    }
+    scheduleSave();
+    return;
+  }
+
+  // Delete bullet
+  if (t.dataset.trldel) {
+    const track = findTrack(t.dataset.trldel);
+    if (!track) return;
+    const lf = t.dataset.lf;
+    const bi = parseInt(t.dataset.bi);
+    if (track[lf]) track[lf].splice(bi, 1);
+    const listId = (lf === 'project_status' ? 'ps-' : 'ns-') + track.id;
+    const listEl = document.getElementById(listId);
+    if (listEl) listEl.querySelectorAll('li')[bi]?.remove();
+    // re-render to fix indices
+    reRenderList(track, lf);
+    scheduleSave();
+    return;
+  }
+
+  // Delete slide4 in-flight
+  if (t.dataset.s4Del !== undefined) {
+    state.slide4.in_flight.splice(parseInt(t.dataset.s4Del), 1);
+    reRenderSlide('slide4', renderSlide4);
+    scheduleSave();
+    return;
+  }
+
+  // Delete slide4 completed
+  if (t.dataset.s4Compdel !== undefined) {
+    state.slide4.completed.splice(parseInt(t.dataset.s4Compdel), 1);
+    reRenderSlide('slide4', renderSlide4);
+    scheduleSave();
+    return;
+  }
+
+  // Add initiative
+  if (t.id === 'btn-add-init') {
+    document.getElementById('modal-add-init').hidden = false;
+    return;
+  }
+
+  // Executive summary toggle
+  if (t.dataset.esToggle) {
+    const esBody = document.getElementById('es-' + t.dataset.esToggle);
+    if (esBody) {
+      esBody.hidden = !esBody.hidden;
+      t.classList.toggle('open', !esBody.hidden);
+    }
+    return;
+  }
+
+  // Add track button
+  if (t.id === 'btn-add-track') {
+    document.getElementById('modal-add-track').hidden = false;
+    document.getElementById('new-track-title').value = '';
+    document.getElementById('new-track-coh').value = '';
+    document.getElementById('new-track-cisco').value = '';
+    document.getElementById('new-track-pid').value = PID;
+    return;
+  }
+});
+
+// ── INPUT / BLUR DELEGATION ────────────────────────────────────────
+document.getElementById('slides').addEventListener('blur', function(e) {
+  const t = e.target;
+  if (!t.isContentEditable) return;
+  const val = t.textContent.trim();
+
+  // Slide 1
+  if (t.dataset.s1) { state.slide1[t.dataset.s1] = val; scheduleSave(); return; }
+  // Slide 2 item
+  if (t.dataset.s2 === 'item') {
+    const idx = parseInt(t.dataset.idx);
+    const cur = state.slide2.items[idx];
+    if (typeof cur === 'string') { state.slide2.items[idx] = {text: val, done: false}; }
+    else { cur.text = val; }
+    scheduleSave(); return;
+  }
+  // Slide 3 token tile
+  if (t.dataset.s3Tile !== undefined) {
+    const ti = parseInt(t.dataset.s3Tile);
+    const field = t.dataset.field;
+    const num = parseInt(val) || 0;
+    state.slide3.tracks[ti][field] = (field === 'label') ? val : num;
+    // update bar
+    const tile = t.closest('.token-tile');
+    const c = state.slide3.tracks[ti].consumed, tot = state.slide3.tracks[ti].total;
+    const pct = tot > 0 ? Math.round((c/tot)*100) : 0;
+    const bar = tile && tile.querySelector('.token-bar');
+    const pctEl = tile && tile.querySelector('.token-pct');
+    if (bar)   { bar.style.width = pct + '%'; bar.style.background = tokenBarColor(pct); }
+    if (pctEl) pctEl.textContent = pct + '% consumed';
+    scheduleSave(); return;
+  }
+  // Slide 3 time_consumed_pct
+  if (t.dataset.s3 === 'report_date') { state.slide3.report_date = val; scheduleSave(); return; }
+  if (t.dataset.s3 === 'time_consumed_pct_hdr') { state.slide3.time_consumed_pct = parseInt(val)||0; scheduleSave(); return; }
+  if (t.dataset.s3 === 'time_consumed_pct') { state.slide3.time_consumed_pct = parseInt(val)||0; scheduleSave(); return; }
+  // Slide 4 initiative name
+  if (t.dataset.s4Name !== undefined) {
+    const init = (state.slide4.in_flight||[])[parseInt(t.dataset.s4Name)];
+    if (init) { init.name = val; scheduleSave(); } return;
+  }
+  // Track header fields
+  if (t.dataset.trh) {
+    const track = findTrack(t.dataset.trh);
+    if (track) {
+      const hf = t.dataset.hf;
+      track[hf] = hf === 'budget_consumed' ? (parseInt(val)||0) : val;
+      if (hf === 'budget_consumed') {
+        const bbar = document.getElementById('bbar-' + track.id);
+        if (bbar) { const p = Math.min(parseInt(val)||0,100); bbar.style.width=p+'%'; bbar.style.background=tokenBarColor(p); }
+      }
+      scheduleSave();
+    }
+    return;
+  }
+  // Track key activity fields
+  if (t.dataset.tr && t.dataset.rf && t.dataset.rf !== 'status') {
+    const track = findTrack(t.dataset.tr);
+    if (track) {
+      const row = track.key_activities[parseInt(t.dataset.ri)];
+      if (row) { row[t.dataset.rf] = val; scheduleSave(); }
+    }
+    return;
+  }
+  // Track bullet fields
+  if (t.dataset.tr && t.dataset.li) {
+    const track = findTrack(t.dataset.tr);
+    if (track) {
+      const lf = t.dataset.li === 'ps' ? 'project_status' : 'next_steps';
+      if (track[lf]) { const _bi=parseInt(t.dataset.bi),_ex=track[lf][_bi]; if(typeof _ex==='object'&&_ex!==null){_ex.text=val;}else{track[lf][_bi]=val;} scheduleSave(); }
+    }
+    return;
+  }
+}, true); // capture to catch blur on contenteditable
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function findTrack(id) {
+  return (state.tracks||[]).find(t=>t.id===id) || (state.completed_tracks||[]).find(t=>t.id===id);
+}
+function selectAll(el) {
+  const r = document.createRange(); r.selectNodeContents(el);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+function reRenderSlide(slideId, renderFn) {
+  const el = document.getElementById('slide-' + slideId.replace('slide',''));
+  if (!el) { renderAll(); return; }
+  const tmp = document.createElement('div');
+  tmp.innerHTML = renderFn();
+  const newEl = tmp.firstElementChild;
+  el.replaceWith(newEl);
+  attachQuoteBtns();
+  updateNav();
+}
+function reRenderList(track, lf) {
+  const listId = (lf === 'project_status' ? 'ps-' : 'ns-') + track.id;
+  const listEl = document.getElementById(listId);
+  if (!listEl) return;
+  const isNS = lf === 'next_steps';
+  listEl.innerHTML = (track[lf]||[]).map((b, bi) => {
+    const _bt = typeof b==='object'?(b.text||''):b;
+    const _bd = typeof b==='object'?(b.added||''):'';
+    return `<li>
+      <span class="item-text" contenteditable="true" data-tr="${track.id}" data-li="${isNS?'ns':'ps'}" data-bi="${bi}">${esc(_bt)}</span>${_bd?`<span class="item-date">${_bd}</span>`:''}
+      <button class="chk-btn chk-bullet" data-trldone="${track.id}" data-lf="${lf}" data-bi="${bi}" title="Mark done">✓</button>
+      <button class="del-btn" data-trldel="${track.id}" data-lf="${lf}" data-bi="${bi}" title="Remove">✕</button>
+    </li>`;
+  }).join('');
+}
+
+// ── EXPORT / IMPORT ────────────────────────────────────────────────
+document.getElementById('btn-pdf').onclick = async function() {
+  const btn = this;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="animation:spin 1s linear infinite"><path d="M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg> Generating…';
+  btn.disabled = true;
+  document.body.classList.add('pdf-mode');
+  try {
+    const date = new Date().toISOString().slice(0,10);
+    await html2pdf().set({
+      margin:       [0.35, 0.35, 0.35, 0.35],
+      filename:     (PID||'report') + '_status_' + date + '.pdf',
+      image:        { type:'jpeg', quality:0.97 },
+      html2canvas:  { scale:2, useCORS:true, scrollX:0, scrollY:0,
+                      windowWidth:document.getElementById('slides').offsetWidth },
+      jsPDF:        { unit:'in', format:'letter', orientation:'landscape' },
+      pagebreak:    { mode:['css','legacy'], before:'.slide' }
+    }).from(document.getElementById('slides')).save();
+  } catch(e) { alert('PDF generation failed: ' + e.message); }
+  finally {
+    document.body.classList.remove('pdf-mode');
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+};
+
+document.getElementById('btn-export').onclick = function() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = PID + '_state_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById('btn-import').onclick = function() {
+  document.getElementById('import-file-input').click();
+};
+document.getElementById('import-file-input').onchange = function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = function(ev) {
+    try {
+      state = JSON.parse(ev.target.result);
+      saveState();
+      renderAll();
+    } catch(err) { alert('Invalid JSON file.'); }
+  };
+  r.readAsText(file);
+  e.target.value = '';
+};
+
+// ── ADD TRACK MODAL ────────────────────────────────────────────────
+document.getElementById('modal-cancel').onclick = function() {
+  document.getElementById('modal-add-track').hidden = true;
+};
+document.getElementById('modal-confirm').onclick = function() {
+  const title  = document.getElementById('new-track-title').value.trim();
+  if (!title) { alert('Please enter a track title.'); return; }
+  const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+  const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const newTrack = {
+    id, title, pid: document.getElementById('new-track-pid').value || PID,
+    date: today, coh_engineer: document.getElementById('new-track-coh').value,
+    cisco_engineers: document.getElementById('new-track-cisco').value,
+    status: 'active', project_start: today, project_end: '07/20/27',
+    budget_consumed: 0, executive_summary: '',
+    key_activities: [{num:1, task:'', status:'Not Started', outcome:''}],
+    project_status: [''], next_steps: [''],
+  };
+  state.tracks.push(newTrack);
+  state.slide3.tracks.push({id, label: title, consumed: 0, total: 200});
+  state.slide4.in_flight.push({id: id+'_i', name: title, progress: 0, sub: ''});
+  document.getElementById('modal-add-track').hidden = true;
+  renderAll();
+  // Scroll to new track
+  setTimeout(() => {
+    const el = document.getElementById('track-' + id);
+    if (el) el.scrollIntoView({behavior:'smooth'});
+  }, 100);
+  scheduleSave();
+};
+
+// ── ADD INITIATIVE MODAL ───────────────────────────────────────────
+document.getElementById('init-modal-cancel').onclick = function() {
+  document.getElementById('modal-add-init').hidden = true;
+};
+document.getElementById('init-modal-confirm').onclick = function() {
+  const name = document.getElementById('new-init-name').value.trim();
+  if (!name) return;
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,20) + '_' + Date.now().toString(36);
+  state.slide4.in_flight.push({id, name, progress:0, sub: document.getElementById('new-init-sub').value});
+  document.getElementById('modal-add-init').hidden = false;
+  document.getElementById('modal-add-init').hidden = true;
+  reRenderSlide('slide4', renderSlide4);
+  scheduleSave();
+};
+
+// ── CHECKMARK HANDLERS ────────────────────────────────────────
+document.getElementById('slides').addEventListener('click', function(e) {
+  const t = e.target;
+
+  // Row complete checkmark
+  if (t.dataset.trcomplete) {
+    const track = findTrack(t.dataset.trcomplete);
+    if (!track) return;
+    const ri = parseInt(t.dataset.ri);
+    const row = track.key_activities[ri];
+    if (!row) return;
+    row.status = row.status === 'Completed' ? 'In Progress' : 'Completed';
+    row._done  = row.status === 'Completed';
+    const tr = t.closest('tr');
+    if (tr) {
+      tr.classList.toggle('row-done', row._done);
+      const badge = tr.querySelector('.status-badge');
+      if (badge) {
+        badge.textContent = row.status;
+        badge.className   = 'status-badge ' + (STATUS_CLASS[row.status] || 's-ns');
+      }
+    }
+    scheduleSave();
+    return;
+  }
+
+  // Bullet done checkmark (visual toggle only — resets on reload)
+  if (t.dataset.trldone) {
+    const li = t.closest('li');
+    if (li) li.classList.toggle('bullet-done');
+    return;
+  }
+});
+
+// ── DRAG SLIDER ────────────────────────────────────────────────
+let _drag = null;
+function _setProgress(trackId, pct) {
+  pct = Math.max(0, Math.min(100, pct));
+  const fill  = document.getElementById('progfill-'  + trackId);
+  const thumb = document.getElementById('progthumb-' + trackId);
+  const val   = document.getElementById('progval-'   + trackId);
+  if (fill)  fill.style.width = pct + '%';
+  if (thumb) thumb.style.left = pct + '%';
+  if (val)   val.textContent  = pct + '%';
+  const track = findTrack(trackId);
+  if (track) { track.budget_consumed = pct; scheduleSave(); }
+}
+document.addEventListener('mousedown', function(e) {
+  if (e.target.classList.contains('prog-thumb')) {
+    _drag = e.target;
+    _drag.classList.add('dragging');
+    e.preventDefault();
+  }
+  // click on track bg
+  if (e.target.classList.contains('prog-track-bg') || e.target.classList.contains('prog-fill')) {
+    const bg = e.target.closest('.prog-track-bg') || e.target;
+    const slider = bg.closest('.prog-slider-wrap');
+    if (!slider) return;
+    const trackId = slider.id.replace('progslider-','');
+    const rect = bg.getBoundingClientRect();
+    const pct  = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    _setProgress(trackId, pct);
+  }
+});
+document.addEventListener('mousemove', function(e) {
+  if (!_drag) return;
+  const bg   = _drag.closest('.prog-track-bg');
+  const slider = _drag.closest('.prog-slider-wrap');
+  if (!bg || !slider) return;
+  const rect    = bg.getBoundingClientRect();
+  const pct     = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+  const trackId = slider.id.replace('progslider-','');
+  _setProgress(trackId, pct);
+});
+document.addEventListener('mouseup', function() {
+  if (_drag) { _drag.classList.remove('dragging'); _drag = null; }
+});
+// Touch support
+document.addEventListener('touchstart', function(e) {
+  if (e.target.classList.contains('prog-thumb')) {
+    _drag = e.target; _drag.classList.add('dragging'); e.preventDefault();
+  }
+}, {passive:false});
+document.addEventListener('touchmove', function(e) {
+  if (!_drag) return;
+  const bg   = _drag.closest('.prog-track-bg');
+  const slider = _drag.closest('.prog-slider-wrap');
+  if (!bg || !slider) return;
+  const touch   = e.touches[0];
+  const rect    = bg.getBoundingClientRect();
+  const pct     = Math.round(((touch.clientX - rect.left) / rect.width) * 100);
+  const trackId = slider.id.replace('progslider-','');
+  _setProgress(trackId, pct);
+  e.preventDefault();
+}, {passive:false});
+document.addEventListener('touchend', function() {
+  if (_drag) { _drag.classList.remove('dragging'); _drag = null; }
+});
+
+// ── CLOSE MODALS ON OVERLAY CLICK ─────────────────────────────────
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.hidden = true; });
+});
+
+// ── KEYBOARD: Enter in contenteditable list items ──────────────────
+document.getElementById('slides').addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const t = e.target;
+  if (!t.isContentEditable) return;
+  // TOM items: Enter adds new item
+  if (t.dataset.s2 === 'item') {
+    e.preventDefault();
+    document.getElementById('btn-add-tom').click();
+    return;
+  }
+  // Prevent default Enter in other contenteditable (no newlines in data cells)
+  if (t.closest('.ka-table') || t.dataset.tr) {
+    e.preventDefault();
+    t.blur();
+  }
+});
+
+// ── GITHUB UI WIRING ─────────────────────────────────────────────
+if (GH_ENABLED) {
+  // Show GH controls in nav
+  ['gh-dot','gh-status-label','btn-gh-save','btn-gh-refresh','btn-gh-pat'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.hidden = false; el.style.display = ''; }
+  });
+  setGhStatus('loading');
+
+  // Manual save button
+  document.getElementById('btn-gh-save').onclick = () => ghSave(state);
+
+  // Manual refresh button
+  document.getElementById('btn-gh-refresh').onclick = async function() {
+    if (_ghPending) {
+      state    = JSON.parse(atob(_ghPending.content.replace(/\n/g,'')));
+      _ghSha   = _ghPending.sha;
+      _ghPending = null;
+      document.getElementById('gh-refresh-banner').classList.remove('visible');
+      renderAll(); setGhStatus('saved');
+    } else {
+      const s = await ghLoad();
+      if (s) { state = s; renderAll(); setGhStatus('saved'); }
+    }
+  };
+
+  // Token settings button
+  document.getElementById('btn-gh-pat').onclick = () => showPatModal();
+}
+
+// Refresh banner buttons
+document.getElementById('gh-banner-apply').onclick = async function() {
+  if (_ghPending) {
+    state = JSON.parse(atob(_ghPending.content.replace(/\n/g,'')));
+    _ghSha = _ghPending.sha;
+    _ghPending = null;
+    renderAll(); setGhStatus('saved');
+  } else {
+    const s = await ghLoad();
+    if (s) { state = s; renderAll(); setGhStatus('saved'); }
+  }
+  document.getElementById('gh-refresh-banner').classList.remove('visible');
+};
+document.getElementById('gh-banner-dismiss').onclick = function() {
+  _ghPending = null;
+  document.getElementById('gh-refresh-banner').classList.remove('visible');
+};
+
+// Conflict banner buttons
+document.getElementById('gh-conflict-export').onclick = function() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = PID + '_state_conflict_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('gh-conflict-force').onclick = async function() {
+  // Force-overwrite by refetching SHA then saving
+  const d = await ghLoad();
+  if (d !== null) {
+    // _ghSha now updated, retry save
+    await ghSave(state);
+  }
+  document.getElementById('gh-conflict-banner').classList.remove('visible');
+};
+document.getElementById('gh-conflict-dismiss').onclick = function() {
+  document.getElementById('gh-conflict-banner').classList.remove('visible');
+};
+
+// PAT modal buttons
+document.getElementById('gh-pat-cancel').onclick = function() {
+  document.getElementById('modal-gh-pat').hidden = true;
+};
+document.getElementById('gh-pat-save').onclick = async function() {
+  const token = document.getElementById('gh-pat-input').value.trim();
+  if (!token) return;
+  localStorage.setItem('sr_gh_pat', token);
+  document.getElementById('modal-gh-pat').hidden = true;
+  document.getElementById('gh-pat-input').value = '';
+  // Try to load with the new token
+  const s = await ghLoad();
+  if (s) { state = s; renderAll(); setGhStatus('saved'); }
+};
+
+// ── INIT ────────────────────────────────────────────────────────────
+loadState();
+// Migrate legacy strings + sync dates from REPORT_DATA (overrides stale localStorage dates)
+(function migrateBullets(){
+  const lfs = ['project_status','next_steps'];
+  const rdTracks = (REPORT_DATA.tracks||[]).concat(REPORT_DATA.completed_tracks||[]);
+  const allTracks = (state.tracks||[]).concat(state.completed_tracks||[]);
+  allTracks.forEach(function(t){
+    const rdt = rdTracks.find(function(r){return r.id===t.id;});
+    lfs.forEach(function(lf){
+      if(!t[lf]) return;
+      t[lf] = t[lf].map(function(b){
+        return typeof b==='string' ? {text:b, added:'10/14'} : b;
+      });
+      if(rdt && rdt[lf]){
+        t[lf].forEach(function(item){
+          const match = rdt[lf].find(function(ri){
+            return (typeof ri==='object'?ri.text:ri) === item.text;
+          });
+          if(match && typeof match==='object' && match.added) item.added = match.added;
+        });
+        rdt[lf].forEach(function(ri){
+          const riText = typeof ri==='object' ? ri.text : ri;
+          const exists = t[lf].some(function(b){ return b.text===riText; });
+          if(!exists) t[lf].push(typeof ri==='object' ? ri : {text:ri, added:'10/19'});
+        });
+      }
+    });
+  });
+})();
+renderAll();
+</script>

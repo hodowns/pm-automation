@@ -1,0 +1,429 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cockpit: Office Hours</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #121a30;
+    --panel-2: #172245;
+    --text: #e8edf7;
+    --muted: #9aa7c2;
+    --blue: #5cb8f5;
+    --indigo: #4a6cf0;
+    --orange: #f0a04b;
+    --green: #5fd1a0;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide { position: absolute; inset: 0; padding: 5vh 6vw; display: none; flex-direction: column; justify-content: center; }
+  .slide.active { display: flex; }
+  .eyebrow { color: var(--blue); letter-spacing: .18em; text-transform: uppercase; font-size: clamp(12px, 1.3vw, 18px); font-weight: 600; margin-bottom: 1.2vh; }
+  h1 { font-size: clamp(36px, 5.6vw, 84px); margin: 0 0 2vh; line-height: 1.05; }
+  h2 { font-size: clamp(28px, 3.8vw, 56px); margin: 0 0 3vh; line-height: 1.1; }
+  p.lead { font-size: clamp(16px, 1.9vw, 28px); color: var(--muted); max-width: 62ch; line-height: 1.45; margin: 0 0 2vh; }
+  .grid { display: grid; gap: 1.6vw; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .card { background: var(--panel); border-left: 4px solid var(--blue); border-radius: 10px; padding: 1.8vh 1.6vw; }
+  .card.o { border-left-color: var(--orange); }
+  .card.i { border-left-color: var(--indigo); }
+  .card.g { border-left-color: var(--green); }
+  .card h3 { margin: 0 0 .8vh; font-size: clamp(16px, 1.8vw, 26px); }
+  .card p { margin: 0; color: var(--muted); font-size: clamp(13px, 1.4vw, 20px); line-height: 1.4; }
+  .big { font-size: clamp(40px, 6vw, 90px); font-weight: 700; color: var(--blue); line-height: 1; }
+  .big.o { color: var(--orange); }
+  .layers { display: flex; flex-direction: column-reverse; gap: 1.2vh; }
+  .layer { border: 2px solid var(--blue); border-radius: 10px; padding: 1.4vh 1.4vw; background: var(--panel); display: grid; grid-template-columns: 7vw 1fr; align-items: center; gap: 1.2vw; opacity: 0; transform: translateY(8px); transition: opacity .3s, transform .3s; }
+  .layer.show { opacity: 1; transform: none; }
+  .layer.o { border-color: var(--orange); }
+  .layer.i { border-color: var(--indigo); }
+  .layer .n { font-size: clamp(22px, 3vw, 44px); font-weight: 700; color: var(--muted); }
+  .layer .t { font-size: clamp(16px, 1.9vw, 28px); font-weight: 650; }
+  .layer .d { color: var(--muted); font-size: clamp(12px, 1.3vw, 19px); margin-top: .3vh; }
+  .tag { display: inline-block; font-size: .7em; padding: .1em .5em; border-radius: 99px; background: var(--panel-2); color: var(--orange); margin-left: .4em; vertical-align: middle; }
+  ul.clean { list-style: none; padding: 0; margin: 0; }
+  ul.clean li { font-size: clamp(16px, 2vw, 30px); padding: 1.2vh 0; border-bottom: 1px solid #1d2745; line-height: 1.35; }
+  ul.clean li b { color: var(--blue); }
+  .flow { display: flex; align-items: stretch; gap: 1vw; flex-wrap: wrap; }
+  .flow .step { flex: 1 1 14vw; background: var(--panel); border-radius: 10px; padding: 1.6vh 1.2vw; text-align: center; font-size: clamp(14px, 1.6vw, 24px); }
+  .flow .arrow { align-self: center; color: var(--orange); font-size: 2.4vw; }
+  .callout { font-size: clamp(18px, 2.4vw, 36px); font-weight: 700; color: var(--text); background: var(--panel-2); border-left: 6px solid var(--orange); border-radius: 10px; padding: 1.4vh 1.6vw; margin: 0 0 2vh; }
+  table.who { width: 100%; border-collapse: separate; border-spacing: 0 .8vh; }
+  table.who th { text-align: left; color: var(--blue); text-transform: uppercase; letter-spacing: .12em; font-size: clamp(11px, 1.1vw, 16px); padding: 0 1.2vw .4vh; }
+  table.who td { background: var(--panel); padding: 1.4vh 1.2vw; font-size: clamp(13px, 1.5vw, 22px); line-height: 1.35; vertical-align: top; }
+  table.who td:first-child { font-weight: 650; border-left: 4px solid var(--blue); border-radius: 10px 0 0 10px; white-space: nowrap; }
+  table.who td:last-child { border-radius: 0 10px 10px 0; }
+  table.who tr.o td:first-child { border-left-color: var(--orange); }
+  table.who tr.g td:first-child { border-left-color: var(--green); }
+  table.who tr.i td:first-child { border-left-color: var(--indigo); }
+  table.who td small { display: block; color: var(--muted); font-weight: 400; font-size: .75em; }
+  .note { color: var(--muted); font-size: clamp(12px, 1.2vw, 17px); margin-top: 2vh; }
+  a { color: var(--blue); }
+  .hud { position: fixed; bottom: 2vh; right: 2vw; color: var(--muted); font-size: 13px; }
+  .hint { position: fixed; bottom: 2vh; left: 2vw; color: #55627f; font-size: 12px; }
+  @media (max-width: 760px) { .g2, .g3 { grid-template-columns: 1fr; } .layer { grid-template-columns: 1fr; } }
+
+  /* ===== Top Gun / aviation theme ===== */
+  :root { --gold: #ffcf6b; --sunset: #ff7a3d; --steel: #cfd8e6; --hud: #7dffb0; }
+  body { background: linear-gradient(180deg, #050a1c 0%, #0b1736 45%, #2a1a3a 78%, #6b2d3a 100%) fixed; }
+  .sky { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .sky .stars { position: absolute; inset: 0 0 40% 0; background-image:
+      radial-gradient(1.5px 1.5px at 12% 20%, #fff8, transparent), radial-gradient(1px 1px at 33% 55%, #fff6, transparent),
+      radial-gradient(1.5px 1.5px at 58% 15%, #fff8, transparent), radial-gradient(1px 1px at 79% 40%, #fff6, transparent),
+      radial-gradient(1px 1px at 91% 12%, #fff7, transparent), radial-gradient(1px 1px at 22% 78%, #fff5, transparent); }
+  .sky .glow { position: absolute; left: -10%; right: -10%; bottom: -25vh; height: 55vh;
+      background: radial-gradient(ellipse at 50% 100%, #ff7a3d99 0%, #ff7a3d33 40%, transparent 70%); }
+  .cloud { position: absolute; left: 0; border-radius: 50%; background: #c9d6f2; opacity: .07; filter: blur(14px);
+      animation: drift linear infinite; }
+  @keyframes drift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+  .streak { position: absolute; left: 0; height: 2px; width: 22vw; background: linear-gradient(90deg, transparent, #cfe3ff55, transparent);
+      animation: streak linear infinite; }
+  @keyframes streak { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+  .deck { z-index: 1; }
+  .card, .layer, table.who td, .flow .step { background: rgba(14, 22, 48, .82); }
+  .callout { background: rgba(23, 34, 69, .9); }
+  .slide.active { animation: enter .55s cubic-bezier(.2,.8,.2,1); }
+  @keyframes enter { from { opacity: 0; transform: translateX(6vw); } to { opacity: 1; transform: none; } }
+  .eyebrow { font-family: Consolas, "Courier New", monospace; color: var(--gold); }
+  .eyebrow::before { content: "\2708\00a0\00a0"; }
+  h1, h2 { text-shadow: 0 2px 18px rgba(0,0,0,.55); }
+
+  /* title slide */
+  .slide.title-slide.active { flex-direction: row; align-items: center; gap: 4vw; }
+  .title-slide .copy { flex: 1 1 52%; }
+  .title-slide h1 { font-size: clamp(32px, 4.4vw, 68px); }
+  .title-slide .poster { flex: 0 0 auto; height: 72vh; margin-top: 6vh; aspect-ratio: 1; border-radius: 6px; overflow: hidden;
+      box-shadow: 0 0 0 2px #cfd8e655, 0 20px 60px rgba(0,0,0,.6), 0 0 80px #ff7a3d33; animation: float 6s ease-in-out infinite; }
+  .title-slide .poster img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  @keyframes float { 0%,100% { transform: translateY(0) rotate(-.6deg); } 50% { transform: translateY(-1.2vh) rotate(.6deg); } }
+  .callsign { display: inline-block; font-family: Consolas, monospace; color: var(--hud); border: 1px solid var(--hud);
+      padding: .3em .8em; letter-spacing: .15em; font-size: clamp(11px, 1.1vw, 16px); margin-top: 1vh; }
+
+  /* boarding overlay */
+  #boarding { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2.5vh; background: radial-gradient(ellipse at 50% 100%, #7a2f3a, #050a1c 75%); text-align: center; transition: opacity .8s; }
+  #boarding.gone { opacity: 0; pointer-events: none; }
+  #boarding img { height: 52vh; aspect-ratio: 1; border-radius: 6px; box-shadow: 0 20px 70px rgba(0,0,0,.7), 0 0 90px #ff7a3d44; }
+  #boarding .kicker { font-family: Consolas, monospace; color: var(--gold); letter-spacing: .3em; font-size: clamp(12px, 1.4vw, 20px); }
+  #takeoff { font: 700 clamp(16px, 1.8vw, 26px) Consolas, monospace; letter-spacing: .2em; color: #0a0e1a; background: var(--gold);
+      border: 0; border-radius: 4px; padding: 1.2vh 2.4vw; cursor: pointer; box-shadow: 0 0 30px #ffcf6b88; animation: pulse 1.6s infinite; }
+  #takeoff:hover { background: #fff; }
+  @keyframes pulse { 50% { box-shadow: 0 0 50px #ffcf6bcc; } }
+  #boarding .sub { color: var(--muted); font-size: clamp(11px, 1.1vw, 15px); }
+  #boarding a.skip { color: var(--muted); font-size: clamp(11px, 1.1vw, 15px); cursor: pointer; text-decoration: underline; }
+
+  /* flyby jet */
+  #jet { position: fixed; top: 14vh; left: 0; z-index: 5; width: 14vw; opacity: 0; pointer-events: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+  #jet svg { width: 100%; display: block; }
+  #jet.fly { animation: flyby 1.5s cubic-bezier(.4,0,.6,1); }
+  @keyframes flyby { 0% { transform: translate(-20vw, 6vh) rotate(-4deg); opacity: 0; } 12% { opacity: 1; }
+      88% { opacity: 1; } 100% { transform: translate(115vw, -8vh) rotate(-4deg); opacity: 0; } }
+  #jet .trail { position: absolute; right: 92%; top: 46%; width: 28vw; height: 3px; background: linear-gradient(270deg, #ffffffcc, transparent); }
+
+  /* cockpit instruments */
+  .instr { position: fixed; top: 2vh; right: 2vw; z-index: 6; display: flex; gap: 1vw; align-items: center;
+      font-family: Consolas, "Courier New", monospace; color: var(--hud); font-size: clamp(10px, 1vw, 14px);
+      background: rgba(5, 12, 24, .7); border: 1px solid #7dffb055; border-radius: 6px; padding: .8vh 1vw; letter-spacing: .08em; }
+  .instr .k { color: #7dffb099; font-size: .8em; display: block; }
+  .instr .v { font-size: 1.25em; font-variant-numeric: tabular-nums; }
+  #horizon { width: 4.2vw; min-width: 44px; aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--steel); overflow: hidden; position: relative; }
+  #horizon .ball { position: absolute; inset: -50%; background: linear-gradient(180deg, #3d8bd9 50%, #8a5a2b 50%); animation: bank 9s ease-in-out infinite; }
+  #horizon::after { content: ""; position: absolute; left: 20%; right: 20%; top: 50%; height: 2px; background: var(--gold); box-shadow: 0 0 0 1px #0006; }
+  @keyframes bank { 0%,100% { transform: rotate(-5deg) translateY(2px); } 50% { transform: rotate(5deg) translateY(-3px); } }
+
+  /* flight path progress */
+  .path { position: fixed; left: 6vw; right: 14vw; bottom: 2.6vh; height: 2px; z-index: 6; background: repeating-linear-gradient(90deg, #cfd8e655 0 8px, transparent 8px 16px); }
+  .path .done { position: absolute; left: 0; top: -1px; height: 4px; width: 0; background: linear-gradient(90deg, transparent, var(--gold)); transition: width .8s ease; }
+  .path .plane { position: absolute; top: -12px; left: 0; font-size: 20px; color: var(--steel); transform: translateX(-50%); transition: left .8s ease; text-shadow: 0 0 10px #ffcf6b; }
+  #music { position: fixed; top: 2vh; left: 2vw; z-index: 6; background: rgba(5,12,24,.7); color: var(--gold); border: 1px solid #ffcf6b66;
+      border-radius: 6px; padding: .6vh .9vw; font: 600 clamp(10px, 1vw, 14px) Consolas, monospace; cursor: pointer; letter-spacing: .1em; }
+  #yt { position: fixed; width: 200px; height: 200px; opacity: 0; pointer-events: none; left: -300px; top: 0; }
+  .hint { z-index: 6; bottom: 5vh; } .hud { display: none; }
+  @media (prefers-reduced-motion: reduce) { .cloud, .streak, .poster, #horizon .ball, #takeoff, .slide.active { animation: none !important; } #jet { display: none; } }
+  @media (max-width: 900px) { .slide.title-slide.active { flex-direction: column; } .title-slide .poster { height: 34vh; } #horizon { display: none; } }
+</style>
+<div class="sky" id="sky"><div class="stars"></div><div class="glow"></div></div>
+<div id="boarding">
+  <div class="kicker">CISCO &middot; CLAUDE COCKPIT</div>
+  <img src="assets/briefing-poster.jpg" alt="Cisco Claude Cockpit">
+  <button id="takeoff" type="button">TAKE OFF</button>
+  <div class="sub">Turn your sound on. Click to start the briefing with music.</div>
+  <a class="skip" id="skip">Skip the music</a>
+</div>
+<div id="jet"><svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><path fill="#b9c6dc" d="M34 33 L22 6 L44 6 L64 30 Z"/><path fill="#dfe6f2" d="M12 35 L58 29 L130 27 L168 28 L198 34 L160 40 L96 41 L36 41 Z"/><path fill="#9fb0cc" d="M92 36 L66 52 L98 52 L128 37 Z"/><path fill="#1b2a4a" d="M128 28 L144 21 L158 28 Z"/><rect x="12" y="35" width="14" height="5" fill="#7d8fae"/><circle cx="8" cy="37.5" r="4" fill="#ff9a3d"/></svg><div class="trail"></div></div>
+<div id="yt"></div>
+<audio id="fallback" src="assets/danger-zone.mp3" loop preload="none"></audio>
+<button id="music" type="button" aria-label="Toggle music">&#9835; MUSIC ON</button>
+<div class="instr"><div><span class="k">ALT</span><span class="v" id="alt">0</span> FT</div><div><span class="k">HDG</span><span class="v" id="hdg">090</span>&deg;</div><div><span class="k">WPT</span><span class="v" id="wpt">1/12</span></div><div id="horizon"><div class="ball"></div></div></div>
+<div class="path"><div class="done" id="done"></div><div class="plane" id="plane">&#9992;</div></div>
+<div class="deck" id="deck">
+
+  <!-- 1 Title -->
+  <section class="slide title-slide">
+    <div class="copy">
+      <div class="eyebrow">CX AI Cockpit &middot; Office Hours</div>
+      <h1>The Cockpit:<br>what it is, how to use it,<br>where it's going</h1>
+      <p class="lead">A 15 minute orientation for project managers who are learning Claude, AI and GitHub.</p>
+      <div class="callsign">MISSION BRIEFING &middot; CLEARED FOR TAKEOFF</div>
+    </div>
+    <div class="poster"><img src="assets/briefing-poster.jpg" alt="Cisco Claude Cockpit briefing poster"></div>
+  </section>
+
+  <!-- 2 The shift -->
+  <section class="slide">
+    <div class="eyebrow">Why this exists</div>
+    <h2>One shared place to work with AI</h2>
+    <div class="grid g3">
+      <div class="card"><h3>Consistent delivery</h3><p>Customers get the same look, feel and quality, no matter who on the team does the work.</p></div>
+      <div class="card o"><h3>Build once, share with everyone</h3><p>When someone creates something useful, the rest of us can use it instead of rebuilding it.</p></div>
+      <div class="card g"><h3>Faster delivery</h3><p>AI handles the repetitive steps so we spend our time on the work that needs a person.</p></div>
+    </div>
+    <p class="note">The Cockpit is how we get there: a single starting point for AI-assisted work, with the guardrails already built in.</p>
+  </section>
+
+  <!-- 3 What it is -->
+  <section class="slide">
+    <div class="eyebrow">What it is</div>
+    <h2>Claude Code is the interface. The Cockpit is everything beneath it.</h2>
+    <div class="grid g3">
+      <div class="card"><h3>Enterprise infrastructure</h3><p>Claude runs inside Cisco's own AWS environment, with sign-in, usage tracking and spending limits built in.</p></div>
+      <div class="card i"><h3>Live system connections</h3><p>Claude can reach the tools you already use, like Webex, Outlook and SharePoint.</p></div>
+      <div class="card o"><h3>A shared skills library</h3><p>Workflows built by your peers, available to everyone, so nobody starts from a blank page.</p></div>
+    </div>
+    <p class="note">Not claude.ai. Your conversations, files and customer data stay inside Cisco's AWS boundary.</p>
+  </section>
+
+  <!-- 4 Five layers (click to reveal) -->
+  <section class="slide" data-steps="5">
+    <div class="eyebrow">A connected environment</div>
+    <div class="layers">
+      <div class="layer o"><div class="n">1</div><div><div class="t">The brain: Claude on AWS Bedrock</div><div class="d">Anthropic's model, hosted inside Cisco's AWS boundary. Your data stays inside.</div></div></div>
+      <div class="layer o"><div class="n">2</div><div><div class="t">The front desk: LiteLLM proxy</div><div class="d">Checks who you are, enforces limits, counts usage per user.</div></div></div>
+      <div class="layer i"><div class="n">3</div><div><div class="t">Where you type: Claude Code CLI</div><div class="d">Reads and writes files, runs commands, calls APIs, from your terminal.</div></div></div>
+      <div class="layer i"><div class="n">4</div><div><div class="t">The hands: MCP connectors<span class="tag">SDC + Cisco IQ coming</span></div><div class="d">Webex, Outlook, SharePoint today.</div></div></div>
+      <div class="layer"><div class="n">5</div><div><div class="t">The playbooks: skills and workflows</div><div class="d">Pre-built skills and custom agents that you run with a slash command.</div></div></div>
+    </div>
+  </section>
+
+  <!-- 5 Act not answer -->
+  <section class="slide">
+    <div class="eyebrow">Connectors</div>
+    <h2>Claude can act, not just answer</h2>
+    <div class="flow">
+      <div class="step">A meeting happens in Webex</div><div class="arrow">&rarr;</div>
+      <div class="step">Claude reads the transcript</div><div class="arrow">&rarr;</div>
+      <div class="step">Drafts structured minutes</div><div class="arrow">&rarr;</div>
+      <div class="step"><b>You review and approve</b></div>
+    </div>
+    <p class="lead" style="margin-top:3vh">Connectors let Claude read from and write to your real work systems. When SDC connects, it will read your live project data directly, with no re-entry.</p>
+  </section>
+
+  <!-- 6 Skills -->
+  <section class="slide">
+    <div class="eyebrow">Skills</div>
+    <h2>Skills are shared, not reinvented</h2>
+    <div class="grid g2">
+      <div class="card"><h3>Pre-built skills</h3><p>Run one with a slash command, such as /meeting-minutes or /close-a-pid.</p></div>
+      <div class="card g"><h3>One vetted workflow for everyone</h3><p>Skills live in a shared GitHub repo, like a shared drive with version history. Every PM runs the same reviewed workflow instead of a prompt typed from memory.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 Dont build twice -->
+  <section class="slide">
+    <div class="eyebrow">Governance in the background</div>
+    <h2>Don't build it twice</h2>
+    <div class="grid g3">
+      <div class="card o"><div class="big o">57</div><h3>files, rebuilt from scratch</h3><p>An engineer built a full config migration tool without knowing an official one has existed since 2020.</p></div>
+      <div class="card"><h3>The Cockpit noticed</h3><p>Automation Velocity indexes every repo, spots overlap, and the Cockpit asks: did you know this existed?</p></div>
+      <div class="card g"><h3>Innovation stays, duplication doesn't</h3><p>Engineers offered to contribute to the existing tool instead of maintaining a copy.</p></div>
+    </div>
+    <p class="note">Same instinct as catching a duplicate project plan, applied across the whole organization.</p>
+  </section>
+
+  <!-- 8 Safe -->
+  <section class="slide">
+    <div class="eyebrow">Trust</div>
+    <h2>Where your work goes, and who can see it</h2>
+    <p class="callout">The Cockpit measures how you use AI, not what you say to it.</p>
+    <table class="who">
+      <thead><tr><th>Where</th><th>What it sees</th><th>Who can see it</th></tr></thead>
+      <tbody>
+        <tr class="o"><td>Claude<small>the brain</small></td><td>What you type and what it answers, so it can do the work</td><td>Stays inside Cisco's AWS</td></tr>
+        <tr class="o"><td>The proxy<small>the front desk</small></td><td>Who you are, how much you used, what it cost</td><td>Powers your budget caps and the Webex budget bot</td></tr>
+        <tr class="g"><td>Folders on your laptop<small>not pushed to GitHub</small></td><td>Claude reads files only when you ask it to. The Cockpit does not collect your project folders.</td><td>Only you, until you push</td></tr>
+        <tr class="i"><td>Leadership dashboards</td><td>Counts only: active users, spend by team, which tools ran</td><td>Leaders, as rollups</td></tr>
+        <tr class="g"><td>Cockpit admins</td><td>Your Claude setup: skills, agents, slash commands, CLAUDE.md, settings</td><td>Platform admins only, kept 90 days</td></tr>
+        <tr><td>GitHub</td><td>Only what you commit and push</td><td>Private repo: you, people you add, and org admins<br>Public repo: anyone who can reach that GitHub site</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 8b Repo explainer -->
+  <section class="slide">
+    <div class="eyebrow">Trust</div>
+    <h2>Your project folders stay yours</h2>
+    <div class="grid g2">
+      <div class="card"><h3>What is a repo?</h3><p>A project folder with built-in version history. Git records who changed what and when, and GitHub is the website that hosts these folders so teams can share them.</p></div>
+      <div class="card g"><h3>What the Cockpit does not read</h3><p>The files in your project repos, such as meeting minutes, reports and customer notes. It only sees your Claude setup, not your project work.</p></div>
+      <div class="card o"><h3>One thing to watch</h3><p>Skills and CLAUDE.md files are part of your Claude setup, so keep customer-specific details out of them.</p></div>
+      <div class="card i"><h3>Guardrails and budget</h3><p>Credential files are blocked from model requests, and you get a push reminder after an hour. Everyone has a spending cap, with Webex warnings at 50%, 80% and 100%.</p></div>
+    </div>
+  </section>
+
+  <!-- 9 Keeping current -->
+  <section class="slide">
+    <div class="eyebrow">Staying up to date</div>
+    <h2>It updates itself</h2>
+    <ul class="clean">
+      <li><b>Automatic:</b> every time you start Claude Code, it picks up the newest skills, rules and security policy.</li>
+      <li><b>Manual, if you ever need it:</b> run <code>cx-us-ps-claude update</code></li>
+      <li><b>Nothing else to remember.</b> New approved tools reach everyone without reinstalling.</li>
+    </ul>
+  </section>
+
+  <!-- 10 Where going -->
+  <section class="slide">
+    <div class="eyebrow">Where it's going</div>
+    <h2>The roadmap</h2>
+    <ul class="clean">
+      <li><b>Now:</b> 31 capabilities live in production, covering guardrails, cost controls, adoption reporting and guided setup in Webex.</li>
+      <li><b>Next:</b> the web experience (catalog, AI search, role-based Collections, Stats) is in beta, targeted for October 2026.</li>
+      <li><b>Connectors:</b> SDC and Cisco IQ, so Claude reads live project data directly.</li>
+      <li><b>The long arc:</b> one sentence, several Cisco systems, one result.</li>
+    </ul>
+    <p class="note">[Update with the five upcoming items from the Roadmap page once confirmed.]</p>
+  </section>
+
+  <!-- 11 Where to ask -->
+  <section class="slide">
+    <div class="eyebrow">Questions</div>
+    <h2>Where to ask</h2>
+    <div class="grid g2">
+      <div class="card"><h3>Questions and help</h3><p>Join the Cockpit Webex support space:<br><a href="https://eurl.io/#uUbdphU6U">eurl.io/#uUbdphU6U</a></p></div>
+      <div class="card o"><h3>Bugs and ideas</h3><p>Use the feedback form:<br><a href="https://cx-ai-cockpit.cisco.com/support/feedback">cx-ai-cockpit.cisco.com/support/feedback</a></p></div>
+    </div>
+  </section>
+
+</div>
+<div class="hint">Arrow keys or space to move</div>
+<div class="hud" id="hud"></div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var hud = document.getElementById('hud');
+  var i = 0, step = 0;
+
+  function steps(s) { return parseInt(s.getAttribute('data-steps') || '0', 10); }
+  function render() {
+    slides.forEach(function (s, n) { s.classList.toggle('active', n === i); });
+    var s = slides[i];
+    if (steps(s)) {
+      var layers = s.querySelectorAll('.layer');
+      // layers are listed bottom-up in the DOM, so reveal in DOM order
+      layers.forEach(function (l, n) { l.classList.toggle('show', n < step); });
+    }
+    hud.textContent = (i + 1) + ' / ' + slides.length;
+    updateInstruments();
+    if (boarded && i !== lastI) flyby();
+    lastI = i;
+  }
+  function next() {
+    var s = slides[i];
+    if (steps(s) && step < steps(s)) { step++; render(); return; }
+    if (i < slides.length - 1) { i++; step = 0; render(); }
+  }
+  function prev() {
+    var s = slides[i];
+    if (steps(s) && step > 0) { step--; render(); return; }
+    if (i > 0) { i--; step = steps(slides[i]); render(); }
+  }
+  document.addEventListener('keydown', function (e) {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].indexOf(e.key) > -1) { e.preventDefault(); next(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].indexOf(e.key) > -1) { e.preventDefault(); prev(); }
+  });
+  document.addEventListener('click', function (e) {
+    if (boarded && e.target.tagName !== 'A' && !e.target.closest('#music')) next();
+  });
+
+  // ----- aviation flair -----
+  var boarded = false, lastI = 0, jet = document.getElementById('jet');
+  var ALT = [0, 8000, 15000, 22000, 28000, 31000, 33000, 35000, 35000, 35000, 36000, 12000];
+  function updateInstruments() {
+    var a = ALT[i] != null ? ALT[i] : 35000, el = document.getElementById('alt');
+    var from = parseInt(el.getAttribute('data-v') || '0', 10), t0 = performance.now();
+    el.setAttribute('data-v', a);
+    (function tick(t) {
+      var p = Math.min(1, Math.max(0, (t - t0) / 900)), v = Math.round(from + (a - from) * p);
+      el.textContent = v.toLocaleString(); if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+    document.getElementById('hdg').textContent = String((90 + i * 23) % 360).padStart(3, '0');
+    document.getElementById('wpt').textContent = (i + 1) + '/' + slides.length;
+    var pct = slides.length > 1 ? i / (slides.length - 1) * 100 : 0;
+    document.getElementById('done').style.width = pct + '%';
+    document.getElementById('plane').style.left = pct + '%';
+  }
+  function flyby() {
+    jet.classList.remove('fly'); void jet.offsetWidth;
+    jet.style.top = (8 + Math.random() * 22) + 'vh'; jet.classList.add('fly');
+  }
+
+  var sky = document.getElementById('sky');
+  for (var c = 0; c < 7; c++) {
+    var d = document.createElement('div'); d.className = 'cloud';
+    d.style.cssText = 'top:' + (10 + Math.random() * 75) + 'vh;width:' + (22 + Math.random() * 30) + 'vw;height:' + (5 + Math.random() * 9) +
+      'vh;animation-duration:' + (50 + Math.random() * 60) + 's;animation-delay:-' + (Math.random() * 80) + 's';
+    sky.appendChild(d);
+  }
+  for (var k = 0; k < 5; k++) {
+    var e = document.createElement('div'); e.className = 'streak';
+    e.style.cssText = 'top:' + (8 + Math.random() * 85) + 'vh;animation-duration:' + (3 + Math.random() * 4) + 's;animation-delay:-' + (Math.random() * 6) + 's';
+    sky.appendChild(e);
+  }
+
+  // ----- music: the YouTube video from "intro url.txt", audio only (player is hidden) -----
+  var VIDEO_ID = 'EZfM2VMs_vI', player = null, musicOn = false, mbtn = document.getElementById('music');
+  function setBtn() { mbtn.innerHTML = '&#9835; MUSIC ' + (musicOn ? 'ON' : 'OFF'); }
+  // Fallback: a local MP3 (assets/danger-zone.mp3) used when YouTube is blocked, offline or slow to start.
+  var fallback = document.getElementById('fallback'), usingFallback = false, ytTimer = null;
+  function useFallback() {
+    if (usingFallback) return;
+    usingFallback = true; clearTimeout(ytTimer);
+    try { if (player && player.stopVideo) player.stopVideo(); } catch (err) {}
+    fallback.play().then(function () { musicOn = true; setBtn(); })
+      .catch(function () { musicOn = false; setBtn(); mbtn.title = 'No music available'; });
+  }
+  function loadYT() {
+    var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api';
+    tag.onerror = useFallback; document.head.appendChild(tag);
+    ytTimer = setTimeout(useFallback, 8000);
+    window.onYouTubeIframeAPIReady = function () {
+      player = new YT.Player('yt', {
+        videoId: VIDEO_ID,
+        playerVars: { autoplay: 1, controls: 0, playsinline: 1, rel: 0, loop: 1, playlist: VIDEO_ID },
+        events: {
+          onReady: function (ev) { ev.target.setVolume(85); ev.target.playVideo(); },
+          onStateChange: function (ev) { if (ev.data === 1) clearTimeout(ytTimer); },
+          onError: useFallback
+        }
+      });
+    };
+  }
+  function start(withMusic) {
+    boarded = true; document.getElementById('boarding').classList.add('gone'); flyby();
+    musicOn = withMusic; setBtn(); if (withMusic) loadYT();
+  }
+  document.getElementById('takeoff').addEventListener('click', function (e) { e.stopPropagation(); start(true); });
+  document.getElementById('skip').addEventListener('click', function (e) { e.stopPropagation(); start(false); });
+  mbtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (!player && !usingFallback) { musicOn = true; setBtn(); loadYT(); return; }
+    musicOn = !musicOn; setBtn();
+    if (usingFallback) { if (musicOn) fallback.play(); else fallback.pause(); }
+    else if (musicOn) player.playVideo(); else player.pauseVideo();
+  });
+  render();
+})();
+</script>

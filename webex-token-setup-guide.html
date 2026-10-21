@@ -1,0 +1,600 @@
+<title>Webex Token Setup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg:          #F7F9FC;
+    --surface:     #FFFFFF;
+    --text:        #1A2B3C;
+    --text-2:      #4A5D70;
+    --text-3:      #7A8FA0;
+    --accent:      #0B6E55;
+    --accent-lt:   #E3F4EF;
+    --rule:        #DCE4EE;
+    --code-bg:     #1E2D3D;
+    --code-text:   #B8D4E8;
+    --code-hl:     #5BBFA0;
+    --warn-bg:     #FEF8EC;
+    --warn-border: #F59E0B;
+    --warn-text:   #78380A;
+    --ok-bg:       #EDFAF5;
+    --ok-border:   #0B6E55;
+    --ok-text:     #064733;
+    --step-num:    #0B6E55;
+    --tag-bg:      #E3F4EF;
+    --tag-text:    #0B6E55;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:          #0F1A24;
+      --surface:     #162230;
+      --text:        #DCE8F0;
+      --text-2:      #8AA3B8;
+      --text-3:      #5A7A90;
+      --accent:      #2DD4A8;
+      --accent-lt:   #0A2820;
+      --rule:        #1E3040;
+      --code-bg:     #0A141E;
+      --code-text:   #B8D4E8;
+      --code-hl:     #2DD4A8;
+      --warn-bg:     #1E1606;
+      --warn-border: #D97706;
+      --warn-text:   #FCD34D;
+      --ok-bg:       #061A12;
+      --ok-border:   #2DD4A8;
+      --ok-text:     #6EE7C8;
+      --step-num:    #2DD4A8;
+      --tag-bg:      #0A2820;
+      --tag-text:    #2DD4A8;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:          #0F1A24;
+    --surface:     #162230;
+    --text:        #DCE8F0;
+    --text-2:      #8AA3B8;
+    --text-3:      #5A7A90;
+    --accent:      #2DD4A8;
+    --accent-lt:   #0A2820;
+    --rule:        #1E3040;
+    --code-bg:     #0A141E;
+    --code-text:   #B8D4E8;
+    --code-hl:     #2DD4A8;
+    --warn-bg:     #1E1606;
+    --warn-border: #D97706;
+    --warn-text:   #FCD34D;
+    --ok-bg:       #061A12;
+    --ok-border:   #2DD4A8;
+    --ok-text:     #6EE7C8;
+    --step-num:    #2DD4A8;
+    --tag-bg:      #0A2820;
+    --tag-text:    #2DD4A8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 52px 32px 80px;
+  }
+
+  /* ── HEADER ── */
+  .doc-header {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .doc-header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 10px;
+    text-wrap: balance;
+  }
+
+  .doc-header .subtitle {
+    font-size: 14.5px;
+    font-weight: 300;
+    color: var(--text-2);
+    max-width: 540px;
+    line-height: 1.6;
+  }
+
+  /* ── LIFECYCLE SUMMARY ── */
+  .lifecycle {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-bottom: 44px;
+  }
+
+  .lc-card {
+    background: var(--surface);
+    padding: 18px 16px;
+    border-top: 3px solid var(--rule);
+  }
+
+  .lc-card:first-child { border-top-color: var(--accent); border-radius: 6px 0 0 6px; }
+  .lc-card:nth-child(2) { border-top-color: var(--warn-border); }
+  .lc-card:last-child  { border-top-color: #C0392B; border-radius: 0 6px 6px 0; }
+
+  .lc-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 4px;
+  }
+
+  .lc-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .lc-card p {
+    font-size: 11.5px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
+  /* ── SECTION HEADING ── */
+  .section { margin-bottom: 40px; }
+
+  h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+
+  .step {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--step-num);
+    min-width: 24px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .step-body { flex: 1; min-width: 0; }
+
+  .step-body h3 {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .step-body p {
+    font-size: 13.5px;
+    color: var(--text-2);
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  .step-body p:last-child { margin-bottom: 0; }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    overflow-x: auto;
+  }
+
+  .code-block .prompt {
+    color: var(--text-3);
+    user-select: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+  }
+
+  .code-block code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    color: var(--code-text);
+    display: block;
+    line-height: 1.7;
+    white-space: pre;
+  }
+
+  .code-block code .hl { color: var(--code-hl); }
+  .code-block code .dim { color: var(--text-3); opacity: .7; }
+
+  /* inline code */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    background: var(--accent-lt);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .code-block code { background: none; color: var(--code-text); padding: 0; }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    border-left: 3px solid;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .callout.warn {
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+
+  .callout.ok {
+    background: var(--ok-bg);
+    border-color: var(--ok-border);
+    color: var(--ok-text);
+  }
+
+  .callout strong { font-weight: 600; }
+
+  /* ── PREREQ CHECKLIST ── */
+  .checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--text-2);
+  }
+
+  .check-icon {
+    font-size: 13px;
+    color: var(--accent);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .checklist li strong { color: var(--text); }
+
+  /* ── TROUBLESHOOT TABLE ── */
+  .trouble {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .trouble-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0;
+    background: var(--surface);
+    border-radius: 0;
+  }
+
+  .trouble-row:first-child { border-radius: 6px 6px 0 0; }
+  .trouble-row:last-child  { border-radius: 0 0 6px 6px; }
+
+  .trouble-symptom {
+    padding: 14px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #C0392B;
+    background: var(--surface);
+    border-right: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+  }
+
+  .trouble-fix {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+
+  .trouble-fix strong { color: var(--text); }
+
+  /* ── DIVIDER ── */
+  hr { border: none; border-top: 1px solid var(--rule); margin: 40px 0; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 520px) {
+    .page { padding: 32px 18px 60px; }
+    .lifecycle { grid-template-columns: 1fr; }
+    .lc-card { border-radius: 0 !important; border-top-color: var(--rule) !important; border-left: 3px solid; }
+    .lc-card:first-child { border-left-color: var(--accent); border-radius: 6px 6px 0 0 !important; }
+    .lc-card:last-child { border-radius: 0 0 6px 6px !important; }
+    .trouble-row { grid-template-columns: 1fr; }
+    .trouble-symptom { border-right: none; border-bottom: 1px solid var(--rule); }
+  }
+</style>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div class="eyebrow">Internal Setup Guide · Cisco CX</div>
+    <h1>Webex MCP — 90-Day Auth Token Setup</h1>
+    <p class="subtitle">How to authenticate the Webex MCP server so Claude Code can pull meeting transcripts, recaps, and attendee data. Takes about 2 minutes. Must be repeated every ~90 days.</p>
+  </div>
+
+  <!-- LIFECYCLE -->
+  <div class="lifecycle">
+    <div class="lc-card">
+      <div class="lc-label">Access Token</div>
+      <div class="lc-val">~14 days</div>
+      <p>Auto-refreshed silently in the background. You never need to touch this.</p>
+    </div>
+    <div class="lc-card">
+      <div class="lc-label">Refresh Token</div>
+      <div class="lc-val">~90 days</div>
+      <p>Keeps the access token alive. When this expires, run <code>npm run auth</code> again.</p>
+    </div>
+    <div class="lc-card">
+      <div class="lc-label">Re-auth Required</div>
+      <div class="lc-val">Every 90 days</div>
+      <p>One 2-minute browser click. Claude Code will give a 401 error as the reminder.</p>
+    </div>
+  </div>
+
+  <!-- PREREQUISITES -->
+  <div class="section">
+    <h2>Before You Start</h2>
+    <ul class="checklist">
+      <li>
+        <span class="check-icon">›</span>
+        <span><strong>Node.js installed</strong> — open a terminal and run <code>node --version</code>. If you see a version number, you're good. If not, download from <strong>nodejs.org</strong> (LTS version).</span>
+      </li>
+      <li>
+        <span class="check-icon">›</span>
+        <span><strong>The <code>webex-mcp-oauth</code> folder</strong> — located at <code>C:\Users\[you]\webex-mcp-oauth\</code>. It should contain <code>auth-server.js</code>, <code>token.js</code>, <code>package.json</code>, and a <code>.env</code> file.</span>
+      </li>
+      <li>
+        <span class="check-icon">›</span>
+        <span><strong>The <code>.env</code> file</strong> — must have <code>WEBEX_CLIENT_ID</code> and <code>WEBEX_CLIENT_SECRET</code> filled in. Get these from whoever set up your Webex OAuth app, or from the team's shared credentials doc. The file is hidden by default — make sure it's named exactly <code>.env</code>, not <code>.env.txt</code>.</span>
+      </li>
+      <li>
+        <span class="check-icon">›</span>
+        <span><strong>Port 8080 free</strong> — the auth server runs briefly on this port. If something else is using it, that program will need to be closed first.</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- STEPS -->
+  <div class="section">
+    <h2>Steps</h2>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <h3>Open a terminal in the right folder</h3>
+          <p>Open PowerShell or Command Prompt. Navigate to the <code>webex-mcp-oauth</code> folder:</p>
+          <div class="code-block">
+            <code><span class="dim"># Paste this exactly, replacing [you] with your username</span>
+cd C:\Users\[you]\webex-mcp-oauth</code>
+          </div>
+          <p>Alternatively, open File Explorer, navigate to that folder, right-click in the empty space, and choose <strong>Open in Terminal</strong>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <h3>Install dependencies <span style="font-weight:300;font-size:12px;color:var(--text-3)">(first time only)</span></h3>
+          <p>If you've never run this before, install the required packages first:</p>
+          <div class="code-block">
+            <code>npm install</code>
+          </div>
+          <p>Skip this step on subsequent re-auths — you only need to do it once.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <h3>Run the auth command</h3>
+          <div class="code-block">
+            <code><span class="hl">npm run auth</span></code>
+          </div>
+          <p>The terminal will print a long URL and show a waiting message. Something like:</p>
+          <div class="code-block">
+            <code><span class="dim">╔════════════════════════════════════════════╗
+║       Webex OAuth — One-Time Setup         ║
+╚════════════════════════════════════════════╝
+
+⚠️  The auth code Webex sends expires in ~60 seconds.
+
+👉 Open this URL in your browser RIGHT NOW:
+
+   https://webexapis.com/v1/authorize?response_type=code&...</span></code>
+          </div>
+          <div class="callout warn">
+            <strong>⚠️ Act fast.</strong> The auth code Webex sends back expires in about <strong>60 seconds</strong>. As soon as you see the URL in the terminal, copy it and open it in your browser immediately — don't pause to read this guide first.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-body">
+          <h3>Approve in your browser</h3>
+          <p>The URL opens a Webex login/approval page. If you're already signed in to Webex, you'll land directly on the permission screen. Click <strong>Accept</strong>.</p>
+          <p>The browser will briefly redirect to <code>localhost:8080/callback</code> and then show:</p>
+          <div class="callout ok">
+            <strong>✅ Authentication successful!</strong> Your tokens have been saved to <code>tokens.json</code>. You can close this tab and return to the terminal.
+          </div>
+          <p>If you see an error instead, the 60-second window likely expired. Just run <code>npm run auth</code> again — it resets cleanly.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">05</div>
+        <div class="step-body">
+          <h3>Verify the token was saved</h3>
+          <p>Back in the terminal you should see:</p>
+          <div class="code-block">
+            <code><span class="hl">✅ tokens.json saved. You are authenticated.</span></code>
+          </div>
+          <p>You can also open <code>tokens.json</code> in the folder — it should contain <code>access_token</code>, <code>refresh_token</code>, and two expiry timestamps. If the file is there with those four fields, you're done.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">06</div>
+        <div class="step-body">
+          <h3>Test that it works</h3>
+          <p>Ask Claude Code to pull a recent meeting transcript — for example: <em>"meeting minutes [any recent meeting name]"</em>. If it returns transcript content instead of a 401 error, the token is live and working.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- WHAT HAPPENS AUTOMATICALLY -->
+  <div class="section">
+    <h2>What Happens Automatically</h2>
+    <p style="font-size:13.5px;color:var(--text-2);margin-bottom:14px;">You don't need to touch anything between re-auths. Here's what runs on its own:</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num" style="color:var(--text-3)">↻</div>
+        <div class="step-body">
+          <h3>Access token auto-refresh (every ~14 days)</h3>
+          <p>The Python transcript scripts silently call the Node refresh logic before every API call. If the access token is expired or close to expiry, it exchanges the refresh token for a new one and overwrites <code>tokens.json</code> automatically. No action needed.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="color:var(--text-3)">✓</div>
+        <div class="step-body">
+          <h3>Transcript pulls on every meeting minutes run</h3>
+          <p>Every time you run a "meeting minutes" command, Claude Code calls the Webex API to pull the transcript for that session. The token refresh runs as part of that call — so as long as you're running meeting minutes regularly, the token stays warm.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- WHEN TO RE-AUTH -->
+  <div class="section">
+    <h2>When to Re-Authenticate</h2>
+    <p style="font-size:13.5px;color:var(--text-2);margin-bottom:14px;">Re-run <code>npm run auth</code> (Steps 1 → 6 above) in either of these situations:</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">A</div>
+        <div class="step-body">
+          <h3>Every ~90 days (calendar reminder)</h3>
+          <p>The refresh token itself expires after approximately 90 days. After that, the auto-refresh stops working and every transcript pull will return a 401 error. Set a recurring calendar reminder 85 days after each auth to give yourself a buffer.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">B</div>
+        <div class="step-body">
+          <h3>When Claude Code reports a 401 error</h3>
+          <p>If a meeting minutes run shows <code>[ERROR fetching meetings: 401 Client Error: Unauthorized]</code>, that's the signal the refresh token has expired. Run <code>npm run auth</code> and the error goes away.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- TROUBLESHOOTING -->
+  <div class="section">
+    <h2>Troubleshooting</h2>
+    <div class="trouble">
+      <div class="trouble-row">
+        <div class="trouble-symptom">401 Unauthorized</div>
+        <div class="trouble-fix"><strong>Refresh token expired.</strong> Run <code>npm run auth</code> to re-authenticate. Takes 2 minutes.</div>
+      </div>
+      <div class="trouble-row">
+        <div class="trouble-symptom">Auth code expired</div>
+        <div class="trouble-fix"><strong>You didn't click Accept fast enough.</strong> The code is valid for ~60 seconds. Run <code>npm run auth</code> again and open the URL immediately.</div>
+      </div>
+      <div class="trouble-row">
+        <div class="trouble-symptom">EADDRINUSE :8080</div>
+        <div class="trouble-fix"><strong>Port 8080 is in use.</strong> Close whatever is using it (check Task Manager for Node processes) or wait a moment and retry.</div>
+      </div>
+      <div class="trouble-row">
+        <div class="trouble-symptom">Missing .env variables</div>
+        <div class="trouble-fix"><strong>The <code>.env</code> file is missing or incomplete.</strong> Confirm the file exists in the <code>webex-mcp-oauth</code> folder, is named exactly <code>.env</code> (not <code>.env.txt</code>), and contains both <code>WEBEX_CLIENT_ID</code> and <code>WEBEX_CLIENT_SECRET</code>.</div>
+      </div>
+      <div class="trouble-row">
+        <div class="trouble-symptom">tokens.json not found</div>
+        <div class="trouble-fix"><strong>Auth hasn't been run yet, or the file was deleted.</strong> Run <code>npm run auth</code> from the start to create it.</div>
+      </div>
+      <div class="trouble-row">
+        <div class="trouble-symptom">node: command not found</div>
+        <div class="trouble-fix"><strong>Node.js isn't installed.</strong> Download the LTS version from <strong>nodejs.org</strong> and install it. Restart your terminal afterward.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:48px;padding-top:20px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--text-3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span>Cisco CX · Internal tooling guide</span>
+    <span>webex-mcp-oauth · tokens.json at C:\Users\[you]\webex-mcp-oauth\</span>
+  </div>
+
+</div>

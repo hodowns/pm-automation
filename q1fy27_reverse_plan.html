@@ -1,0 +1,581 @@
+<!doctype html>
+<title>Q1 FY27 Reverse Plan Calendar</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#E9ECF4;--surface:#FFF;--surface2:#F4F6FA;--border:#D0D7E4;--border2:#E2E6EF;
+  --text:#18253D;--text2:#4C5C7A;--text3:#8093B0;
+  --accent:#1E50D8;--accent-bg:#EBF0FD;
+  --risk:#C85D0D;--risk-bg:#FFF3EA;--risk-bd:#F0BFA0;
+  --up:#1A7C52;--up-bg:#E7FAF2;--up-bd:#9AE4C4;
+  --mcc:#5B1EC4;--mcc-bg:#F2EDFD;--mcc-bd:#C4AEF0;
+  --warn:#956200;--warn-bg:#FFFAEB;--warn-bd:#F0D890;
+  --danger:#B01C1C;
+  --hh:52px;--th:44px;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1421;--surface:#141D2F;--surface2:#1B2540;--border:#263350;--border2:#1E2C46;
+    --text:#DCE6F8;--text2:#7D97C4;--text3:#4B6090;
+    --accent:#5580F8;--accent-bg:#1A2650;
+    --risk:#EF8240;--risk-bg:#281408;--risk-bd:#5A2E0A;
+    --up:#4EC492;--up-bg:#081E12;--up-bd:#1A4C30;
+    --mcc:#9E70F0;--mcc-bg:#1A0E30;--mcc-bd:#3E2468;
+    --warn:#E0A030;--warn-bg:#1C1400;--warn-bd:#4A3200;
+    --danger:#F06060;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1421;--surface:#141D2F;--surface2:#1B2540;--border:#263350;--border2:#1E2C46;
+  --text:#DCE6F8;--text2:#7D97C4;--text3:#4B6090;
+  --accent:#5580F8;--accent-bg:#1A2650;
+  --risk:#EF8240;--risk-bg:#281408;--risk-bd:#5A2E0A;
+  --up:#4EC492;--up-bg:#081E12;--up-bd:#1A4C30;
+  --mcc:#9E70F0;--mcc-bg:#1A0E30;--mcc-bd:#3E2468;
+  --warn:#E0A030;--warn-bg:#1C1400;--warn-bd:#4A3200;
+  --danger:#F06060;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+img{max-width:100%}[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;line-height:1.5;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+#app{display:flex;flex-direction:column;min-height:100%}
+
+/* Header */
+#hdr{height:var(--hh);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;position:sticky;top:env(safe-area-inset-top,0);z-index:200}
+.hdr-logo{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--text);white-space:nowrap}
+.hdr-logo em{color:var(--accent);font-style:normal}
+.hdiv{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.hsp{flex:1}
+.hdr-today{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
+.hdr-q1{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--mcc);background:var(--mcc-bg);border:1px solid var(--mcc-bd);padding:3px 9px;border-radius:3px;white-space:nowrap}
+.hdr-theme{background:none;border:1px solid var(--border);color:var(--text3);font-size:12px;padding:4px 8px;border-radius:3px;line-height:1}
+.hdr-theme:hover{color:var(--text)}
+
+/* Tabs */
+#tabs{height:var(--th);background:var(--surface);border-bottom:2px solid var(--border);display:flex;align-items:flex-end;padding:0 20px;position:sticky;top:var(--hh);z-index:190;overflow-x:auto;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{font-size:12px;font-weight:500;color:var(--text3);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:8px 16px 11px;white-space:nowrap;transition:color .1s,border-color .1s}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--accent);border-color:var(--accent);font-weight:600}
+
+/* Content */
+#content{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:20px 20px 48px}
+.panel{display:none}.panel.active{display:block}
+
+/* Section label */
+.sec{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;margin-top:24px}
+.sec:first-child{margin-top:0}
+
+/* Tiles */
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:10px 14px;min-width:90px}
+.tile-n{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;line-height:1;color:var(--text);font-variant-numeric:tabular-nums}
+.tile-l{font-size:11px;color:var(--text3);margin-top:2px}
+.t-risk .tile-n{color:var(--risk)}
+.t-up .tile-n{color:var(--up)}
+.t-slip .tile-n{color:var(--danger)}
+.t-warn .tile-n{color:var(--warn)}
+.t-rev .tile-n{font-size:20px}
+.t-cnt .tile-n{font-size:20px}
+
+/* Calendar */
+.cal-month{margin-bottom:20px}
+.cal-month-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:5px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.cal-dow{background:var(--surface2);text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:5px 3px}
+.cal-day{background:var(--surface);min-height:86px;padding:5px;display:flex;flex-direction:column;gap:2px}
+.cal-day.wk{background:var(--surface2);opacity:.75}
+.cal-day.mcc-cutoff{background:var(--mcc-bg)}
+.cal-day.five-day-rule{background:var(--warn-bg)}
+.cal-top{display:flex;align-items:center;gap:4px;margin-bottom:1px;flex-wrap:wrap}
+.cal-n{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--text3);line-height:1;min-width:16px}
+.today-ring{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#fff;line-height:1}
+.cal-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 4px;border-radius:2px;line-height:1.4}
+.lbl-mcc{background:var(--mcc-bg);color:var(--mcc);border:1px solid var(--mcc-bd)}
+.lbl-5d{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd)}
+.cal-chips{display:flex;flex-direction:column;gap:2px}
+.cc{display:flex;align-items:baseline;gap:3px;padding:2px 4px;border-left:2px solid;border-radius:0 2px 2px 0;cursor:default;position:relative}
+.cc-risk{border-color:var(--risk);background:var(--risk-bg)}
+.cc-up{border-color:var(--up);background:var(--up-bg)}
+.cc-t{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;flex-shrink:0}
+.cc-risk .cc-t{color:var(--risk)}
+.cc-up .cc-t{color:var(--up)}
+.cc-nm{font-size:9.5px;font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+
+/* Tooltip */
+#tip{position:fixed;background:var(--text);color:var(--surface);font-size:11px;font-family:'IBM Plex Sans',sans-serif;padding:5px 9px;border-radius:3px;pointer-events:none;z-index:500;max-width:260px;line-height:1.45;white-space:normal;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:5px}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--surface2)}
+thead th{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:7px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);font-family:'IBM Plex Sans',sans-serif}
+tbody tr{background:var(--surface);border-bottom:1px solid var(--border2)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:7px 10px;color:var(--text2);vertical-align:top}
+
+/* Badges + chips */
+.pid{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--accent)}
+.rev{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dt{font-family:'IBM Plex Mono',monospace;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text2)}
+.tbdg{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 5px;border-radius:2px}
+.tbdg-risk{background:var(--risk-bg);color:var(--risk);border:1px solid var(--risk-bd)}
+.tbdg-up{background:var(--up-bg);color:var(--up);border:1px solid var(--up-bd)}
+.scip{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.sc-done{background:var(--up-bg);color:var(--up)}
+.sc-prog{background:var(--accent-bg);color:var(--accent)}
+.sc-no{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
+.sc-hold{background:var(--warn-bg);color:var(--warn)}
+.mkt{display:inline-block;font-size:9px;font-weight:600;padding:1px 5px;border-radius:2px;white-space:nowrap}
+.mkt-se{background:#EBF0FD;color:#1E50D8}
+.mkt-sw{background:#F2EDFD;color:#5B1EC4}
+.mkt-civ{background:#E6F3FA;color:#0A5F8C}
+.mkt-nso{background:#E7FAF2;color:#1A7C52}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .mkt-se{background:#1A2650;color:#5580F8}
+  :root:not([data-theme="light"]) .mkt-sw{background:#1A0E30;color:#9E70F0}
+  :root:not([data-theme="light"]) .mkt-civ{background:#061624;color:#3AACEE}
+  :root:not([data-theme="light"]) .mkt-nso{background:#081E12;color:#4EC492}
+}
+:root[data-theme="dark"] .mkt-se{background:#1A2650;color:#5580F8}
+:root[data-theme="dark"] .mkt-sw{background:#1A0E30;color:#9E70F0}
+:root[data-theme="dark"] .mkt-civ{background:#061624;color:#3AACEE}
+:root[data-theme="dark"] .mkt-nso{background:#081E12;color:#4EC492}
+.flags{display:flex;flex-wrap:wrap;gap:3px}
+.flag{font-size:9px;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:2px;text-transform:uppercase}
+.f-slip{background:var(--danger);color:#fff}
+.f-stale{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd)}
+.f-late{background:var(--risk-bg);color:var(--risk);border:1px solid var(--risk-bd)}
+.prog-wrap{display:flex;align-items:center;gap:6px}
+.prog-bar{width:44px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0}
+.prog-fill{height:100%;border-radius:2px}
+.pf-zero{background:var(--border)}
+.pf-full{background:var(--up)}
+.pf-part{background:var(--accent)}
+.prog-frac{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+.ms-slip td:first-child{border-left:3px solid var(--danger)}
+.ms-ok td:first-child{border-left:3px solid var(--up)}
+.ms-warn td:first-child{border-left:3px solid var(--warn)}
+.ms-late td:first-child{border-left:3px solid var(--risk)}
+.trunc{max-width:260px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;cursor:pointer}
+.trunc.open{display:block;-webkit-line-clamp:unset}
+.more-btn{font-size:10px;color:var(--accent);background:none;border:none;padding:0;cursor:pointer;display:block;margin-top:2px}
+
+/* Coverage lists */
+.cov-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+@media(max-width:900px){.cov-grid{grid-template-columns:1fr}}
+.cov-hd{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:4px 4px 0 0;border:1px solid;border-bottom:none}
+.cov-risk{background:var(--risk-bg);color:var(--risk);border-color:var(--risk-bd)}
+.cov-up{background:var(--up-bg);color:var(--up);border-color:var(--up-bd)}
+.cov-tbl{overflow-x:auto;border:1px solid var(--border);border-radius:0 0 4px 4px}
+
+/* PM Guide */
+.guide{max-width:760px}
+.guide-h0{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1.1;text-wrap:balance;margin-bottom:4px}
+.guide-sub{font-size:13px;color:var(--text3);margin-bottom:24px}
+.g-h1{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:5px;margin:24px 0 10px}
+.g-h2{font-size:13px;font-weight:600;color:var(--text);margin:14px 0 6px}
+.g-p{font-size:13px;color:var(--text2);line-height:1.65;max-width:65ch;margin-bottom:8px}
+.g-p strong{color:var(--text);font-weight:600}
+.g-ul{list-style:none;padding:0;margin-bottom:8px}
+.g-ul li{font-size:13px;color:var(--text2);line-height:1.6;padding-left:14px;position:relative;margin-bottom:4px;max-width:65ch}
+.g-ul li::before{content:'–';position:absolute;left:0;color:var(--text3)}
+code{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:2px;padding:0 4px;color:var(--accent)}
+.g-tbl-wrap{overflow-x:auto;margin-bottom:10px}
+.g-tbl{border-collapse:collapse;font-size:12px;width:100%}
+.g-tbl th{background:var(--surface2);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:6px 10px;text-align:left;border:1px solid var(--border)}
+.g-tbl td{padding:6px 10px;color:var(--text2);border:1px solid var(--border2);vertical-align:top;line-height:1.5}
+.g-tbl td:first-child{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);white-space:nowrap}
+
+@media(max-width:640px){
+  #content{padding:14px 12px 32px}
+  .cal-day{min-height:60px}
+  .cc-nm{display:none}
+  .tile-n{font-size:22px}
+  .tiles{gap:8px}
+}
+</style>
+
+<div id="app">
+<header id="hdr">
+  <span class="hdr-logo">Q1&thinsp;<em>FY27</em>&thinsp;Reverse Plan</span>
+  <div class="hdiv"></div>
+  <span class="hdr-sub">Upside · Risk Calendar</span>
+  <div class="hsp"></div>
+  <span class="hdr-today" id="hdr-today"></span>
+  <span class="hdr-q1">Q1 Closes Oct 20</span>
+  <button class="hdr-theme" id="theme-btn" aria-label="Toggle theme">◐</button>
+</header>
+<nav id="tabs">
+  <button class="tab active" data-tab="cal">Calendar</button>
+  <button class="tab" data-tab="week">This Week</button>
+  <button class="tab" data-tab="ms">Milestones</button>
+  <button class="tab" data-tab="guide">PM Guide</button>
+</nav>
+<main id="content">
+  <div id="panel-cal" class="panel active"></div>
+  <div id="panel-week" class="panel"></div>
+  <div id="panel-ms" class="panel"></div>
+  <div id="panel-guide" class="panel"></div>
+</main>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+/* ── Data ─────────────────────────────────────────────── */
+const CAL = {"calendar_months":[{"title":"Fiscal September FY27 (9/13 - 9/19)","weeks":[[{"day":"13","classes":["day"],"label":null,"projects":[]},{"day":"14","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"F32673","text":"R MassDOT Net-Sec (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A23296","text":"R NYC-T-PSAC IP PBX/Unified Coms (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"}]},{"day":"15","classes":["day","mcc-cutoff"],"label":"MCC Deadline","projects":[]},{"day":"16","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"A21924","text":"R PSAC Network Refresh Year 1 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (2) · Pending"}]},{"day":"17","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"A21924","text":"R PSAC Network Refresh Year 1 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"},{"status_class":"chip-yellow","market":"SLED West","pid":"F28761","text":"R F28761 (4) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (2) · Pending"}]},{"day":"18","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"F52127","text":"R Amtrak-T-Chicago Wifi-F52127 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C13061","text":"R CUNY IBLA (1) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F46581","text":"U F46581 - ONI CSW (2) · Pending"}]},{"day":"19","classes":["day"],"label":null,"projects":[]}]]},{"title":"Fiscal October FY27 (9/20 - 10/24)","weeks":[[{"day":"20","classes":["day"],"label":null,"projects":[]},{"day":"21","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"F32673","text":"R MassDOT Net-Sec (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A23296","text":"R NYC-T-PSAC IP PBX/Unified Coms (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"}]},{"day":"22","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"A23296","text":"R NYC-T-PSAC IP PBX/Unified Coms (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (3) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A82792","text":"U BCIT ACI Deployment A82792 (1) · Pending"}]},{"day":"23","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"F52127","text":"R Amtrak-T-Chicago Wifi-F52127 (2) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F54489","text":"U AMENTUM - F54489 - CUCM/ACI (1) · Pending"}]},{"day":"24","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (2) · Pending"}]},{"day":"25","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"C13061","text":"R CUNY IBLA (3) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A21924","text":"R PSAC Network Refresh Year 1 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED West","pid":"F28761","text":"R F28761 (2) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F46581","text":"U F46581 - ONI CSW (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (2) · Pending"}]},{"day":"26","classes":["day"],"label":null,"projects":[]}],[{"day":"27","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"B39036","text":"R B39036- Treasury OCC-T-HQ-WLAN (1) · Pending"}]},{"day":"28","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"F32673","text":"R MassDOT Net-Sec (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A21924","text":"R PSAC Network Refresh Year 1 (1) · Pending"}]},{"day":"29","classes":["day"],"label":null,"projects":[]},{"day":"30","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"F52127","text":"R Amtrak-T-Chicago Wifi-F52127 (1) · Pending"}]},{"day":"1","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F46581","text":"U F46581 - ONI CSW (1) · Pending"}]},{"day":"2","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"C13061","text":"R CUNY IBLA (4) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"F32673","text":"R MassDOT Net-Sec (1) · Pending"},{"status_class":"chip-yellow","market":"SLED West","pid":"F28761","text":"R F28761 (2) · Pending"}]},{"day":"3","classes":["day"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"C60032","text":"U AL OIT Security Segmentation (1) · Pending"}]}],[{"day":"4","classes":["day"],"label":null,"projects":[]},{"day":"5","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"F52127","text":"R Amtrak-T-Chicago Wifi-F52127 (1) · Pending"}]},{"day":"6","classes":["day"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"A82792","text":"U BCIT ACI Deployment A82792 (1) · Pending"}]},{"day":"7","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED West","pid":"F28761","text":"R F28761 (2) · Pending"}]},{"day":"8","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F46581","text":"U F46581 - ONI CSW (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (1) · Pending"}]},{"day":"9","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"B39036","text":"R B39036- Treasury OCC-T-HQ-WLAN (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F46581","text":"U F46581 - ONI CSW (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (2) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C60032","text":"U AL OIT Security Segmentation (2) · Pending"}]},{"day":"10","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"C13061","text":"R CUNY IBLA (2) · Pending"},{"status_class":"chip-yellow","market":"SLED West","pid":"C16464","text":"R C16464 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (1) · Pending"}]}],[{"day":"11","classes":["day"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"C60032","text":"U AL OIT Security Segmentation (1) · Pending"}]},{"day":"12","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"F52127","text":"R Amtrak-T-Chicago Wifi-F52127 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A21924","text":"R PSAC Network Refresh Year 1 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A82792","text":"U BCIT ACI Deployment A82792 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C60032","text":"U AL OIT Security Segmentation (2) · Pending"}]},{"day":"13","classes":["day","five-day-rule","has-risk"],"label":"MCC 5-Day Rule","projects":[{"status_class":"chip-yellow","market":"CIV","pid":"F52127","text":"R Amtrak-T-Chicago Wifi-F52127 (1) · Pending"}]},{"day":"14","classes":["day"],"label":null,"projects":[]},{"day":"15","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"B39036","text":"R B39036- Treasury OCC-T-HQ-WLAN (1) · Pending"},{"status_class":"chip-yellow","market":"SLED West","pid":"F28761","text":"R F28761 (4) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A82603","text":"U NYS ITS Migration A82603 (1) · Pending"}]},{"day":"16","classes":["day"],"label":null,"projects":[]},{"day":"17","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"SLED East","pid":"C13061","text":"R CUNY IBLA (4) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A82603","text":"U NYS ITS Migration A82603 (1) · Pending"}]}],[{"day":"18","classes":["day"],"label":null,"projects":[]},{"day":"19","classes":["day","has-risk"],"label":null,"projects":[{"status_class":"chip-yellow","market":"CIV","pid":"B39036","text":"R B39036- Treasury OCC-T-HQ-WLAN (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A21924","text":"R PSAC Network Refresh Year 1 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F54489","text":"U AMENTUM - F54489 - CUCM/ACI (2) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A82792","text":"U BCIT ACI Deployment A82792 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (2) · Pending"}]},{"day":"20","classes":["day","mcc-cutoff","has-risk"],"label":"MCC Deadline","projects":[{"status_class":"chip-yellow","market":"CIV","pid":"B39036","text":"R B39036- Treasury OCC-T-HQ-WLAN (1) · Pending"},{"status_class":"chip-yellow","market":"CIV","pid":"F52127","text":"R Amtrak-T-Chicago Wifi-F52127 (2) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A21924","text":"R PSAC Network Refresh Year 1 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"D08250","text":"R PSAC Nexus Refresh (1) · Pending"},{"status_class":"chip-yellow","market":"NSO","pid":"F54489","text":"U AMENTUM - F54489 - CUCM/ACI (2) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"A82603","text":"U NYS ITS Migration A82603 (1) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C10347","text":"U PSAC Network Refresh Year 2 (2) · Pending"},{"status_class":"chip-yellow","market":"SLED East","pid":"C60032","text":"U AL OIT Security Segmentation (2) · Pending"}]},{"day":"21","classes":["day"],"label":null,"projects":[]},{"day":"22","classes":["day"],"label":null,"projects":[]},{"day":"23","classes":["day"],"label":null,"projects":[]},{"day":"24","classes":["day"],"label":null,"projects":[]}]]}],"coverage_lists":[{"title":"Projects WITH a Reverse Plan – RISK (9)","header":["Market","Project","PID","Milestone(s)","Revenue $","Risk Profile","Reverse Plan"],"rows":[["CIV","Amtrak-T-Chicago Wifi-F52127","F52127","Completion of Solution Requirements Development","$39,648","High","CIV-F52127-Amtrak Chicago Wifi.xlsx"],["CIV","B39036- Treasury OCC-T-HQ-WLAN","B39036","MS 2","$39,184","High","B39036 Treasury OCC T-HQ-WLAN.xlsx"],["SLED East","CUNY IBLA","C13061","MS46: Completion of MGP,MGE,PMS,KT- BrooklynMS52","$115,999","High","CUNY IBLA Reverse Plans 09032026.xlsx"],["SLED East","PSAC Network Refresh Year 1","A21924","MS# 21: Completion of FDNY access layer switches Migration Plan Development and Migration Execution and Test Execution at PSAC2","$177,183","High","SLEDEast A21924 NY-T-PSAC Network Refresh Y1-Reverse Plan.xlsx"],["SLED East","PSAC Nexus Refresh","D08250","MS# 11 & MS# 12: FDNY VESTA Migration at PSAC 1 & 2","$352,327","High","SLEDEast D08250 NY-T-PSAC Nexus Refresh-Reverse Plan.xlsx"],["SLED West","C16464","C16464","Completion of Implementation and Testing Execution - Production Install","$350,013","High","SLW-C16464-CDT MMB.xlsx"],["SLED West","F28761","F28761","Milestone 6 - Migration Execution #2 / Milestone 7 - Migration Execution #3","$255,461","High","SLW-F28761-TxCH.xlsx"],["SLED East","MassDOT Net-Sec","F32673","9003: Completion of Implementation Support, 9005: Testing Support","$29,111","Low","SLED East F32673 MASSDOT NW and SEC - Reverse Plan.xlsx"],["SLED East","NYC-T-PSAC IP PBX/Unified Coms","A23296","MS 12 - Completion of Implementation Execution Production","$576,665","Low","SLEDEast A23296 NYC-T-PSAC IP PBX Unified Communication-Reverse Plan.xlsx"]]},{"title":"Projects WITH a Reverse Plan – UPSIDE (6)","header":["Market","Project","PID","Milestone(s)","Revenue $","Confidence","Reverse Plan"],"rows":[["SLED East","NYS ITS Migration A82603","A82603","MS#5 Completion of Post Migration Support Add-on","$322,131","35%","SLED East A82603 NY-T-NYS ITS Migration MS5 Reverse Plan.xlsx"],["SLED East","AL OIT Security Segmentation","C60032","MS# 4: Completion of Testing Execution","$465,156","25%","SLEDEast C60032 AL OIT Security Segmentation Reverse Plan.xlsx"],["SLED East","BCIT ACI Deployment A82792","A82792","MS#6 Completion of Post Implementation Support","$39,838","25%","SLED East A82792 MD-T-BCIT DC ACI Reverse Plan MS6 Q1.xlsx"],["NSO","F46581 - ONI CSW","F46581","MCC-1 - Completion of Solution Requirements Document","$51,382","15%","ONI CSW MCC-1 Reverse Plan.xlsx"],["SLED East","PSAC Network Refresh Year 2","C10347","MS# 11 & MS# 12: FDNY access layer switches at PSAC1 & PSAC2","$164,797","10%","SLEDEast C10347 NY-T-PSAC Network Refresh Y2 -Reverse Plan.xlsx"],["NSO","AMENTUM - F54489 - CUCM/ACI","F54489","MS 001–007: Full project scope","$254,446","5%","NSO-F54489_Amentum_Reverse Plan.xlsx"]]}],"current_week":{"header":["Due Date","Type","Market","Project","Milestone","Activity / Task","Owner","Status","Risk / Mitigation"],"rows":[["09/14/2026","Risk","SLED East","MassDOT Net-Sec","9003: Completion of Implementation Support, 9005: Testing Support","Firewall Testing Session","","",""],["09/14/2026","Risk","SLED East","NYC-T-PSAC IP PBX/Unified Coms","MS 12 - Completion of Implementation Execution Production (Collaboration CUBE Build, Config, Failover)","Obtain signatures from all parties in the DocuSign","Multiple Signatures from agencies included (NYPD, FDNY)","Not started","Daily touchpoints with the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/14/2026","Risk","SLED East","PSAC Nexus Refresh","MS# 11: Completion of FDNY VESTA Migration Plan Development and Migration Execution at PSAC 1","Obtain signatures from all parties in the DocuSign","Multiple Signatures from agencies included (NYPD, FDNY)","Not started","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/16/2026","Risk","SLED East","PSAC Network Refresh Year 1","MS# 21: Completion of FDNY access layer switches Migration Plan Development and Migration Execution and Test Execution at PSAC2","Perform Cutovers in accordance with the approved Migration Plan","Cisco, Partner, and Customer","In Progress","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/16/2026","Upside","SLED East","PSAC Network Refresh Year 2","MS# 11: Completion of Migration Plan Development, Migration Execution and Testing Execution (FDNY access layer switches at PSAC1)","Perform migration execution in accordance with the approved Migration Plan","Cisco, Partner, and Customer","On hold - see status below","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/16/2026","Upside","SLED East","PSAC Network Refresh Year 2","MS# 12: Completion of Migration Plan Development, Migration Execution and Testing Execution (FDNY access layer switches at PSAC2)","Perform migration execution in accordance with the approved Migration Plan","Cisco, Partner, and Customer","In Progress","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/17/2026","Risk","SLED West","F28761","Milestone 6 - Migration Execution #2","Execute Migration","Customer — Gareth","Not Started","The customer must provide a \"GO\" for this migration; otherwise, we will be required to wait another 30 days for a new port request."],["09/17/2026","Risk","SLED West","F28761","Milestone 7 - Migration Execution #3","Execute Migration","Customer — Gareth","Not Started","The customer must provide a \"GO\" for this migration; otherwise, we will be required to wait another 30 days for a new port request."],["09/17/2026","Risk","SLED West","F28761","Milestone 6 - Migration Execution #2","Port Request Confirmed","Customer — Gareth","Complete","This process takes 30 days to complete. The customer confirmed that this request was submitted on Aug-17-2026."],["09/17/2026","Risk","SLED West","F28761","Milestone 7 - Migration Execution #3","Port Request Confirmed","Customer — Gareth","Complete","This process takes 30 days to complete. The customer confirmed that this request was submitted on Aug-17-2026."],["09/17/2026","Risk","SLED East","PSAC Network Refresh Year 1","MS# 21: Completion of FDNY access layer switches Migration Plan Development and Migration Execution and Test Execution at PSAC2","Provide written notification that the Migration Execution Services (SDE) are complete","Cisco PM","Not started","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/17/2026","Risk","SLED East","PSAC Nexus Refresh","MS# 12: Completion of FDNY VESTA Migration Plan, Development, and Migration Execution at PSAC 2","Provide written notification that the Migration Execution Services (SDE) are complete","Cisco PM","Not started","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/17/2026","Upside","SLED East","PSAC Network Refresh Year 2","MS# 11: Completion of Migration Plan Development, Migration Execution and Testing Execution (FDNY access layer switches at PSAC1)","Provide written notification that the Migration Execution Services (SDE) are complete","Cisco PM","Not started","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/17/2026","Upside","SLED East","PSAC Network Refresh Year 2","MS# 12: Completion of Migration Plan Development, Migration Execution and Testing Execution (FDNY access layer switches at PSAC2)","Provide written notification that the Migration Execution Services (SDE) are complete","Cisco PM","Not started","Daily touchpoints with Optinet and the customer technical team + touchpoints with the customer PM to ensure dates and scheduled activities are communicated."],["09/18/2026","Risk","CIV","Amtrak-T-Chicago Wifi-F52127","Completion of Solution Requirements Development","Cisco Drafts Iteration 1 of SDD","Roody / Sharath","In Progress",""],["09/18/2026","Risk","SLED East","CUNY IBLA","MS52","Switchport Configuration to WAPs","CUNY Campus CIO","In progress, slated for completion this week. 75% complete.","Risk: If Campus team uses these ports for other devices without notifying Cisco. Mitigation: Escalation to CUNY Leadership. Risk: CUNY Network Director has been out of office since 8/17 and not returning until 9/8. No one providing leadership decisions on the CUNY side. Mitigation: Escalation to Account team who escalated to Director's leadership at CUNY."],["09/18/2026","Upside","NSO","F46581 - ONI CSW","MCC-1 - Completion of Solution Requirements Document","Review existing customer documentation on current and planned architectural designs","Cisco Engineer (Sam)","In Progress","Customer environment access is required for the September review (initial review completed 7/16/26). If site access is delayed past 9/15, begin drafting SRD with available documentation."],["09/18/2026","Upside","NSO","F46581 - ONI CSW","MCC-1 - Completion of Solution Requirements Document","ONI provides relevant documentation and participates in design workshop","ONI","Not Started","If ONI documentation and workshop participation are not confirmed by 9/12, escalate to Matt Hranicka. Any delay beyond 9/18 will compress the SRD drafting window."]]},"milestone_summary":{"header":["Due Date","Type","Market","Project","Milestone","Revenue","Req Qtr","Exp Qtr","Tasks Done","Flags","Source"],"rows":[["09/22/2026","Risk","SLED East","NYC-T-PSAC IP PBX/Unified Coms","MS 12 - Completion of Implementation Execution Production","$576,665","Q1 FY27","Q1 FY27","1/9","","SLEDEast A23296 NYC-T-PSAC IP PBX Unified Communication-Reverse Plan.xlsx"],["10/02/2026","Risk","SLED East","MassDOT Net-Sec","9003: Completion of Implementation Support, 9005: Testing Support","$29,111","","Q1","0/5","","SLED East F32673 MASSDOT NW and SEC - Reverse Plan.xlsx"],["10/09/2026","Upside","NSO","F46581 - ONI CSW","MCC-1 - Completion of Solution Requirements Document","$51,382","Q2","Q1","1/7","SLIPPING: Required 'Q2' vs Expected 'Q1'; STALE DATA: Required Qtr does not reference Q1 FY27","ONI CSW MCC-1 Reverse Plan.xlsx"],["10/10/2026","Risk","SLED West","C16464","Completion of Implementation and Testing Execution - Production Install","$350,013","Q1","Q2","0/5","SLIPPING: Required 'Q1' vs Expected 'Q2'","SLW-C16464-CDT MMB.xlsx"],["10/14/2026","Risk","SLED East","CUNY IBLA","MS46: Completion of MGP,MGE,PMS,KT- Brooklyn","$58,045","Q1FY27 - High risk","Q3FY27","0/8","SLIPPING: Required 'Q1FY27 - High risk' vs Expected 'Q3FY27'","CUNY IBLA Reverse Plans 09032026.xlsx"],["10/14/2026","Risk","SLED East","CUNY IBLA","MS52","$57,954","Q1FY27 - low risk","Q1FY27","1/7","SLIPPING: Required 'Q1FY27 - low risk' vs Expected 'Q1FY27'","CUNY IBLA Reverse Plans 09032026.xlsx"],["10/19/2026","Upside","SLED East","BCIT ACI Deployment A82792","MS#6 Completion of Post Implementation Support","$39,838","Q2 FY27","Q1 FY27","0/4","SLIPPING: Required 'Q2 FY27' vs Expected 'Q1 FY27'; STALE DATA: Required Qtr does not reference Q1 FY27","SLED East A82792 MD-T-BCIT DC ACI Reverse Plan MS6 Q1.xlsx"],["10/20/2026","Risk","CIV","B39036- Treasury OCC-T-HQ-WLAN","MS 2","$39,184","Q1","Q1","0/5","","B39036 Treasury OCC T-HQ-WLAN.xlsx"],["10/20/2026","Risk","CIV","Amtrak-T-Chicago Wifi-F52127","Completion of Solution Requirements Development","$39,648","Q1","Q1","0/9","","CIV-F52127-Amtrak Chicago Wifi.xlsx"],["10/20/2026","Upside","NSO","AMENTUM - F54489 - CUCM/ACI","MS 001 - Solution Requirements Development","$37,813","1 QTR FY27","","0/10","STALE DATA: Required Qtr does not reference Q1 FY27","NSO-F54489_Amentum_Reverse Plan.xlsx"],["10/20/2026","Upside","NSO","AMENTUM - F54489 - CUCM/ACI","MS 002 - Solution Design Document","$29,546","1 QTR FY27","19 January 2027 (2 QTR FY27)","0/0","SLIPPING: Required '1 QTR FY27' vs Expected '19 January 2027 (2 QTR FY27)'; STALE DATA: Required Qtr does not reference Q1 FY27","NSO-F54489_Amentum_Reverse Plan.xlsx"],["10/20/2026","Upside","NSO","AMENTUM - F54489 - CUCM/ACI","MS 003 - Implementation Plan Development","$15,434","1 QTR FY27","19 January 2027 (2 QTR FY27)","0/0","SLIPPING: Required '1 QTR FY27' vs Expected '19 January 2027 (2 QTR FY27)'; STALE DATA","NSO-F54489_Amentum_Reverse Plan.xlsx"],["10/20/2026","Upside","NSO","AMENTUM - F54489 - CUCM/ACI","MS 004 - Implementation Execution","$146,627","1 QTR FY27","19 January 2027 (2 QTR FY27)","0/4","SLIPPING: Required '1 QTR FY27' vs Expected '19 January 2027 (2 QTR FY27)'; STALE DATA","NSO-F54489_Amentum_Reverse Plan.xlsx"],["10/20/2026","Upside","NSO","AMENTUM - F54489 - CUCM/ACI","MS 005 - Test Plan Development","$10,914","1 QTR FY27","19 January 2027 (2 QTR FY27)","0/0","SLIPPING: Required '1 QTR FY27' vs Expected '19 January 2027 (2 QTR FY27)'; STALE DATA","NSO-F54489_Amentum_Reverse Plan.xlsx"],["10/20/2026","Upside","NSO","AMENTUM - F54489 - CUCM/ACI","MS 006 - Testing Execution","$6,394","1 QTR FY27","19 January 2027 (2 QTR FY27)","0/0","SLIPPING: Required '1 QTR FY27' vs Expected '19 January 2027 (2 QTR FY27)'; STALE DATA","NSO-F54489_Amentum_Reverse Plan.xlsx"],["10/20/2026","Upside","NSO","AMENTUM - F54489 - CUCM/ACI","MS 007 - Post Implementation Support","$7,717","1 QTR FY27","19 January 2027 (2 QTR FY27)","0/0","SLIPPING: Required '1 QTR FY27' vs Expected '19 January 2027 (2 QTR FY27)'; STALE DATA","NSO-F54489_Amentum_Reverse Plan.xlsx"],["10/20/2026","Upside","SLED East","NYS ITS Migration A82603","MS#5 Completion of Post Migration Support Add-on","$322,131","Q2 FY27","Q1 FY27","0/3","SLIPPING: Required 'Q2 FY27' vs Expected 'Q1 FY27'; STALE DATA: Required Qtr does not reference Q1 FY27","SLED East A82603 NY-T-NYS ITS Migration MS5 Reverse Plan.xlsx"],["10/20/2026","Risk","SLED East","PSAC Network Refresh Year 1","MS# 21: Completion of FDNY access layer switches Migration Plan Development and Migration Execution and Test Execution at PSAC2","$177,183","Q1 FY27","Q1 FY27","7/16","","SLEDEast A21924 NY-T-PSAC Network Refresh Y1-Reverse Plan.xlsx"],["10/20/2026","Upside","SLED East","AL OIT Security Segmentation","MS# 4: Completion of Testing Execution","$465,156","Q1 FY27","Q1 FY27","2/11","","SLEDEast C60032 AL OIT Security Segmentation Reverse Plan.xlsx"],["10/20/2026","Risk","SLED East","PSAC Nexus Refresh","MS# 11: Completion of FDNY VESTA Migration Plan Development and Migration Execution at PSAC 1","$176,164","Q1 FY27","Q1 FY27","4/12","","SLEDEast D08250 NY-T-PSAC Nexus Refresh-Reverse Plan.xlsx"],["10/20/2026","Risk","SLED East","PSAC Nexus Refresh","MS# 12: Completion of FDNY VESTA Migration Plan, Development, and Migration Execution at PSAC 2","$176,164","Q1 FY27","Q1 FY27","4/12","","SLEDEast D08250 NY-T-PSAC Nexus Refresh-Reverse Plan.xlsx"],["10/20/2026","Risk","SLED West","F28761","Milestone 6 - Migration Execution #2","$127,731","FY27 Q1","FY27 Q1","8/22","","SLW-F28761-TxCH.xlsx"],["10/20/2026","Risk","SLED West","F28761","Milestone 7 - Migration Execution #3","$127,731","FY27 Q1","FY27 Q1","8/22","","SLW-F28761-TxCH.xlsx"],["11/15/2026","Upside","SLED East","PSAC Network Refresh Year 2","MS# 11: Completion of Migration Plan Development, Migration Execution and Testing Execution (FDNY access layer switches at PSAC1)","$82,398","Q2 FY27","Q1 FY27","5/16","SLIPPING: Required 'Q2 FY27' vs Expected 'Q1 FY27'; Due date is AFTER Q1 FY27 MCC deadline (10/20/26); STALE DATA: Required Qtr does not reference Q1 FY27","SLEDEast C10347 NY-T-PSAC Network Refresh Y2 -Reverse Plan.xlsx"],["11/15/2026","Upside","SLED East","PSAC Network Refresh Year 2","MS# 12: Completion of Migration Plan Development, Migration Execution and Testing Execution (FDNY access layer switches at PSAC2)","$82,398","Q2 FY27","Q2 FY27","6/18","Due date is AFTER Q1 FY27 MCC deadline (10/20/26); STALE DATA: Required Qtr does not reference Q1 FY27","SLEDEast C10347 NY-T-PSAC Network Refresh Y2 -Reverse Plan.xlsx"]]}};
+
+const GUIDE_CONTENT = [{"type":"heading","level":0,"text":"Reverse Plan Standards & Update Guide (Q1 FY27)"},{"type":"paragraph","text":"Your reverse plan is read automatically to build the Upside/Risk Reverse Plan Calendar that leadership uses every Fiscal Friday. If a reverse plan doesn't follow the standards below, an email will be sent out to you and the CXM of the given project.","runs":[{"text":"Your reverse plan is read automatically to build the Upside/Risk Reverse Plan Calendar that leadership uses every Fiscal Friday. If a reverse plan doesn't follow the standards below, ","bold":false,"italic":false},{"text":"an email will be sent out to you and the CXM of the given project.","bold":false,"italic":false}]},{"type":"heading","level":1,"text":"1. How your file gets matched to the TRF"},{"type":"paragraph","text":"The calendar only picks up a reverse plan if it can confidently connect the file to a specific Risk or Upside line item on the current quarter's TRF. It does this by matching a Project ID (PID) — a letter followed by 5 digits, e.g. `A23296`, `F47064`, `C13061` — in three places, which must all agree:","runs":[{"text":"The calendar only picks up a reverse plan if it can confidently connect the file to a specific Risk or Upside line item on the current quarter's TRF. It does this by matching a ","bold":false,"italic":false},{"text":"Project ID (PID)","bold":true,"italic":false},{"text":" — a letter followed by 5 digits, e.g. `A23296`, `F47064`, `C13061` — in three places, which must all agree:","bold":false,"italic":false}]},{"type":"bullet","text":"The filename must contain the PID (e.g. `SLW-F28761-TxCH.xlsx`)."},{"type":"bullet","text":"The \"Project:\" cell on each milestone tab (row 2, column C) must contain the same PID."},{"type":"bullet","text":"The milestone number must map to a milestone number on the TRF for that PID — read from the milestone description cell (row 3) or the sheet/tab name."},{"type":"paragraph","text":"If a milestone tab doesn't match a current-quarter TRF line, it is dropped from the calendar entirely — it won't show as red, it just won't appear at all, which is worse than showing as behind schedule."},{"type":"heading","level":1,"text":"2. Required plan header fields (top of each milestone tab)"},{"type":"table","header":["Row","Field","What it's used for"],"rows":[["2","`Project:` (col C)","PID + project name matching"],["3","Milestone description","Milestone label shown on the calendar; must include the milestone number"],["4","Revenue amount","Plain number; TRF dollar amount is authoritative"],["5","Required Completion Date","Must be an actual date, not text"],["6","Required Qtr","Must say \"Q1 FY27\" — if it references a different or old quarter, the calendar flags the plan as stale"],["7","Expected Qtr","If this differs from Required Qtr, the calendar flags the milestone as SLIPPING"],["8","Last Updated","Should reflect the actual date you last touched the sheet"]]},{"type":"heading","level":1,"text":"3. Required activity table columns"},{"type":"paragraph","text":"The activity table must start with a row where column B literally reads \"Activity\" (the tool searches rows 9–12 for this header)."},{"type":"table","header":["Col","Field","Rules"],"rows":[["A","# (task number)","Must be sequential (1, 2, 3…). Do not split a step into 4a, 4b — this breaks the sequence."],["B","Activity","Plain text description"],["C","Required Start","Baseline start date — the date the task would need to begin to meet timeline for revenue recognition"],["D","Required Completion","Baseline End date — date this must be completed by to recognize revenue in the quarter"],["E","Actual Start","Actual date value only, or leave blank if not started. Never enter a future date here."],["F","Actual End","Actual date value only, or leave blank if not complete. Never enter a future date here."],["G","Dependency","If this task depends on another task in this same tab, enter the Activity Number and Activity Description (ex: 1. Creation of draft document)"],["H","Risk/Mitigation","What happened, what you're doing to recover, and whether the delay pushes the final milestone date. If a Required date is red on the calendar, this field is the first thing leadership will click into."],["I","Owner","Name of the person accountable for this specific activity"],["J","Escalation Path","Who this gets escalated to if it's stuck"],["K","Status","Use one of: Not Started / In Progress / Complete / No Longer Required"]]},{"type":"heading","level":2,"text":"Critical date-field rules"},{"type":"bullet","text":"Never type anything except a real date into a date column — no \"TBD,\" \"tentative,\" notes, or partial text."},{"type":"bullet","text":"Never change a Required Start/Required Completion date once it's set, even if you're going to miss it. Required dates are the fixed baseline the whole plan is measured against."},{"type":"bullet","text":"If you're going to be late: leave the Required date as-is (it will correctly show red/late), update the Actual date once the step really happens, and explain the miss in Risk/Mitigation."},{"type":"bullet","text":"If the miss doesn't put the final MCC/revenue date at risk, say so explicitly in Risk/Mitigation — otherwise leadership will assume the whole milestone is now at risk."},{"type":"heading","level":1,"text":"4. What gets flagged automatically"},{"type":"bullet","text":"Missed vs. on-track vs. pending: a task is \"missed\" if there's no Actual End and the Required Completion date is in the past."},{"type":"bullet","text":"Escalation tiers on a miss: 1–3 days late = Tier 1, 4–7 days late = Tier 2, 8+ days late = Tier 3."},{"type":"bullet","text":"Stale data flag: if Required Qtr doesn't say Q1 FY27, the plan is flagged as likely not updated this quarter."},{"type":"bullet","text":"Slipping flag: if Required Qtr and Expected Qtr disagree."},{"type":"bullet","text":"Past-deadline flag: if the effective due date falls after the Q1 FY27 MCC deadline (10/20/26)."},{"type":"heading","level":1,"text":"5. Update cadence"},{"type":"paragraph","text":"Every reverse plan must be updated by end of day, every Fiscal Friday, so the calendar reflects current status before the weekly leadership review.","runs":[{"text":"Every reverse plan must be updated by end of day, every Fiscal Friday","bold":true,"italic":false},{"text":", so the calendar reflects current status before the weekly leadership review.","bold":false,"italic":false}]},{"type":"bullet","text":"Mark any activity completed this week as Complete with a real Actual Start/End date."},{"type":"bullet","text":"Update Status for any in-flight activity."},{"type":"bullet","text":"Add/refresh Risk/Mitigation commentary for anything red or at risk."},{"type":"bullet","text":"Confirm Required Qtr still reads Q1 FY27 and Expected Qtr reflects reality."},{"type":"heading","level":2,"text":"Key Q1 FY27 dates"},{"type":"table","header":["Date","Milestone"],"rows":[["9/15/26","Fiscal September MCC cutoff (last day to submit)"],["10/13/26","Fiscal October 5-business-day rule (MCC paperwork/signature ready)"],["10/20/26","Fiscal October MCC cutoff — Q1 FY27 final deadline"]]},{"type":"paragraph","text":"Questions on how the calendar reads your specific file? Contact Parker Ward.","runs":[{"text":"Questions on how the calendar reads your specific file? Contact Parker Ward.","bold":false,"italic":true}]}];
+
+/* ── Helpers ──────────────────────────────────────────── */
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function escQ(s){return esc(s).replace(/"/g,'&quot;')}
+function fmtDate(s){
+  if(!s)return'';
+  const p=s.split('/');
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return mn[parseInt(p[0])]+'&nbsp;'+parseInt(p[1]);
+}
+function fmtRevShort(n){
+  if(n>=1e6)return'$'+(n/1e6).toFixed(1)+'M';
+  if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'K';
+  return'$'+n;
+}
+function parseRev(s){return parseInt((s||'0').replace(/[$,]/g,''))||0;}
+function mktCls(m){
+  if(m==='SLED East')return'mkt-se';
+  if(m==='SLED West')return'mkt-sw';
+  if(m==='CIV')return'mkt-civ';
+  if(m==='NSO')return'mkt-nso';
+  return'';
+}
+function statusChip(s){
+  if(!s||s.trim()==='')return'<span class="scip sc-no">—</span>';
+  const l=s.toLowerCase();
+  if(l.includes('complete')&&!l.includes('not'))return`<span class="scip sc-done">Complete</span>`;
+  if(l.includes('in progress')||l.startsWith('in-progress'))return`<span class="scip sc-prog">In Progress</span>`;
+  if(l.includes('hold'))return`<span class="scip sc-hold">On Hold</span>`;
+  if(l.includes('not start'))return`<span class="scip sc-no">Not Started</span>`;
+  return`<span class="scip sc-no">${esc(s.slice(0,28))}${s.length>28?'…':''}</span>`;
+}
+function progBar(frac){
+  if(!frac||frac==='0/0')return`<span class="prog-frac">${esc(frac)||'—'}</span>`;
+  const pts=frac.split('/');
+  const a=parseInt(pts[0]),b=parseInt(pts[1]);
+  if(isNaN(a)||isNaN(b)||b===0)return`<span class="prog-frac">${esc(frac)}</span>`;
+  const pct=Math.round(a/b*100);
+  const cls=pct===0?'pf-zero':pct===100?'pf-full':'pf-part';
+  return`<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill ${cls}" style="width:${pct}%"></div></div><span class="prog-frac">${a}/${b}</span></div>`;
+}
+function parseFlags(s){
+  const f=[];
+  if(!s)return f;
+  if(s.includes('SLIPPING'))f.push({cls:'f-slip',label:'SLIPPING'});
+  if(s.includes('STALE'))f.push({cls:'f-stale',label:'STALE'});
+  if(s.toLowerCase().includes('after q1'))f.push({cls:'f-late',label:'PAST DL'});
+  return f;
+}
+function msRowCls(row){
+  const fl=row[9]||'';
+  if(fl.includes('SLIPPING'))return'ms-slip';
+  if(fl.toLowerCase().includes('after q1'))return'ms-late';
+  if(fl.includes('STALE'))return'ms-warn';
+  return'ms-ok';
+}
+function confidence(s){
+  const n=parseInt(s);
+  if(isNaN(n))return esc(s);
+  const bar=Math.round(n/100*40);
+  return`<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--up)">${s}</span>`;
+}
+function riskProfile(s){
+  if(s==='High')return`<span style="font-size:10px;font-weight:600;color:var(--risk)">${s}</span>`;
+  return`<span style="font-size:10px;color:var(--warn);font-weight:600">${s}</span>`;
+}
+
+/* ── Assign actual dates to calendar days ─────────────── */
+function assignDates(){
+  let d=new Date(2026,8,13);// Sept 13
+  for(const mo of CAL.calendar_months){
+    for(const wk of mo.weeks){
+      for(const day of wk){
+        day._d=new Date(d);
+        d.setDate(d.getDate()+1);
+      }
+    }
+  }
+}
+
+/* ── Calendar ─────────────────────────────────────────── */
+function renderCal(){
+  const today=new Date();
+  const todayStr=today.toDateString();
+  const riskTotal=CAL.coverage_lists[0].rows.reduce((s,r)=>s+parseRev(r[4]),0);
+  const upTotal=CAL.coverage_lists[1].rows.reduce((s,r)=>s+parseRev(r[4]),0);
+  const totalRev=riskTotal+upTotal;
+  const q1=new Date(2026,9,20);
+  const daysLeft=Math.max(0,Math.ceil((q1-today)/86400000));
+  let h=`<div class="tiles">
+    <div class="tile t-risk"><div class="tile-n">${CAL.coverage_lists[0].rows.length}</div><div class="tile-l">Risk Projects</div></div>
+    <div class="tile t-up"><div class="tile-n">${CAL.coverage_lists[1].rows.length}</div><div class="tile-l">Upside Projects</div></div>
+    <div class="tile t-rev"><div class="tile-n">${fmtRevShort(totalRev)}</div><div class="tile-l">Revenue Tracked</div></div>
+    <div class="tile t-cnt"><div class="tile-n">${daysLeft}d</div><div class="tile-l">Days to Q1 Close</div></div>
+  </div>`;
+  const DOWS=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  for(const mo of CAL.calendar_months){
+    h+=`<div class="cal-month"><div class="cal-month-title">${esc(mo.title)}</div><div class="cal-grid">`;
+    for(const d of DOWS)h+=`<div class="cal-dow">${d}</div>`;
+    mo.weeks.forEach((wk,wi)=>{
+      wk.forEach((day,di)=>{
+        const isWkend=(di===0||di===6);
+        const isToday=day._d&&day._d.toDateString()===todayStr;
+        const cls=[
+          ...(isWkend?['wk']:[]),
+          ...(isToday?['today-day']:[]),
+          ...(day.classes.includes('mcc-cutoff')?['mcc-cutoff']:[]),
+          ...(day.classes.includes('five-day-rule')?['five-day-rule']:[])
+        ].join(' ');
+        h+=`<div class="cal-day ${cls}" id="${isToday?'today-cell':''}">`;
+        h+=`<div class="cal-top">`;
+        if(isToday){h+=`<span class="today-ring">${esc(day.day)}</span>`;}
+        else{h+=`<span class="cal-n">${esc(day.day)}</span>`;}
+        if(day.label){
+          const lblCls=day.classes.includes('mcc-cutoff')?'cal-lbl lbl-mcc':'cal-lbl lbl-5d';
+          h+=`<span class="${lblCls}">${esc(day.label)}</span>`;
+        }
+        h+=`</div>`;// cal-top
+        if(day.projects.length){
+          h+=`<div class="cal-chips">`;
+          for(const p of day.projects){
+            const isR=p.text[0]==='R';
+            const cls2=isR?'cc cc-risk':'cc cc-up';
+            const nameM=p.text.match(/^[RU] (.+?) \(\d+\)/);
+            const name=nameM?nameM[1]:p.text.slice(2);
+            const tip=`${p.pid} · ${p.market} · ${esc(p.text)}`;
+            h+=`<div class="${cls2}" data-tip="${escQ(tip)}"><span class="cc-t">${isR?'R':'U'}</span><span class="cc-nm">${esc(name)}</span></div>`;
+          }
+          h+=`</div>`;
+        }
+        h+=`</div>`;// cal-day
+      });
+    });
+    h+=`</div></div>`;// cal-grid, cal-month
+  }
+  // Coverage lists
+  h+=`<div class="sec">Projects With Reverse Plans</div><div class="cov-grid">`;
+  CAL.coverage_lists.forEach((list,li)=>{
+    const isr=li===0;
+    h+=`<div>`;
+    h+=`<div class="cov-hd ${isr?'cov-risk':'cov-up'}">${esc(list.title)}</div>`;
+    h+=`<div class="cov-tbl"><table><thead><tr>`;
+    list.header.forEach(c=>h+=`<th>${esc(c)}</th>`);
+    h+=`</tr></thead><tbody>`;
+    list.rows.forEach(row=>{
+      h+=`<tr>`;
+      row.forEach((cell,ci)=>{
+        if(ci===0)h+=`<td><span class="mkt ${mktCls(cell)}">${esc(cell)}</span></td>`;
+        else if(ci===1)h+=`<td style="font-weight:500;color:var(--text)">${esc(cell)}</td>`;
+        else if(ci===2)h+=`<td><span class="pid">${esc(cell)}</span></td>`;
+        else if(ci===4)h+=`<td><span class="rev">${esc(cell)}</span></td>`;
+        else if(ci===5)h+=`<td>${isr?riskProfile(cell):confidence(cell)}</td>`;
+        else if(ci===6)h+=`<td style="font-size:10px;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escQ(cell)}">${esc(cell)}</td>`;
+        else h+=`<td>${esc(cell)}</td>`;
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div></div>`;
+  });
+  h+=`</div>`;
+  document.getElementById('panel-cal').innerHTML=h;
+  // Tooltip events
+  document.querySelectorAll('.cc[data-tip]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>showTip(el,el.dataset.tip));
+    el.addEventListener('mouseleave',hideTip);
+  });
+}
+
+/* ── This Week ────────────────────────────────────────── */
+function renderWeek(){
+  const rows=CAL.current_week.rows;
+  const riskN=rows.filter(r=>r[1]==='Risk').length;
+  const upN=rows.filter(r=>r[1]==='Upside').length;
+  const doneN=rows.filter(r=>(r[7]||'').toLowerCase().includes('complete')&&!(r[7]||'').toLowerCase().includes('not')).length;
+  let h=`<div class="tiles">
+    <div class="tile"><div class="tile-n">${rows.length}</div><div class="tile-l">Tasks This Week</div></div>
+    <div class="tile t-risk"><div class="tile-n">${riskN}</div><div class="tile-l">Risk Tasks</div></div>
+    <div class="tile t-up"><div class="tile-n">${upN}</div><div class="tile-l">Upside Tasks</div></div>
+    <div class="tile t-up"><div class="tile-n">${doneN}</div><div class="tile-l">Complete</div></div>
+  </div>`;
+  h+=`<div class="tbl-wrap"><table><thead><tr>
+    <th>Due</th><th>Type</th><th>Market</th><th>Project</th><th>Milestone</th>
+    <th>Activity / Task</th><th>Owner</th><th>Status</th><th>Risk / Mitigation</th>
+  </tr></thead><tbody>`;
+  rows.forEach((row,ri)=>{
+    const isr=row[1]==='Risk';
+    h+=`<tr>`;
+    h+=`<td class="dt">${fmtDate(row[0])}</td>`;
+    h+=`<td><span class="tbdg ${isr?'tbdg-risk':'tbdg-up'}">${esc(row[1])}</span></td>`;
+    h+=`<td><span class="mkt ${mktCls(row[2])}">${esc(row[2])}</span></td>`;
+    h+=`<td style="font-weight:500;color:var(--text);min-width:120px">${esc(row[3])}</td>`;
+    h+=`<td style="max-width:160px;font-size:12px">${esc(row[4])}</td>`;
+    h+=`<td style="max-width:180px;font-size:12px;color:var(--text)">${esc(row[5])}</td>`;
+    h+=`<td style="font-size:11px;white-space:nowrap">${esc(row[6]||'—')}</td>`;
+    h+=`<td>${statusChip(row[7])}</td>`;
+    const rm=row[8]||'';
+    if(rm.length>60){
+      h+=`<td style="max-width:220px"><div class="trunc" id="trunc-${ri}">${esc(rm)}</div><button class="more-btn" onclick="toggleTrunc('trunc-${ri}',this)">more</button></td>`;
+    } else {
+      h+=`<td style="font-size:12px;max-width:220px">${esc(rm)||'<span style="color:var(--text3)">—</span>'}</td>`;
+    }
+    h+=`</tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  document.getElementById('panel-week').innerHTML=h;
+}
+
+/* ── Milestones ───────────────────────────────────────── */
+function renderMs(){
+  const rows=CAL.milestone_summary.rows;
+  const totalRev=rows.reduce((s,r)=>s+parseRev(r[5]),0);
+  const slipN=rows.filter(r=>r[9]&&r[9].includes('SLIPPING')).length;
+  const okN=rows.filter(r=>!(r[9]&&r[9].includes('SLIPPING'))).length;
+  let h=`<div class="tiles">
+    <div class="tile"><div class="tile-n">${rows.length}</div><div class="tile-l">Milestones Tracked</div></div>
+    <div class="tile t-slip"><div class="tile-n">${slipN}</div><div class="tile-l">Slipping</div></div>
+    <div class="tile t-up"><div class="tile-n">${okN}</div><div class="tile-l">On Track / Stable</div></div>
+    <div class="tile t-rev"><div class="tile-n">${fmtRevShort(totalRev)}</div><div class="tile-l">Total Revenue</div></div>
+  </div>`;
+  h+=`<div class="tbl-wrap"><table><thead><tr>
+    <th>Due</th><th>Type</th><th>Market</th><th>Project</th><th>Milestone</th>
+    <th>Revenue</th><th>Req Qtr</th><th>Exp Qtr</th><th>Tasks</th><th>Flags</th>
+  </tr></thead><tbody>`;
+  rows.forEach((row,ri)=>{
+    const isr=row[1]==='Risk';
+    const cls=msRowCls(row);
+    const flags=parseFlags(row[9]);
+    h+=`<tr class="${cls}">`;
+    h+=`<td class="dt">${fmtDate(row[0])}</td>`;
+    h+=`<td><span class="tbdg ${isr?'tbdg-risk':'tbdg-up'}">${esc(row[1])}</span></td>`;
+    h+=`<td><span class="mkt ${mktCls(row[2])}">${esc(row[2])}</span></td>`;
+    h+=`<td style="font-weight:500;color:var(--text);min-width:130px">${esc(row[3])}</td>`;
+    h+=`<td style="max-width:200px;font-size:12px">${esc(row[4])}</td>`;
+    h+=`<td><span class="rev">${esc(row[5])}</span></td>`;
+    h+=`<td style="font-size:11px;white-space:nowrap">${esc(row[6]||'—')}</td>`;
+    h+=`<td style="font-size:11px;white-space:nowrap">${esc(row[7]||'—')}</td>`;
+    h+=`<td>${progBar(row[8])}</td>`;
+    h+=`<td><div class="flags">${flags.map(f=>`<span class="flag ${f.cls}">${f.label}</span>`).join('')}</div></td>`;
+    h+=`</tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  document.getElementById('panel-ms').innerHTML=h;
+}
+
+/* ── PM Guide ─────────────────────────────────────────── */
+function processGuideText(s){
+  return s.replace(/`([^`]+)`/g,'<code>$1</code>');
+}
+function renderGuide(){
+  let h=`<div class="guide">`;
+  let inList=false;
+  for(const item of GUIDE_CONTENT){
+    if(item.type!=='bullet'&&inList){h+=`</ul>`;inList=false;}
+    if(item.type==='heading'){
+      if(item.level===0){
+        h+=`<h1 class="guide-h0">${esc(item.text)}</h1>`;
+        h+=`<p class="guide-sub">For Q1 FY27 Project Managers whose projects appear on the Upside/Risk Reverse Plan Calendar.</p>`;
+      } else if(item.level===1){
+        h+=`<h2 class="g-h1">${esc(item.text)}</h2>`;
+      } else {
+        h+=`<h3 class="g-h2">${esc(item.text)}</h3>`;
+      }
+    } else if(item.type==='paragraph'){
+      let content;
+      if(item.runs&&item.runs.length>0){
+        content=item.runs.map(r=>{
+          let t=processGuideText(esc(r.text));
+          if(r.bold&&r.italic)return`<strong><em>${t}</em></strong>`;
+          if(r.bold)return`<strong>${t}</strong>`;
+          if(r.italic)return`<em>${t}</em>`;
+          return t;
+        }).join('');
+      } else {
+        content=processGuideText(esc(item.text));
+      }
+      h+=`<p class="g-p">${content}</p>`;
+    } else if(item.type==='bullet'){
+      if(!inList){h+=`<ul class="g-ul">`;inList=true;}
+      h+=`<li>${processGuideText(esc(item.text))}</li>`;
+    } else if(item.type==='table'){
+      h+=`<div class="g-tbl-wrap"><table class="g-tbl"><thead><tr>`;
+      item.header.forEach(c=>h+=`<th>${esc(c)}</th>`);
+      h+=`</tr></thead><tbody>`;
+      item.rows.forEach(row=>{
+        h+=`<tr>`;
+        row.forEach((cell,ci)=>{
+          h+=`<td>${processGuideText(esc(cell))}</td>`;
+        });
+        h+=`</tr>`;
+      });
+      h+=`</tbody></table></div>`;
+    }
+  }
+  if(inList)h+=`</ul>`;
+  h+=`</div>`;
+  document.getElementById('panel-guide').innerHTML=h;
+}
+
+/* ── Tooltip ──────────────────────────────────────────── */
+const tipEl=document.getElementById('tip');
+function showTip(el,text){
+  tipEl.textContent=text;
+  tipEl.hidden=false;
+  const r=el.getBoundingClientRect();
+  tipEl.style.left=Math.min(r.left,window.innerWidth-270)+'px';
+  tipEl.style.top=(r.bottom+5)+'px';
+}
+function hideTip(){tipEl.hidden=true;}
+
+/* ── Truncation ───────────────────────────────────────── */
+function toggleTrunc(id,btn){
+  const el=document.getElementById(id);
+  if(el.classList.toggle('open')){btn.textContent='less';}
+  else{btn.textContent='more';}
+}
+
+/* ── Tab switching ────────────────────────────────────── */
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+id));
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+
+/* ── Theme toggle ─────────────────────────────────────── */
+document.getElementById('theme-btn').addEventListener('click',()=>{
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme');
+  if(cur==='dark')r.setAttribute('data-theme','light');
+  else if(cur==='light')r.removeAttribute('data-theme');
+  else r.setAttribute('data-theme','dark');
+});
+
+/* ── Init ─────────────────────────────────────────────── */
+assignDates();
+document.getElementById('hdr-today').textContent=
+  new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+renderCal();
+renderWeek();
+renderMs();
+renderGuide();
+// Scroll today into view
+setTimeout(()=>{
+  const tc=document.getElementById('today-cell');
+  if(tc)tc.scrollIntoView({behavior:'auto',block:'nearest'});
+},50);
+</script>

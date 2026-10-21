@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cisco PS · Project Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; }
+  :root { --cisco: #049FD9; --cisco-dark: #005073; --cisco-light: #e8f7fc; }
+
+  /* Layout */
+  .app-shell { display: flex; flex-direction: column; height: 100vh; }
+  .app-body { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 220px; min-width: 220px; background: #0d2b3e; overflow-y: auto; }
+  .main { flex: 1; overflow-y: auto; padding: 24px; }
+  .chat-panel { width: 340px; min-width: 340px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; transition: width 0.2s; }
+  .chat-panel.collapsed { width: 0; min-width: 0; overflow: hidden; }
+
+  /* Nav */
+  .topnav { background: #0d2b3e; color: white; height: 52px; display: flex; align-items: center; padding: 0 20px; gap: 12px; border-bottom: 2px solid #049FD9; flex-shrink: 0; }
+  .cisco-logo { font-size: 18px; font-weight: 800; color: #049FD9; letter-spacing: -0.5px; }
+  .topnav-title { font-size: 14px; color: #94a3b8; font-weight: 500; }
+  .topnav-sep { width: 1px; height: 20px; background: #1e4060; }
+
+  /* Sidebar */
+  .sidebar-section { padding: 12px 0 4px; }
+  .sidebar-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; padding: 0 16px 6px; }
+  .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px; cursor: pointer; color: #94a3b8; font-size: 13px; transition: all 0.15s; }
+  .sidebar-item:hover { background: rgba(4,159,217,0.12); color: white; }
+  .sidebar-item.active { background: rgba(4,159,217,0.2); color: #49c5f0; border-right: 2px solid #049FD9; }
+  .health-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: #10b981; }
+  .dot-yellow { background: #f59e0b; }
+  .dot-red { background: #ef4444; }
+  .type-chip { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 8px; margin-left: auto; }
+  .chip-lcs { background: rgba(79,70,229,0.3); color: #a5b4fc; }
+  .chip-pdi { background: rgba(4,159,217,0.3); color: #67d6f8; }
+  .chip-sas { background: rgba(16,185,129,0.3); color: #6ee7b7; }
+  .chip-sme { background: rgba(245,158,11,0.3); color: #fcd34d; }
+
+  /* Views */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Cards */
+  .stat-card { background: white; border-radius: 10px; padding: 16px 20px; border: 1px solid #e5e7eb; }
+  .stat-label { font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: #111827; line-height: 1.1; margin-top: 4px; }
+  .stat-sub { font-size: 12px; color: #6b7280; margin-top: 3px; }
+  .card { background: white; border-radius: 10px; border: 1px solid #e5e7eb; overflow: hidden; }
+  .card-header { padding: 14px 18px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 13px; font-weight: 700; color: #374151; }
+  .card-body { padding: 18px; }
+
+  /* Progress */
+  .prog-track { height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; }
+  .prog-green { background: #10b981; }
+  .prog-yellow { background: #f59e0b; }
+  .prog-red { background: #ef4444; }
+  .prog-blue { background: #049FD9; }
+  .prog-purple { background: #8b5cf6; }
+
+  /* Badges */
+  .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #4b5563; }
+  .badge-lcs { background: #ede9fe; color: #5b21b6; }
+  .badge-pdi { background: #e0f2fe; color: #075985; }
+  .badge-sas { background: #d1fae5; color: #065f46; }
+  .badge-sme { background: #fef3c7; color: #92400e; }
+
+  /* Milestone */
+  .ms-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; position: relative; }
+  .ms-row:not(:last-child)::after { content: ''; position: absolute; left: 10px; top: 28px; bottom: -10px; width: 2px; background: #e5e7eb; }
+  .ms-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; z-index: 1; position: relative; }
+  .ms-complete { background: #10b981; color: white; }
+  .ms-active { background: #049FD9; color: white; }
+  .ms-pending { background: #e5e7eb; color: #9ca3af; }
+
+  /* Sub-project rows */
+  .sp-row { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+  .sp-row:hover { border-color: #049FD9; background: #f0f9ff !important; box-shadow: 0 1px 6px rgba(4,159,217,0.15); }
+  .sp-row:hover .sp-title { color: #049FD9; }
+  .util-bars { padding: 10px 0 2px; border-top: 1px solid #f3f4f6; margin-top: 10px; }
+  .util-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; font-size: 11px; }
+  .util-label { width: 130px; color: #6b7280; flex-shrink: 0; }
+  .util-track { flex: 1; height: 7px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+  .util-fill { height: 100%; border-radius: 4px; }
+  .util-val { width: 36px; text-align: right; font-weight: 600; color: #374151; flex-shrink: 0; }
+  /* Sub-project modal */
+  .sp-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 60; align-items: flex-start; justify-content: flex-end; }
+  .sp-modal-overlay.open { display: flex; }
+  .sp-modal { width: 560px; height: 100vh; background: white; overflow-y: auto; box-shadow: -4px 0 32px rgba(0,0,0,0.15); display: flex; flex-direction: column; }
+  .sp-modal-header { padding: 20px 24px 16px; border-bottom: 1px solid #f3f4f6; flex-shrink: 0; position: sticky; top: 0; background: white; z-index: 1; }
+  .sp-modal-body { padding: 20px 24px; flex: 1; }
+  .sp-section { margin-bottom: 24px; }
+  .sp-section-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .sp-section-title::after { content: ''; flex: 1; height: 1px; background: #f3f4f6; }
+  .webex-chip { font-size: 10px; padding: 2px 8px; background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; }
+  .resource-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f9fafb; }
+  .resource-avatar { width: 28px; height: 28px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #6b7280; flex-shrink: 0; }
+  .accomplish-item { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f9fafb; font-size: 13px; align-items: flex-start; }
+  .next-step-item { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f9fafb; font-size: 13px; align-items: flex-start; }
+  .meeting-source { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 6px; font-size: 12px; }
+  .sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; text-align: left; border-bottom: 1px solid #f3f4f6; }
+  .data-table td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid #f9fafb; vertical-align: middle; }
+  .data-table tr:hover td { background: #f0f9ff; cursor: pointer; }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+  .tab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab:hover { color: #374151; }
+  .tab.active { color: #049FD9; border-bottom-color: #049FD9; font-weight: 600; }
+
+  /* Buttons */
+  .btn { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: #049FD9; color: white; }
+  .btn-primary:hover { background: #0388bb; }
+  .btn-outline { background: white; color: #374151; border: 1px solid #d1d5db; }
+  .btn-outline:hover { background: #f9fafb; }
+  .btn-ghost { background: transparent; color: #6b7280; }
+  .btn-ghost:hover { color: #374151; background: #f3f4f6; }
+
+  /* Alert strip */
+  .alert { border-radius: 8px; padding: 10px 14px; font-size: 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .alert-yellow { background: #fef3c7; border: 1px solid #fcd34d; color: #78350f; }
+  .alert-red { background: #fee2e2; border: 1px solid #fca5a5; color: #7f1d1d; }
+  .alert-blue { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f; }
+
+  /* Chat */
+  .chat-header { padding: 14px 16px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .chat-bubble { padding: 10px 13px; font-size: 13px; line-height: 1.5; max-width: 88%; }
+  .chat-bubble.user { background: #049FD9; color: white; border-radius: 12px 12px 2px 12px; align-self: flex-end; }
+  .chat-bubble.ai { background: #f3f4f6; color: #111827; border-radius: 12px 12px 12px 2px; align-self: flex-start; }
+  .chat-input-area { padding: 12px; border-top: 1px solid #f3f4f6; flex-shrink: 0; }
+  .chat-input { width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 12px; font-size: 13px; resize: none; outline: none; }
+  .chat-input:focus { border-color: #049FD9; }
+  .chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .chat-pill { font-size: 11px; padding: 4px 10px; background: #eff6ff; color: #1d4ed8; border-radius: 12px; cursor: pointer; border: 1px solid #bfdbfe; }
+  .chat-pill:hover { background: #dbeafe; }
+
+  /* Project header */
+  .proj-header { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 22px; margin-bottom: 20px; }
+  .proj-title { font-size: 18px; font-weight: 700; color: #111827; }
+  .proj-meta { font-size: 12px; color: #6b7280; margin-top: 4px; }
+  .proj-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f3f4f6; }
+  .kpi { }
+  .kpi-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 18px; font-weight: 700; color: #111827; margin-top: 2px; }
+  .kpi-sub { font-size: 11px; color: #6b7280; margin-top: 1px; }
+
+  /* Forecast Modal */
+  .fc-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70; overflow-y:auto; padding:32px 20px; }
+  .fc-overlay.open { display:block; }
+  .fc-modal { max-width:1140px; margin:0 auto; background:white; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+  .fc-header { background:#0d2b3e; color:white; padding:18px 28px; display:flex; align-items:center; justify-content:space-between; }
+  .fc-ai-bar { background:#eff6ff; padding:9px 28px; font-size:12px; color:#1e40af; border-bottom:1px solid #dbeafe; display:flex; align-items:center; gap:8px; }
+  .fc-panels { display:grid; gap:1px; background:#e5e7eb; }
+  .fc-panel { background:white; padding:24px 28px; }
+  .fc-panel-title { font-size:13px; font-weight:700; color:#374151; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .fc-panel-sub { font-size:12px; color:#6b7280; margin-bottom:16px; }
+  .fc-narrative { background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:12px 16px; font-size:13px; color:#374151; line-height:1.6; margin-bottom:18px; }
+  .fc-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .fc-table th { background:#f9fafb; font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; padding:7px 10px; text-align:left; border-bottom:1px solid #e5e7eb; }
+  .fc-table td { padding:8px 10px; border-bottom:1px solid #f9fafb; vertical-align:middle; }
+  .fc-table tr:last-child td { border-bottom:none; font-weight:700; background:#f9fafb; }
+  .fc-table tr:hover td { background:#f0f9ff; }
+  .fc-table td.editable:hover { background:#fff7ed; cursor:pointer; }
+  .fc-table td.editable:hover::after { content:'✎'; font-size:10px; color:#f59e0b; margin-left:5px; }
+  .fc-assumptions { margin-top:16px; padding:12px 14px; background:#fefce8; border:1px solid #fef08a; border-radius:8px; font-size:12px; color:#713f12; }
+  .fc-assumptions li { margin-bottom:4px; padding-left:4px; }
+  .fc-footer { padding:16px 28px; border-top:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; }
+  .fc-footer-note { font-size:11px; color:#9ca3af; }
+  .fc-month-past { color:#9ca3af; }
+  .fc-month-current { font-weight:700; color:#049FD9; }
+  .fc-highlight-red { color:#ef4444; font-weight:600; }
+  .fc-highlight-green { color:#10b981; font-weight:600; }
+  .fc-highlight-yellow { color:#f59e0b; font-weight:600; }
+
+  /* Project-level year toggle */
+  .proj-year-toggle { display:flex; align-items:center; gap:6px; padding:10px 0 2px; border-top:1px solid #f3f4f6; margin-top:10px; flex-wrap:wrap; }
+  .proj-yr-btn { font-size:11px; padding:4px 12px; border-radius:6px; cursor:pointer; border:1px solid #e5e7eb; background:white; color:#6b7280; font-weight:500; transition:all 0.15s; }
+  .proj-yr-btn:hover { border-color:#049FD9; color:#0369a1; }
+  .proj-yr-btn.active { border-color:#049FD9; background:#e0f5fd; color:#0369a1; font-weight:700; }
+  .proj-yr-label { font-size:11px; color:#9ca3af; font-weight:600; margin-right:4px; }
+  /* Floating chart tooltip */
+  #fc-tooltip-el { position:fixed; background:white; border:1px solid #e5e7eb; border-radius:10px; padding:14px 16px; font-size:12px; pointer-events:none; z-index:300; box-shadow:0 8px 24px rgba(0,0,0,0.15); min-width:230px; max-width:270px; opacity:0; transition:opacity 0.1s; }
+  /* Chart legend */
+  .chart-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:#6b7280; }
+  .legend-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+  /* Session log */
+  .session-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f9fafb; align-items: flex-start; }
+  .session-date { font-size: 11px; color: #9ca3af; width: 52px; flex-shrink: 0; padding-top: 2px; }
+  .topic-tag { font-size: 10px; font-weight: 600; padding: 2px 7px; background: #f3f4f6; color: #4b5563; border-radius: 8px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <span class="cisco-logo">cisco</span>
+    <span class="topnav-sep"></span>
+    <span class="topnav-title">Professional Services · Project Dashboard</span>
+    <div style="flex:1"></div>
+    <button class="btn btn-outline" style="font-size:11px; padding:4px 12px;" onclick="showUploadModal()">
+      ↑ Upload GPPR
+    </button>
+    <div style="width:1px;height:20px;background:#1e4060;margin:0 8px;"></div>
+    <div style="font-size:13px;color:#94a3b8;">Cali Grimes</div>
+    <div style="width:30px;height:30px;border-radius:50%;background:#049FD9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;margin-left:8px;">CG</div>
+    <button class="btn btn-ghost" style="color:#94a3b8;margin-left:4px;" onclick="toggleChat()" title="AI Copilot">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+      AI Copilot
+    </button>
+  </nav>
+
+  <div class="app-body">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Navigation</div>
+        <div class="sidebar-item active" id="nav-portfolio" onclick="showPortfolio()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          My Portfolio
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Subscription</div>
+        <div class="sidebar-item" id="nav-lcs" onclick="showProject('lcs')">
+          <div class="health-dot dot-green"></div>
+          <span style="font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">Metro Transit Auth.</span>
+          <span class="type-chip chip-lcs">LCS</span>
+        </div>
+        <div class="sidebar-item" id="nav-sas" onclick="showProject('sas')">
+          <div class="health-dot dot-yellow"></div>
+          <span style="font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">Harbor Medical</span>
+          <span class="type-chip chip-sas">SAS</span>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Transaction</div>
+        <div class="sidebar-item" id="nav-pdi" onclick="showProject('pdi')">
+          <div class="health-dot dot-red"></div>
+          <span style="font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">Westbrook Refresh</span>
+          <span class="type-chip chip-pdi">PDI</span>
+        </div>
+        <div class="sidebar-item" id="nav-sme" onclick="showProject('sme')">
+          <div class="health-dot dot-green"></div>
+          <span style="font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">State DOT Security</span>
+          <span class="type-chip chip-sme">SME</span>
+        </div>
+      </div>
+      <div style="padding: 16px; margin-top: 8px;">
+        <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:11px;">+ Add Project</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- ═══════════════════════════════════════ PORTFOLIO VIEW -->
+      <div id="view-portfolio" class="view active">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <h1 style="font-size:20px;font-weight:700;color:#111827;">My Portfolio</h1>
+            <p style="font-size:13px;color:#6b7280;margin-top:2px;">4 active projects · Data as of Jun 1, 2026</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline">Export</button>
+            <button class="btn btn-primary">+ New Project</button>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="alert alert-red">
+          <span>⚠</span>
+          <span><strong>Westbrook Network Refresh</strong> — Cost overrun at -34% margin. Immediate review required.</span>
+        </div>
+        <div class="alert alert-yellow">
+          <span>⏰</span>
+          <span><strong>28-Day Forecast due in 3 days</strong> — Metro Transit Authority, Harbor Medical, Westbrook Refresh</span>
+        </div>
+
+        <!-- KPI Row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0;">
+          <div class="stat-card">
+            <div class="stat-label">Active Projects</div>
+            <div class="stat-value">4</div>
+            <div class="stat-sub">2 Subscription · 2 Transaction</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Rev Budget</div>
+            <div class="stat-value">$4.6M</div>
+            <div class="stat-sub">$2.1M recognized to date</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Forecast Margin</div>
+            <div class="stat-value" style="color:#f59e0b;">28%</div>
+            <div class="stat-sub">Target: ≥35% · 1 project at risk</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Forecasts Due</div>
+            <div class="stat-value" style="color:#ef4444;">3</div>
+            <div class="stat-sub">Next deadline: Jul 14</div>
+          </div>
+        </div>
+
+        <!-- Projects Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">All Projects</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost" style="font-size:11px;">Filter</button>
+              <button class="btn btn-ghost" style="font-size:11px;">Sort</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Forecast Margin</th>
+                <th>Budget Consumed</th>
+                <th>End Date</th>
+                <th>Health</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="showProject('lcs')">
+                <td><span style="font-weight:600;color:#111827;">Metro Transit Authority</span><br><span style="font-size:11px;color:#9ca3af;">PID-1045821</span></td>
+                <td style="color:#374151;">Metro Transit Auth.</td>
+                <td><span class="badge badge-lcs">LCS</span></td>
+                <td><span style="color:#10b981;font-weight:600;">42%</span> <span style="font-size:11px;color:#9ca3af;">↑ on target</span></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="prog-track" style="width:80px;"><div class="prog-fill prog-green" style="width:68%;"></div></div>
+                    <span style="font-size:12px;color:#6b7280;">68%</span>
+                  </div>
+                </td>
+                <td style="font-size:12px;">Mar 31, 2027</td>
+                <td><span class="badge badge-green">On Track</span></td>
+              </tr>
+              <tr onclick="showProject('sas')">
+                <td><span style="font-weight:600;color:#111827;">Harbor Medical</span><br><span style="font-size:11px;color:#9ca3af;">PID-1051203</span></td>
+                <td style="color:#374151;">Harbor Medical Ctr.</td>
+                <td><span class="badge badge-sas">SAS</span></td>
+                <td><span style="color:#f59e0b;font-weight:600;">31%</span> <span style="font-size:11px;color:#9ca3af;">↓ drifting</span></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="prog-track" style="width:80px;"><div class="prog-fill prog-yellow" style="width:79%;"></div></div>
+                    <span style="font-size:12px;color:#6b7280;">79%</span>
+                  </div>
+                </td>
+                <td style="font-size:12px;">Sep 30, 2026</td>
+                <td><span class="badge badge-yellow">Watch</span></td>
+              </tr>
+              <tr onclick="showProject('pdi')">
+                <td><span style="font-weight:600;color:#111827;">Westbrook Network Refresh</span><br><span style="font-size:11px;color:#9ca3af;">PID-1038774</span></td>
+                <td style="color:#374151;">City of Westbrook</td>
+                <td><span class="badge badge-pdi">PDI</span></td>
+                <td><span style="color:#ef4444;font-weight:600;">-34%</span> <span style="font-size:11px;color:#9ca3af;">⚠ overrun</span></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="prog-track" style="width:80px;"><div class="prog-fill prog-red" style="width:100%;"></div></div>
+                    <span style="font-size:12px;color:#ef4444;">134%</span>
+                  </div>
+                </td>
+                <td style="font-size:12px;">Apr 30, 2026 <span style="color:#ef4444;">⚠</span></td>
+                <td><span class="badge badge-red">At Risk</span></td>
+              </tr>
+              <tr onclick="showProject('sme')">
+                <td><span style="font-weight:600;color:#111827;">State DOT Security</span><br><span style="font-size:11px;color:#9ca3af;">PID-1056490</span></td>
+                <td style="color:#374151;">State Dept of Transport</td>
+                <td><span class="badge badge-sme">SME</span></td>
+                <td><span style="color:#10b981;font-weight:600;">44%</span> <span style="font-size:11px;color:#9ca3af;">↑ on target</span></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="prog-track" style="width:80px;"><div class="prog-fill prog-blue" style="width:56%;"></div></div>
+                    <span style="font-size:12px;color:#6b7280;">56%</span>
+                  </div>
+                </td>
+                <td style="font-size:12px;">Dec 31, 2026</td>
+                <td><span class="badge badge-green">On Track</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Action Items -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🎯 Actions Needed</span></div>
+            <div class="card-body" style="padding:12px 18px;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;">
+                  <span style="background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:1px;white-space:nowrap;">DUE TODAY</span>
+                  <span>Submit cost forecast for <strong>Westbrook Refresh</strong></span>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;">
+                  <span style="background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:1px;white-space:nowrap;">3 DAYS</span>
+                  <span>Cost forecast due — Metro Transit, Harbor Medical</span>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;">
+                  <span style="background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:1px;white-space:nowrap;">8 DAYS</span>
+                  <span>Submit NCE resource request for <strong>Metro Transit</strong> Phase 2 ISE deployment (lead time: 4 wks)</span>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;">
+                  <span style="background:#f3f4f6;color:#4b5563;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:1px;white-space:nowrap;">14 DAYS</span>
+                  <span>QBR prep due — Metro Transit Q3 Business Review</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📅 Upcoming Expirations</span></div>
+            <div class="card-body" style="padding:12px 18px;">
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span><strong>Harbor Medical</strong> SAS contract</span>
+                  <span class="badge badge-yellow">82 days</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span><strong>State DOT</strong> SME contract</span>
+                  <span class="badge badge-blue">173 days</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span><strong>Metro Transit</strong> LCS contract</span>
+                  <span class="badge badge-green">263 days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════ LCS PROJECT VIEW -->
+      <div id="view-lcs" class="view">
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;cursor:pointer;" onclick="showPortfolio()">← My Portfolio</div>
+        <div class="proj-header">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="proj-title">Metro Transit Authority</div>
+                <span class="badge badge-lcs">LCS</span>
+                <span class="badge badge-green">Active</span>
+              </div>
+              <div class="proj-meta">PID-1045821 · Customer Delivery: Enterprise Networking + Security · PM: Cali Grimes</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline" onclick="chatPrompt('Draft the Q3 business review for Metro Transit Authority')">Draft QBR</button>
+              <button class="btn btn-outline" onclick="openForecast('lcs')">Forecast</button>
+              <button class="btn btn-primary" onclick="chatPrompt('Scope a new sub-project for Metro Transit Authority')">+ Sub-Project</button>
+            </div>
+          </div>
+          <div class="proj-kpis">
+            <div class="kpi">
+              <div class="kpi-label">Rev Budget</div>
+              <div class="kpi-value">$1.2M</div>
+              <div class="kpi-sub">$816K recognized</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Cost Budget</div>
+              <div class="kpi-value">$696K</div>
+              <div class="kpi-sub">$473K consumed (68%)</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Forecast Margin</div>
+              <div class="kpi-value" style="color:#10b981;">42%</div>
+              <div class="kpi-sub">Target ≥ 35% ✓</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Contract Period</div>
+              <div style="font-size:13px;font-weight:700;color:#111827;margin-top:4px;">Apr 1, 2025 – Mar 31, 2027</div>
+              <div class="kpi-sub">27 months total</div>
+            </div>
+          </div>
+          <div class="util-bars">
+            <div class="util-row">
+              <span class="util-label" id="lcs-sched-label">Schedule utilized</span>
+              <div class="util-track"><div class="util-fill" id="lcs-sched-bar" style="width:67%;background:#049FD9;"></div></div>
+              <span class="util-val" id="lcs-sched-pct">67%</span>
+              <span style="font-size:11px;" id="lcs-sched-note" style="color:#6b7280;">18 of 27 mo elapsed</span>
+            </div>
+            <div class="util-row">
+              <span class="util-label">Budget utilized</span>
+              <div class="util-track"><div class="util-fill" id="lcs-budg-bar" style="width:68%;background:#10b981;"></div></div>
+              <span class="util-val" id="lcs-budg-pct">68%</span>
+              <span style="font-size:11px;" id="lcs-budg-note" style="color:#10b981;">✓ In sync with schedule</span>
+            </div>
+          </div>
+          <div class="proj-year-toggle">
+            <span class="proj-yr-label">View:</span>
+            <button class="proj-yr-btn active" id="lcs-yr-all" onclick="setProjectYear('all')">Whole Contract</button>
+            <button class="proj-yr-btn" id="lcs-yr-y1" onclick="setProjectYear('y1')">Year 1 · Apr 25–Mar 26</button>
+            <button class="proj-yr-btn" id="lcs-yr-y2" onclick="setProjectYear('y2')">Year 2 · Apr 26–Mar 27</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <div class="tab active" onclick="setTab(this,'lcs-overview')">Overview</div>
+          <div class="tab" onclick="setTab(this,'lcs-financial')">Financial</div>
+          <div class="tab" onclick="setTab(this,'lcs-team')">Team & Resources</div>
+          <div class="tab" onclick="setTab(this,'lcs-docs')">Documents</div>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="lcs-overview">
+          <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;">
+            <div>
+              <!-- Sub-projects -->
+              <div class="card" style="margin-bottom:16px;">
+                <div class="card-header">
+                  <span class="card-title">Sub-Projects</span>
+                  <button class="btn btn-outline" style="font-size:11px;" onclick="chatPrompt('Help me scope a new sub-project for Metro Transit Authority. Technology domain is Secure Access.')">+ Scope New</button>
+                </div>
+                <div class="card-body" style="padding:14px 18px;">
+
+                  <!-- Year 1 only -->
+                  <div class="sp-row" data-year="y1" style="display:none;border-color:#e5e7eb;background:#f9fafb;" onclick="openSubProject('advisory')">
+                    <div class="sp-header">
+                      <div>
+                        <div class="sp-title" style="font-size:13px;font-weight:600;color:#6b7280;">ISE Phase 1 — Policy Design &amp; Pilot</div>
+                        <div style="font-size:11px;color:#9ca3af;margin-top:2px;">Security · Completed Year 1 · Apr 2025 – Mar 2026</div>
+                      </div>
+                      <span class="badge badge-gray">Completed</span>
+                    </div>
+                    <div style="display:flex;gap:12px;font-size:11px;color:#9ca3af;">
+                      <span>Budget: $227K (actual)</span><span>Hours: 2,017 logged</span><span style="color:#10b981;">Delivered on time ✓</span>
+                    </div>
+                  </div>
+                  <!-- Year 2 / All -->
+                  <div class="sp-row" data-year="y2,all" style="border-color:#bfdbfe;background:#f0f9ff;" onclick="openSubProject('ise-zt')">
+                    <div class="sp-header">
+                      <div>
+                        <div class="sp-title" style="font-size:13px;font-weight:600;color:#111827;">ISE Zero Trust Deployment</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px;">Security · NCE: 2 assigned · Jun 2026 – Oct 2026</div>
+                      </div>
+                      <span class="badge badge-blue">In Progress</span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                      <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:4px;">
+                        <span>Phase 2: Pilot Deployment</span>
+                        <span>67% complete</span>
+                      </div>
+                      <div class="prog-track"><div class="prog-fill prog-blue" style="width:67%;"></div></div>
+                    </div>
+                    <div style="display:flex;gap:12px;font-size:11px;color:#6b7280;">
+                      <span>Budget: $48K / $60K</span>
+                      <span>Hours: 312 / 480 remaining</span>
+                      <span style="color:#10b981;">On track</span>
+                    </div>
+                  </div>
+
+                  <div class="sp-row" data-year="y2,all" onclick="openSubProject('catalyst')">
+                    <div class="sp-header">
+                      <div>
+                        <div class="sp-title" style="font-size:13px;font-weight:600;color:#111827;">Catalyst Center Migration</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px;">Enterprise Networking · NCE: TBD · Nov 2026 – Feb 2027</div>
+                      </div>
+                      <span class="badge badge-gray">Planned</span>
+                    </div>
+                    <div style="display:flex;gap:12px;font-size:11px;color:#6b7280;">
+                      <span>Budget allocated: $80K</span>
+                      <span>⚠ Resource request needed by Jul 20</span>
+                    </div>
+                  </div>
+
+                  <div class="sp-row" data-year="y1,y2,all" style="border-color:transparent;margin-bottom:0;" onclick="openSubProject('advisory')">
+                    <div class="sp-header">
+                      <div>
+                        <div class="sp-title" style="font-size:13px;font-weight:600;color:#111827;">QBR Prep / Advisory Buffer</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px;">Cross-domain · Rolling</div>
+                      </div>
+                      <span class="badge badge-green">Ongoing</span>
+                    </div>
+                    <div style="display:flex;gap:12px;font-size:11px;color:#6b7280;">
+                      <span>Budget allocated: $44K</span>
+                      <span>$8K used</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Budget Allocation -->
+              <div class="card">
+                <div class="card-header"><span class="card-title">Budget Allocation by Sub-Project</span></div>
+                <div class="card-body" style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;margin-bottom:5px;">
+                      <span>ISE Zero Trust</span><span style="color:#6b7280;">$48K of $60K</span>
+                    </div>
+                    <div class="prog-track"><div class="prog-fill prog-blue" style="width:80%;"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;margin-bottom:5px;">
+                      <span>Catalyst Center Migration</span><span style="color:#6b7280;">$0 of $80K</span>
+                    </div>
+                    <div class="prog-track"><div class="prog-fill prog-blue" style="width:0%;"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;margin-bottom:5px;">
+                      <span>Advisory Buffer</span><span style="color:#6b7280;">$8K of $44K</span>
+                    </div>
+                    <div class="prog-track"><div class="prog-fill prog-purple" style="width:18%;"></div></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;margin-bottom:5px;">
+                    <span style="color:#9ca3af;">Unallocated</span><span style="color:#9ca3af;">$512K remaining</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right column -->
+            <div>
+              <div class="card" style="margin-bottom:16px;">
+                <div class="card-header"><span class="card-title">Recent Activity</span></div>
+                <div class="card-body" style="padding:12px 18px;">
+                  <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
+                    <div style="display:flex;gap:8px;"><span style="color:#9ca3af;width:48px;flex-shrink:0;">Jul 8</span><span>NCE logged 18 hrs on ISE Phase 2 pilot config</span></div>
+                    <div style="display:flex;gap:8px;"><span style="color:#9ca3af;width:48px;flex-shrink:0;">Jul 7</span><span>Weekly check-in — customer confirmed Phase 2 on track</span></div>
+                    <div style="display:flex;gap:8px;"><span style="color:#9ca3af;width:48px;flex-shrink:0;">Jun 30</span><span>Phase 1 (Policy Design) milestone complete ✓</span></div>
+                    <div style="display:flex;gap:8px;"><span style="color:#9ca3af;width:48px;flex-shrink:0;">Jun 28</span><span>Q2 Business Review delivered to customer</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><span class="card-title">Open Risks</span></div>
+                <div class="card-body" style="padding:12px 18px;display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                  <div class="alert alert-yellow" style="margin:0;font-size:12px;">Customer firewall change window compressed — risk to Phase 2 timeline</div>
+                  <div class="alert alert-blue" style="margin:0;font-size:12px;">Catalyst Center NCE resource must be requested by Jul 20 (4-wk lead time)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="lcs-financial" style="display:none;">
+          <div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Financial detail view · Coming in Phase 1 build</div></div>
+        </div>
+        <div id="lcs-team" style="display:none;">
+          <div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Team & resource view · Coming in Phase 2 build</div></div>
+        </div>
+        <div id="lcs-docs" style="display:none;">
+          <div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Documents & reports · Coming in Phase 2 build</div></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════ PDI PROJECT VIEW -->
+      <div id="view-pdi" class="view">
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;cursor:pointer;" onclick="showPortfolio()">← My Portfolio</div>
+        <div class="proj-header" style="border-color:#fca5a5;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="proj-title">Westbrook Network Refresh</div>
+                <span class="badge badge-pdi">PDI</span>
+                <span class="badge badge-red">At Risk</span>
+              </div>
+              <div class="proj-meta">PID-1038774 · Enterprise Networking · PM: Cali Grimes</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline" onclick="chatPrompt('Draft a status report for Westbrook Network Refresh highlighting the cost overrun')">Status Report</button>
+              <button class="btn btn-outline">Submit MCC</button>
+              <button class="btn btn-primary" onclick="openForecast('pdi')">Forecast</button>
+            </div>
+          </div>
+          <div class="proj-kpis">
+            <div class="kpi">
+              <div class="kpi-label">Rev Budget</div>
+              <div class="kpi-value">$1.6M</div>
+              <div class="kpi-sub">$1.6M recognized (100%)</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Actual Cost</div>
+              <div class="kpi-value" style="color:#ef4444;">$2.15M</div>
+              <div class="kpi-sub">Budget was $864K ⚠</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Margin</div>
+              <div class="kpi-value" style="color:#ef4444;">-34%</div>
+              <div class="kpi-sub">Target: +15% · Δ = -49pts</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">End Date</div>
+              <div class="kpi-value" style="color:#ef4444;">Apr 2026</div>
+              <div class="kpi-sub">⚠ Past due — extension pending</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" onclick="setTab(this,'pdi-overview')">Overview</div>
+          <div class="tab" onclick="setTab(this,'pdi-financial')">Financial</div>
+          <div class="tab" onclick="setTab(this,'pdi-team')">Team & Resources</div>
+          <div class="tab" onclick="setTab(this,'pdi-docs')">Documents</div>
+        </div>
+
+        <div id="pdi-overview">
+          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Milestone Timeline</span></div>
+              <div class="card-body" style="padding:14px 22px;">
+                <div class="ms-row">
+                  <div class="ms-icon ms-complete">✓</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:13px;font-weight:600;">MS1 — Requirements Gathering</span>
+                      <span class="badge badge-green">MCC Signed</span>
+                    </div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px;">Completed Jun 2022 · 240 hrs</div>
+                  </div>
+                </div>
+                <div class="ms-row">
+                  <div class="ms-icon ms-complete">✓</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:13px;font-weight:600;">MS2 — Solution Design</span>
+                      <span class="badge badge-green">MCC Signed</span>
+                    </div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px;">Completed Jan 2023 · 480 hrs</div>
+                  </div>
+                </div>
+                <div class="ms-row">
+                  <div class="ms-icon ms-complete">✓</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:13px;font-weight:600;">MS3 — SDA/DNA Planning & Design</span>
+                      <span class="badge badge-green">MCC Signed</span>
+                    </div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px;">Completed Aug 2023 · 560 hrs</div>
+                  </div>
+                </div>
+                <div class="ms-row">
+                  <div class="ms-icon ms-complete">✓</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:13px;font-weight:600;">MS4 — Pilot Implementation</span>
+                      <span class="badge badge-green">MCC Signed</span>
+                    </div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px;">Completed Mar 2024 · 820 hrs</div>
+                  </div>
+                </div>
+                <div class="ms-row">
+                  <div class="ms-icon ms-active">5</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:13px;font-weight:600;">MS5 — Site Rollout Phase 1</span>
+                      <span class="badge badge-blue">In Progress</span>
+                    </div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px;">Started Dec 2024 · 4,200 hrs logged · MCC pending customer signature</div>
+                    <div style="margin-top:6px;">
+                      <div class="prog-track"><div class="prog-fill prog-blue" style="width:84%;"></div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="ms-row">
+                  <div class="ms-icon ms-pending">6</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:13px;font-weight:600;color:#9ca3af;">MS6 — Site Rollout Phase 2</span>
+                      <span class="badge badge-gray">Not Started</span>
+                    </div>
+                    <div style="font-size:11px;color:#9ca3af;margin-top:2px;">Est. start Q3 2026 — pending MS5 signoff</div>
+                  </div>
+                </div>
+                <div class="ms-row">
+                  <div class="ms-icon ms-pending">7</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:13px;font-weight:600;color:#9ca3af;">MS7 — Cutover & Handoff</span>
+                      <span class="badge badge-gray">Not Started</span>
+                    </div>
+                    <div style="font-size:11px;color:#9ca3af;margin-top:2px;">Est. Q4 2026</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:16px;">
+                <div class="card-header"><span class="card-title">Revenue Recognition</span></div>
+                <div class="card-body" style="padding:14px 18px;">
+                  <div style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Recognized</span><span style="font-weight:600;">$1.6M</span></div>
+                    <div class="prog-track"><div class="prog-fill prog-green" style="width:100%;"></div></div>
+                  </div>
+                  <div style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>Backlog (pending MCC)</span><span style="font-weight:600;">$0</span></div>
+                    <div class="prog-track"><div class="prog-fill prog-yellow" style="width:0%;"></div></div>
+                  </div>
+                  <div class="alert alert-red" style="margin:8px 0 0;font-size:12px;">Revenue fully recognized but cost continues to accrue. Change Request or project closure required.</div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><span class="card-title">Issues Log</span></div>
+                <div class="card-body" style="padding:12px 18px;display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                  <div class="alert alert-red" style="margin:0;font-size:12px;"><strong>ISS-01:</strong> Cost overrun 249% of budget — root cause: scope growth without CR</div>
+                  <div class="alert alert-yellow" style="margin:0;font-size:12px;"><strong>ISS-02:</strong> MS5 MCC awaiting customer signature 6+ weeks</div>
+                  <div class="alert alert-yellow" style="margin:0;font-size:12px;"><strong>ISS-03:</strong> Contract end date Apr 2026 passed — extension required</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="pdi-financial" style="display:none;"><div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Financial detail · Coming in Phase 1</div></div></div>
+        <div id="pdi-team" style="display:none;"><div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Team & resources · Coming in Phase 2</div></div></div>
+        <div id="pdi-docs" style="display:none;"><div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Documents · Coming in Phase 2</div></div></div>
+      </div>
+
+      <!-- ═══════════════════════════════════════ SAS PROJECT VIEW -->
+      <div id="view-sas" class="view">
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;cursor:pointer;" onclick="showPortfolio()">← My Portfolio</div>
+        <div class="proj-header">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="proj-title">Harbor Medical Center</div>
+                <span class="badge badge-sas">SAS</span>
+                <span class="badge badge-yellow">Watch</span>
+              </div>
+              <div class="proj-meta">PID-1051203 · Secure Access (Umbrella) · PM: Cali Grimes</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline" onclick="chatPrompt('Generate a budget utilization report for Harbor Medical Center SAS project')">Utilization Report</button>
+              <button class="btn btn-primary" onclick="openForecast('sas')">Forecast</button>
+            </div>
+          </div>
+          <div class="proj-kpis">
+            <div class="kpi">
+              <div class="kpi-label">NCE Hours</div>
+              <div class="kpi-value">78 / 112</div>
+              <div class="kpi-sub">34 hrs remaining</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">PM Hours</div>
+              <div class="kpi-value">16 / 38</div>
+              <div class="kpi-sub">22 hrs remaining</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Forecast Margin</div>
+              <div class="kpi-value" style="color:#f59e0b;">31%</div>
+              <div class="kpi-sub">↓ Drifting from 38%</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Contract Period</div>
+              <div style="font-size:13px;font-weight:700;color:#111827;margin-top:4px;">Oct 1, 2025 – Sep 30, 2026</div>
+              <div class="kpi-sub">12 months total · 82 days left</div>
+            </div>
+          </div>
+          <div class="util-bars">
+            <div class="util-row">
+              <span class="util-label">Schedule utilized</span>
+              <div class="util-track"><div class="util-fill" style="width:78%;background:#049FD9;"></div></div>
+              <span class="util-val">78%</span>
+              <span style="font-size:11px;color:#6b7280;">9.3 of 12 mo elapsed</span>
+            </div>
+            <div class="util-row">
+              <span class="util-label">Budget utilized</span>
+              <div class="util-track"><div class="util-fill" style="width:70%;background:#f59e0b;"></div></div>
+              <span class="util-val">70%</span>
+              <span style="font-size:11px;color:#f59e0b;">⚠ Behind schedule pace</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" onclick="setTab(this,'sas-overview')">Overview</div>
+          <div class="tab" onclick="setTab(this,'sas-financial')">Financial</div>
+        </div>
+
+        <div id="sas-overview">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <div class="card" style="margin-bottom:16px;">
+                <div class="card-header">
+                  <span class="card-title">Budget Utilization</span>
+                  <span style="font-size:11px;color:#9ca3af;">Domain: Secure Access · Umbrella</span>
+                </div>
+                <div class="card-body" style="padding:16px 20px;">
+                  <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:6px;">
+                      <span>NCE (Consulting Engineer)</span>
+                      <span style="color:#f59e0b;">78 / 112 hrs</span>
+                    </div>
+                    <div class="prog-track" style="height:10px;"><div class="prog-fill prog-yellow" style="width:70%;"></div></div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:4px;">34 hrs remaining · ~2.8 weeks at current pace</div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:6px;">
+                      <span>PM Hours</span>
+                      <span style="color:#10b981;">16 / 38 hrs</span>
+                    </div>
+                    <div class="prog-track" style="height:10px;"><div class="prog-fill prog-green" style="width:42%;"></div></div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:4px;">22 hrs remaining · On track through contract end</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><span class="card-title">Recent Sessions</span></div>
+                <div class="card-body" style="padding:12px 18px;">
+                  <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
+                    <div style="display:flex;justify-content:space-between;"><span>Jul 7 — Umbrella DNS Policy Config</span><span style="color:#9ca3af;">8 hrs</span></div>
+                    <div style="display:flex;justify-content:space-between;"><span>Jun 30 — SIG Tunnel Setup & Testing</span><span style="color:#9ca3af;">6 hrs</span></div>
+                    <div style="display:flex;justify-content:space-between;"><span>Jun 20 — Customer Onboarding Workshop</span><span style="color:#9ca3af;">4 hrs</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Onboarding Checklist</span>
+                <span class="badge badge-yellow">4 of 7 complete</span>
+              </div>
+              <div class="card-body" style="padding:14px 20px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="color:#10b981;font-size:16px;">✓</span> Kickoff call & scope alignment</div>
+                <div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="color:#10b981;font-size:16px;">✓</span> Environment access & credentials granted</div>
+                <div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="color:#10b981;font-size:16px;">✓</span> Discovery & architecture review</div>
+                <div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="color:#10b981;font-size:16px;">✓</span> Umbrella DNS-layer policy configuration</div>
+                <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#374151;"><span style="color:#049FD9;font-size:16px;">◎</span> <strong>SIG tunnel setup & validation</strong> <span class="badge badge-blue" style="margin-left:4px;">In Progress</span></div>
+                <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#9ca3af;"><span style="font-size:16px;">○</span> Customer UAT sign-off</div>
+                <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#9ca3af;"><span style="font-size:16px;">○</span> Knowledge transfer & handoff documentation</div>
+                <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f3f4f6;">
+                  <div class="alert alert-yellow" style="margin:0;font-size:12px;">At current pace, NCE hours exhausted before KT session — consider scoping remaining work</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="sas-financial" style="display:none;"><div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Financial detail · Coming in Phase 1</div></div></div>
+      </div>
+
+      <!-- ═══════════════════════════════════════ SME PROJECT VIEW -->
+      <div id="view-sme" class="view">
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;cursor:pointer;" onclick="showPortfolio()">← My Portfolio</div>
+        <div class="proj-header">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="proj-title">State Dept of Transportation — Security</div>
+                <span class="badge badge-sme">SME</span>
+                <span class="badge badge-green">Active</span>
+              </div>
+              <div class="proj-meta">PID-1056490 · Security (Firewall Threat Defense) · PM: Cali Grimes · Consulting only — no hands-on keyboard</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline" onclick="chatPrompt('Draft a PSIRT advisory summary for State DOT covering recent FTD vulnerabilities')">PSIRT Advisory</button>
+              <button class="btn btn-primary" onclick="openForecast('sme')">Forecast</button>
+            </div>
+          </div>
+          <div class="proj-kpis">
+            <div class="kpi">
+              <div class="kpi-label">Hours Used</div>
+              <div class="kpi-value">84 / 150</div>
+              <div class="kpi-sub">66 hrs remaining</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Avg Pace</div>
+              <div class="kpi-value">11 hrs/wk</div>
+              <div class="kpi-sub">~6 weeks runway</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Forecast Margin</div>
+              <div class="kpi-value" style="color:#10b981;">44%</div>
+              <div class="kpi-sub">Target ≥ 35% ✓</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Contract Period</div>
+              <div style="font-size:13px;font-weight:700;color:#111827;margin-top:4px;">Jan 1, 2026 – Dec 31, 2026</div>
+              <div class="kpi-sub">12 months total · 173 days left</div>
+            </div>
+          </div>
+          <div class="util-bars">
+            <div class="util-row">
+              <span class="util-label">Schedule utilized</span>
+              <div class="util-track"><div class="util-fill" style="width:53%;background:#049FD9;"></div></div>
+              <span class="util-val">53%</span>
+              <span style="font-size:11px;color:#6b7280;">6.3 of 12 mo elapsed</span>
+            </div>
+            <div class="util-row">
+              <span class="util-label">Budget utilized</span>
+              <div class="util-track"><div class="util-fill" style="width:56%;background:#10b981;"></div></div>
+              <span class="util-val">56%</span>
+              <span style="font-size:11px;color:#10b981;">✓ Slightly ahead — healthy</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" onclick="setTab(this,'sme-overview')">Overview</div>
+          <div class="tab" onclick="setTab(this,'sme-financial')">Financial</div>
+        </div>
+
+        <div id="sme-overview">
+          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Consulting Sessions</span></div>
+              <div class="card-body" style="padding:14px 20px;">
+                <div class="session-row">
+                  <div class="session-date">Jul 8</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:500;">FTD HA Failover Configuration Review</div>
+                    <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">
+                      <span class="topic-tag">FTD</span><span class="topic-tag">High Availability</span><span class="topic-tag">Failover</span>
+                    </div>
+                  </div>
+                  <div style="margin-left:auto;font-size:12px;color:#9ca3af;white-space:nowrap;">4 hrs</div>
+                </div>
+                <div class="session-row">
+                  <div class="session-date">Jun 28</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:500;">PSIRT Advisory — CVE-2024-20353</div>
+                    <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">
+                      <span class="topic-tag">PSIRT</span><span class="topic-tag">CVE</span><span class="topic-tag">Patch Advisory</span>
+                    </div>
+                  </div>
+                  <div style="margin-left:auto;font-size:12px;color:#9ca3af;white-space:nowrap;">2 hrs</div>
+                </div>
+                <div class="session-row">
+                  <div class="session-date">Jun 20</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:500;">ISE Integration Architecture Consultation</div>
+                    <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">
+                      <span class="topic-tag">ISE</span><span class="topic-tag">Integration</span><span class="topic-tag">Architecture</span>
+                    </div>
+                  </div>
+                  <div style="margin-left:auto;font-size:12px;color:#9ca3af;white-space:nowrap;">3 hrs</div>
+                </div>
+                <div class="session-row">
+                  <div class="session-date">Jun 14</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:500;">DMZ Segmentation Design Review</div>
+                    <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">
+                      <span class="topic-tag">Segmentation</span><span class="topic-tag">DMZ</span><span class="topic-tag">Design</span>
+                    </div>
+                  </div>
+                  <div style="margin-left:auto;font-size:12px;color:#9ca3af;white-space:nowrap;">4 hrs</div>
+                </div>
+                <div class="session-row" style="border:none;">
+                  <div class="session-date">Jun 7</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:500;">Policy Review & Cleanup Workshop</div>
+                    <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">
+                      <span class="topic-tag">FTD</span><span class="topic-tag">Policy</span>
+                    </div>
+                  </div>
+                  <div style="margin-left:auto;font-size:12px;color:#9ca3af;white-space:nowrap;">4 hrs</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:16px;">
+                <div class="card-header"><span class="card-title">Hours Utilization</span></div>
+                <div class="card-body" style="padding:14px 20px;">
+                  <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:6px;">
+                    <span>Total Hours Used</span>
+                    <span>84 / 150</span>
+                  </div>
+                  <div class="prog-track" style="height:12px;"><div class="prog-fill prog-blue" style="width:56%;"></div></div>
+                  <div style="font-size:11px;color:#6b7280;margin-top:6px;">56% consumed · Pace: 11 hrs/wk · 6 wks runway</div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><span class="card-title">Topics Covered</span></div>
+                <div class="card-body" style="padding:14px 20px;">
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <span style="background:#fee2e2;color:#991b1b;" class="topic-tag">PSIRT × 2</span>
+                    <span class="topic-tag">FTD Policy × 3</span>
+                    <span class="topic-tag">High Availability</span>
+                    <span class="topic-tag">ISE Integration</span>
+                    <span class="topic-tag">Segmentation</span>
+                    <span class="topic-tag">DMZ Design</span>
+                    <span class="topic-tag">Architecture Review</span>
+                  </div>
+                  <div style="margin-top:14px;font-size:12px;color:#6b7280;line-height:1.5;">
+                    Predominant focus: <strong>FTD policy & security hardening</strong>. Two PSIRT advisories delivered. ISE integration is an emerging topic — may warrant sub-domain scoping.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="sme-financial" style="display:none;"><div class="card"><div class="card-body" style="color:#6b7280;font-size:13px;padding:32px;text-align:center;">Financial detail · Coming in Phase 1</div></div></div>
+      </div>
+
+    </main>
+
+    <!-- CHAT PANEL -->
+    <aside class="chat-panel collapsed" id="chat-panel">
+      <div class="chat-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#049FD9,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:12px;color:white;font-weight:700;">AI</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#111827;">AI Copilot</div>
+            <div style="font-size:11px;color:#9ca3af;">Project-aware assistant</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="toggleChat()" style="padding:4px 8px;font-size:16px;color:#9ca3af;">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-bubble ai">Hi Cali 👋 I have context on all 4 of your active projects from the latest GPPR data. What do you need?</div>
+        <div style="font-size:11px;color:#9ca3af;text-align:center;margin:4px 0;">Suggested prompts:</div>
+        <div class="chat-suggestions" id="chat-suggestions">
+          <span class="chat-pill" onclick="chatPrompt('Which of my projects need attention this week?')">What needs attention this week?</span>
+          <span class="chat-pill" onclick="chatPrompt('Draft the 28-day cost forecast for Metro Transit Authority')">Draft forecast — Metro Transit</span>
+          <span class="chat-pill" onclick="chatPrompt('Help me write an NCE assignment request for the Catalyst Center sub-project')">NCE assignment request</span>
+          <span class="chat-pill" onclick="chatPrompt('Explain the cost overrun on Westbrook Refresh and what options I have')">Westbrook overrun options</span>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">⚠ Project data will be sent to AI — review before sharing externally</div>
+        <div style="display:flex;gap:8px;">
+          <textarea class="chat-input" id="chat-input" rows="2" placeholder="Ask anything about your projects..." onkeydown="handleChatKey(event)"></textarea>
+          <button class="btn btn-primary" style="padding:8px 12px;align-self:flex-end;" onclick="sendChat()">→</button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- FORECAST MODAL -->
+<div id="fc-overlay" class="fc-overlay" onclick="closeForecastOnOverlay(event)">
+  <div class="fc-modal">
+    <div class="fc-header">
+      <div>
+        <div style="font-size:16px;font-weight:700;" id="fc-title"></div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:2px;" id="fc-subtitle"></div>
+      </div>
+      <button onclick="closeForecast()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;line-height:1;padding:0;">✕</button>
+    </div>
+    <div class="fc-ai-bar">
+      <span>⚡</span>
+      <span>AI-estimated from GPPR actuals, burn rate trends, and committed scope. <strong>Click any month row to adjust.</strong> Submit when ready.</span>
+    </div>
+    <div class="fc-panels" id="fc-panels"></div>
+    <div class="fc-footer">
+      <span class="fc-footer-note" id="fc-footer-note"></span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="closeForecast()">Cancel</button>
+        <button class="btn btn-primary" onclick="closeForecast()">Submit Forecast</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUB-PROJECT DETAIL MODAL -->
+<div id="sp-modal-overlay" class="sp-modal-overlay" onclick="closeSubProjectOnOverlay(event)">
+  <div class="sp-modal" id="sp-modal">
+    <div class="sp-modal-header">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span id="sp-modal-title" style="font-size:16px;font-weight:700;color:#111827;"></span>
+            <span id="sp-modal-badge" class="badge"></span>
+            <span id="sp-modal-domain" style="font-size:11px;color:#6b7280;"></span>
+          </div>
+          <div id="sp-modal-meta" style="font-size:12px;color:#9ca3af;margin-top:4px;"></div>
+        </div>
+        <button onclick="closeSubProject()" style="background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer;padding:0 0 0 12px;line-height:1;">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span id="sp-webex-sync" class="webex-chip">🎙 3 Webex meetings linked · Last sync Jul 8</span>
+        <button style="font-size:11px;padding:3px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;">+ Tag Meeting</button>
+      </div>
+    </div>
+    <div class="sp-modal-body" id="sp-modal-body"></div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div id="upload-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;display:none;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;padding:28px;width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:8px;">Upload GPPR Financial Report</div>
+    <div style="font-size:13px;color:#6b7280;margin-bottom:20px;">Upload the weekly Excel export. The tool will parse all project and expenditure data automatically.</div>
+    <div style="border:2px dashed #d1d5db;border-radius:8px;padding:32px;text-align:center;cursor:pointer;background:#f9fafb;" onmouseenter="this.style.borderColor='#049FD9'" onmouseleave="this.style.borderColor='#d1d5db'">
+      <div style="font-size:32px;margin-bottom:8px;">📊</div>
+      <div style="font-size:14px;font-weight:600;color:#374151;">Drop Excel file here</div>
+      <div style="font-size:12px;color:#9ca3af;margin-top:4px;">or click to browse · .xlsx files only</div>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:#9ca3af;">Last upload: Jun 1, 2026 · 1,847 projects loaded · Customer names masked before AI processing</div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;">
+      <button class="btn btn-outline" onclick="hideUploadModal()">Cancel</button>
+      <button class="btn btn-primary">Upload & Process</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let chatOpen = false;
+let currentActiveTabGroup = {};
+
+function showPortfolio() {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-portfolio').classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('nav-portfolio').classList.add('active');
+}
+
+function showProject(type) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + type).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('nav-' + type).classList.add('active');
+}
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const panel = document.getElementById('chat-panel');
+  if (chatOpen) { panel.classList.remove('collapsed'); } 
+  else { panel.classList.add('collapsed'); }
+}
+
+function setTab(el, contentId) {
+  // Find the parent view and deactivate all tabs within it
+  const tabsContainer = el.parentElement;
+  tabsContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  
+  // Find the sibling content divs and hide them
+  const view = tabsContainer.parentElement;
+  // Hide all direct children that are not the tabs div
+  Array.from(view.children).forEach(child => {
+    if (child !== tabsContainer && !child.classList.contains('proj-header') && child.tagName !== 'DIV' || child.id) {
+      if (child.id) child.style.display = 'none';
+    }
+  });
+  // Show the target
+  const target = document.getElementById(contentId);
+  if (target) target.style.display = 'block';
+}
+
+function chatPrompt(text) {
+  if (!chatOpen) toggleChat();
+  document.getElementById('chat-input').value = text;
+  setTimeout(() => sendChat(), 100);
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  const messages = document.getElementById('chat-messages');
+  
+  // User bubble
+  const userMsg = document.createElement('div');
+  userMsg.className = 'chat-bubble user';
+  userMsg.textContent = text;
+  messages.appendChild(userMsg);
+  
+  // Remove suggestions
+  const sugg = document.getElementById('chat-suggestions');
+  if (sugg) sugg.remove();
+  
+  input.value = '';
+  
+  // Simulated AI response
+  setTimeout(() => {
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'chat-bubble ai';
+    aiMsg.innerHTML = getAIResponse(text);
+    messages.appendChild(aiMsg);
+    messages.scrollTop = messages.scrollHeight;
+  }, 800);
+  
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function getAIResponse(text) {
+  const t = text.toLowerCase();
+  if (t.includes('attention') || t.includes('week')) {
+    return '3 things need your attention this week:<br><br><strong>1. Westbrook Refresh (PDI)</strong> — cost forecast overdue and -34% margin requires a plan. I can draft a cost-to-complete analysis.<br><br><strong>2. Metro Transit (LCS)</strong> — NCE resource request for Catalyst Center phase must be submitted by Jul 20 (4-wk lead time).<br><br><strong>3. Harbor Medical (SAS)</strong> — NCE hours at 70% with onboarding incomplete. At current pace, hours exhaust before KT session.';
+  }
+  if (t.includes('forecast') && t.includes('metro')) {
+    return 'Here\'s a draft cost forecast for Metro Transit Authority:<br><br><strong>Current Burn Rate:</strong> ~$18K/month (avg last 90 days)<br><strong>Remaining Budget:</strong> $223K<br><strong>Estimated Runway:</strong> 12.4 months<br><strong>Contract End:</strong> Mar 31, 2027 (9 months)<br><br><strong>Recommendation:</strong> Budget runway exceeds contract end. Consider accelerating ISE Phase 2 and scoping Catalyst Center earlier to increase utilization.<br><br>Want me to draft the full forecast narrative for submission?';
+  }
+  if (t.includes('overrun') || t.includes('westbrook')) {
+    return 'The Westbrook cost overrun appears to stem from scope growth without a formal Change Request. Options:<br><br><strong>Option A:</strong> Close the project — recognize losses, document lessons learned. Requires leadership approval.<br><br><strong>Option B:</strong> Submit a retroactive Change Request — if customer agrees, adjusts contract value. Risky given time elapsed.<br><br><strong>Option C:</strong> Complete remaining milestones (MS6, MS7) with strict hour caps to limit further losses.<br><br>I\'d recommend Option C + A hybrid. Want me to draft the talking points for the customer conversation?';
+  }
+  if (t.includes('nce') || t.includes('assignment')) {
+    return 'Here\'s a draft NCE assignment request for the Catalyst Center sub-project:<br><br><strong>Role:</strong> Network Consulting Engineer (NCE)<br><strong>Domain:</strong> Enterprise Networking — Catalyst Center / SDA<br><strong>Start Date:</strong> Nov 1, 2026<br><strong>Duration:</strong> ~4 months<br><strong>Est. Hours:</strong> 320 hrs<br><strong>Scope:</strong> Migration of existing campus network to Catalyst Center-managed SDA fabric. Includes design review, pilot deployment, and production rollout across 3 buildings.<br><br>Want me to add more detail on deliverables or technical prerequisites?';
+  }
+  return 'I\'m ready to help with that. To give you the best answer, should I focus on a specific project, or would you like a cross-portfolio view? I have GPPR data loaded for all 4 active projects.';
+}
+
+const SP_DATA = {
+  'ise-zt': {
+    title: 'ISE Zero Trust Deployment',
+    badge: 'badge-blue',
+    badgeText: 'In Progress',
+    domain: 'Security · Cisco ISE',
+    meta: 'Jun 2026 – Oct 2026 · NCE: 2 assigned · Budget: $60K',
+    webexCount: 3,
+    scope: 'Deploy ISE-based Zero Trust Network Access (ZTNA) policy framework across Metro Transit Authority\'s campus and OT network segments. Scope includes policy design for ~3 user/device domains, RADIUS integration with existing AD, and a pilot deployment across 2 buildings before full production rollout. Customer goal is to achieve least-privilege access posture ahead of CISA compliance audit in Q4 2026.',
+    resources: [
+      { initials: 'RV', name: 'Randy Veasley', role: 'Sr. NCE — Security', hours: '184 hrs logged', color: '#0369a1' },
+      { initials: 'JC', name: 'Jose Coronel', role: 'NCE — Security', hours: '128 hrs logged', color: '#7c3aed' },
+      { initials: 'CG', name: 'Cali Grimes', role: 'Project Manager', hours: '22 hrs logged', color: '#059669' },
+    ],
+    accomplishments: [
+      { date: 'Jul 7', text: 'Phase 1 complete — ISE policy design document finalized and approved by customer security team', source: 'Weekly Check-in Jul 7' },
+      { date: 'Jun 28', text: 'RADIUS authentication validated for AD-joined devices in pilot building (Bldg A)', source: 'Technical Session Jun 28' },
+      { date: 'Jun 14', text: 'Device profiling rules created for OT/IoT endpoints (Siemens PLCs, IP cameras)', source: 'Technical Session Jun 14' },
+      { date: 'Jun 3', text: 'ISE node cluster deployed and baseline configuration completed', source: 'Kickoff + Config Session Jun 3' },
+    ],
+    updates: 'Phase 2 (pilot deployment) is 67% complete. Randy and Jose completed RADIUS config for Bldg A this week and are troubleshooting a certificate chain issue on legacy endpoints that is causing auth failures for ~12% of devices. Customer confirmed no hard deadline pressure for Phase 2 but wants completion before Aug 1 to allow Phase 3 planning. Customer IT contact (Dana Reyes) is very engaged — approving changes same-day.',
+    nextSteps: [
+      { owner: 'Randy V.', due: 'Jul 14', text: 'Resolve certificate chain issue on legacy Windows 7 endpoints — evaluate 802.1x bypass policy as fallback' },
+      { owner: 'Jose C.', due: 'Jul 18', text: 'Complete RADIUS config for Bldg B devices and validate with pilot user group' },
+      { owner: 'Cali G.', due: 'Jul 20', text: 'Submit NCE resource request for Phase 3 (production rollout) — 4-week lead time required' },
+      { owner: 'Customer', due: 'Jul 22', text: 'Dana Reyes to provide updated device inventory for Bldg C and D ahead of Phase 3 scoping' },
+    ],
+    meetings: [
+      { date: 'Jul 7', title: 'Metro Transit – ISE Weekly Check-in', duration: '45 min' },
+      { date: 'Jun 28', title: 'Metro Transit – ISE Technical Session', duration: '90 min' },
+      { date: 'Jun 14', title: 'Metro Transit – OT/IoT Policy Design', duration: '60 min' },
+    ]
+  },
+  'catalyst': {
+    title: 'Catalyst Center Migration',
+    badge: 'badge-gray',
+    badgeText: 'Planned',
+    domain: 'Enterprise Networking · Catalyst Center / SDA',
+    meta: 'Nov 2026 – Feb 2027 · NCE: TBD · Budget: $80K allocated',
+    webexCount: 1,
+    scope: 'Migrate Metro Transit Authority\'s legacy campus network (3 buildings, ~450 access switches) to Catalyst Center-managed Software-Defined Access (SDA) fabric. Scope includes network readiness assessment, SDA fabric design, pilot deployment in one building, and phased rollout across remaining buildings. Customer is currently running Cisco DNA Center 2.2 on-prem — migration path to Catalyst Center cloud-managed is the preferred approach.',
+    resources: [
+      { initials: '?', name: 'NCE — Enterprise Networking', role: 'Not yet assigned', hours: 'Req. by Jul 20', color: '#9ca3af' },
+      { initials: 'CG', name: 'Cali Grimes', role: 'Project Manager', hours: 'Est. 28 hrs', color: '#059669' },
+    ],
+    accomplishments: [
+      { date: 'Jun 28', text: 'Customer confirmed preferred deployment model: Catalyst Center cloud-managed (not on-prem)', source: 'LCS Quarterly Planning Jun 28' },
+    ],
+    updates: 'Sub-project is in planning stage. Customer alignment call on Jun 28 confirmed cloud-managed Catalyst Center as the preferred path. NCE resource request is not yet submitted — deadline to submit is Jul 20 to meet Nov 1 start. No technical work has begun. PM to confirm scope assumptions with customer in Aug planning session before project kicks off.',
+    nextSteps: [
+      { owner: 'Cali G.', due: 'Jul 20', text: 'Submit NCE resource request (Enterprise Networking domain, SDA experience required)' },
+      { owner: 'Cali G.', due: 'Aug 15', text: 'Schedule scope alignment session with customer to confirm building count and timeline' },
+      { owner: 'NCE (TBD)', due: 'Nov 1', text: 'Kick off network readiness assessment' },
+    ],
+    meetings: [
+      { date: 'Jun 28', title: 'Metro Transit – LCS Quarterly Planning', duration: '60 min' },
+    ]
+  },
+  'advisory': {
+    title: 'QBR Prep / Advisory Buffer',
+    badge: 'badge-green',
+    badgeText: 'Ongoing',
+    domain: 'Cross-domain · Advisory',
+    meta: 'Rolling · No fixed NCE · Budget: $44K allocated',
+    webexCount: 4,
+    scope: 'Rolling advisory buffer to support customer questions, ad-hoc consulting, and quarterly business review preparation. Not a defined delivery sub-project — this bucket absorbs miscellaneous hours for strategic advisory, vulnerability read-outs, and QBR documentation that doesn\'t belong to a specific technical sub-project. Typical activities: PSIRT briefings, architecture whiteboarding, QBR deck preparation, PM strategy sessions.',
+    resources: [
+      { initials: 'RV', name: 'Randy Veasley', role: 'Sr. NCE — occasional advisory', hours: '12 hrs used', color: '#0369a1' },
+      { initials: 'CG', name: 'Cali Grimes', role: 'Project Manager', hours: '8 hrs used', color: '#059669' },
+    ],
+    accomplishments: [
+      { date: 'Jun 28', text: 'Q2 Business Review delivered — customer rated presentation highly, confirmed Q3 priorities', source: 'QBR Session Jun 28' },
+      { date: 'Jun 10', text: 'PSIRT advisory delivered for ISE CVE-2024-20399 — customer confirmed no affected versions in production', source: 'Advisory Call Jun 10' },
+    ],
+    updates: 'Advisory buffer is healthy at $8K of $44K used (18%). Q2 QBR was well-received. No active advisory requests outstanding. Next QBR is due in Q3 — recommend starting prep in September using meeting notes from ISE sub-project.',
+    nextSteps: [
+      { owner: 'Cali G.', due: 'Sep 15', text: 'Begin Q3 QBR prep — pull accomplishments from ISE ZT and Catalyst Center sub-projects' },
+      { owner: 'Randy V.', due: 'On-demand', text: 'Monitor ISE PSIRT advisories for CVEs affecting customer\'s version (ISE 3.2 patch 4)' },
+    ],
+    meetings: [
+      { date: 'Jun 28', title: 'Metro Transit – Q2 Business Review', duration: '90 min' },
+      { date: 'Jun 10', title: 'Metro Transit – PSIRT Advisory', duration: '30 min' },
+      { date: 'May 20', title: 'Metro Transit – QBR Prep Internal', duration: '45 min' },
+      { date: 'May 5', title: 'Metro Transit – Executive Strategy Session', duration: '60 min' },
+    ]
+  }
+};
+
+function openSubProject(id) {
+  const d = SP_DATA[id];
+  if (!d) return;
+
+  document.getElementById('sp-modal-title').textContent = d.title;
+  const badge = document.getElementById('sp-modal-badge');
+  badge.className = 'badge ' + d.badge;
+  badge.textContent = d.badgeText;
+  document.getElementById('sp-modal-domain').textContent = d.domain;
+  document.getElementById('sp-modal-meta').textContent = d.meta;
+  document.getElementById('sp-webex-sync').textContent = `🎙 ${d.webexCount} Webex meeting${d.webexCount !== 1 ? 's' : ''} linked · Last sync Jul 8`;
+
+  const body = document.getElementById('sp-modal-body');
+  body.innerHTML = `
+    <div class="sp-section">
+      <div class="sp-section-title">Scope Summary</div>
+      <p style="font-size:13px;color:#374151;line-height:1.6;">${d.scope}</p>
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-section-title">Resources</div>
+      ${d.resources.map(r => `
+        <div class="resource-row">
+          <div class="resource-avatar" style="background:${r.color}20;color:${r.color};">${r.initials}</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:#111827;">${r.name}</div>
+            <div style="font-size:11px;color:#6b7280;">${r.role}</div>
+          </div>
+          <div style="font-size:12px;color:#6b7280;">${r.hours}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-section-title">Accomplishments <span class="webex-chip" style="font-size:10px;">from Webex transcripts</span></div>
+      ${d.accomplishments.map(a => `
+        <div class="accomplish-item">
+          <span style="color:#10b981;font-size:16px;margin-top:-1px;">✓</span>
+          <div style="flex:1;">
+            <span style="color:#111827;">${a.text}</span>
+            <div style="margin-top:3px;"><span class="webex-chip">${a.source}</span></div>
+          </div>
+          <span style="font-size:11px;color:#9ca3af;white-space:nowrap;margin-left:8px;">${a.date}</span>
+        </div>`).join('')}
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-section-title">Latest Update <span class="webex-chip" style="font-size:10px;">synthesized from recent meetings</span></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:14px;font-size:13px;color:#374151;line-height:1.6;border:1px solid #e5e7eb;">${d.updates}</div>
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-section-title">Next Steps &amp; Actions</div>
+      ${d.nextSteps.map(n => `
+        <div class="next-step-item">
+          <span style="color:#049FD9;font-size:14px;margin-top:1px;">→</span>
+          <div style="flex:1;">${n.text}</div>
+          <div style="text-align:right;flex-shrink:0;margin-left:12px;">
+            <div style="font-size:11px;font-weight:600;color:#374151;">${n.owner}</div>
+            <div style="font-size:11px;color:#9ca3af;">${n.due}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-section-title">Meeting Sources</div>
+      ${d.meetings.map(m => `
+        <div class="meeting-source">
+          <span style="font-size:16px;">🎙</span>
+          <div style="flex:1;">
+            <div style="font-weight:500;color:#111827;">${m.title}</div>
+            <div style="font-size:11px;color:#9ca3af;">${m.date} · ${m.duration}</div>
+          </div>
+          <button style="font-size:11px;padding:3px 8px;background:white;border:1px solid #e5e7eb;border-radius:5px;cursor:pointer;color:#6b7280;">View Notes</button>
+        </div>`).join('')}
+      <div style="margin-top:10px;padding:10px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px;">
+        <span>⚠</span>
+        <span>1 recent Webex transcript pending tag assignment. <strong>Is "Metro Transit – ISE Technical Workshop (Jul 9)"</strong> part of this sub-project?
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="margin-left:8px;font-size:11px;padding:2px 8px;background:#049FD9;color:white;border:none;border-radius:4px;cursor:pointer;">Yes, tag it</button>
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="margin-left:4px;font-size:11px;padding:2px 8px;background:white;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">No</button></span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('sp-modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSubProject() {
+  document.getElementById('sp-modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeSubProjectOnOverlay(e) {
+  if (e.target === document.getElementById('sp-modal-overlay')) closeSubProject();
+}
+
+// ─── FORECAST MODAL ────────────────────────────────────────────────
+
+const FORECAST_DATA = {
+  lcs: {
+    title: '28-Day Cost Forecast — Metro Transit Authority',
+    subtitle: 'LCS · PID-1045821 · Subscription project — cost forecast only',
+    hasCost: true, hasRevenue: false,
+    footerNote: 'Revenue recognition is automatic monthly invoicing — no revenue forecast required for LCS.',
+    cost: {
+      narrative: 'Current average burn is <strong>$18.2K/month</strong> based on the last 90 days of GPPR actuals. ISE Zero Trust Phase 2 is actively consuming ~$22K/month through October. Catalyst Center migration begins November — estimated at $20–24K/month. Estimate at Completion (EAC): <strong>$631K</strong> vs $696K budget. <span style="color:#10b981;font-weight:600;">$65K cushion remaining — on track.</span>',
+      budgetLabel: 'Cost Budget: $696K · Contract: Apr 2025 – Mar 2027 (27 months)', actualLabel: 'Consumed to Date: $473K (68%)',
+      columns: ['Month', 'Sub-Project Activity', 'Est. Hours', 'Est. Cost', 'Cumul. Actual+Fcst'],
+      yearToggle: true,
+      activeYear: 'y2',
+      contractYears: [
+        { label: 'Whole Contract', key: 'all' },
+        { label: 'Year 1  Apr 25–Mar 26', key: 'y1' },
+        { label: 'Year 2  Apr 26–Mar 27', key: 'y2' },
+      ],
+      rowsByYear: {
+        all: [
+          { month: 'Year 1 (Apr 25–Mar 26)', note: 'Historical — full year actuals', hrs: '2,380', cost: '$243,200', cumul: '$243,200', style: 'fc-month-past' },
+          { month: 'Year 2 (Apr 26–Mar 27)', note: 'Q1 actual + Q2–Q4 forecast', hrs: '1,946', cost: '$198,100', cumul: '$441,300', style: '' },
+          { month: 'Unallocated reserve', note: 'Remaining budget buffer', hrs: '—', cost: '', cumul: '$65,000 cushion', style: '' },
+          { month: 'EAC Total', note: '27-month contract', hrs: '—', cost: '', cumul: '<span class="fc-highlight-green">$631K</span> of $696K budget', style: '' },
+        ],
+        y1: [
+          { month: 'Apr 2025', note: 'Kickoff + ISE assessment', hrs: '152', cost: '$15,500', cumul: '$15,500', style: 'fc-month-past' },
+          { month: 'May 2025', note: 'ISE policy design start', hrs: '178', cost: '$18,200', cumul: '$33,700', style: 'fc-month-past' },
+          { month: 'Jun 2025', note: 'ISE policy design active', hrs: '191', cost: '$19,500', cumul: '$53,200', style: 'fc-month-past' },
+          { month: 'Jul 2025', note: 'Policy design complete', hrs: '174', cost: '$17,800', cumul: '$71,000', style: 'fc-month-past' },
+          { month: 'Aug 2025', note: 'ISE Ph.1 pilot deploy', hrs: '206', cost: '$21,000', cumul: '$92,000', style: 'fc-month-past' },
+          { month: 'Sep 2025', note: 'ISE Ph.1 active', hrs: '201', cost: '$20,500', cumul: '$112,500', style: 'fc-month-past' },
+          { month: 'Oct 2025', note: 'ISE Ph.1 production', hrs: '215', cost: '$22,000', cumul: '$134,500', style: 'fc-month-past' },
+          { month: 'Nov 2025', note: 'Stabilization + advisory', hrs: '176', cost: '$18,000', cumul: '$152,500', style: 'fc-month-past' },
+          { month: 'Dec 2025', note: 'Holiday — reduced pace', hrs: '117', cost: '$12,000', cumul: '$164,500', style: 'fc-month-past' },
+          { month: 'Jan 2026', note: 'ISE Ph.2 scope planning', hrs: '191', cost: '$19,500', cumul: '$184,000', style: 'fc-month-past' },
+          { month: 'Feb 2026', note: 'ISE Ph.2 design', hrs: '215', cost: '$22,000', cumul: '$206,000', style: 'fc-month-past' },
+          { month: 'Mar 2026', note: 'ISE Ph.2 kickoff', hrs: '201', cost: '$20,500', cumul: '$226,500', style: 'fc-month-past' },
+          { month: 'Year 1 Total', note: '', hrs: '2,017', cost: '', cumul: '<span class="fc-highlight-green">$226,500</span> — actual spend', style: '' },
+        ],
+        y2: [
+          { month: 'Apr 2026', note: 'ISE Ph.2 active', hrs: '188', cost: '$19,200', cumul: '$245,700', style: 'fc-month-past' },
+          { month: 'May 2026', note: 'ISE Ph.2 active', hrs: '174', cost: '$17,800', cumul: '$263,500', style: 'fc-month-past' },
+          { month: 'Jun 2026', note: 'ISE Ph.2 active', hrs: '167', cost: '$17,100', cumul: '$280,600', style: 'fc-month-past' },
+          { month: 'Q1 Subtotal', note: 'Apr–Jun 2026 actuals', hrs: '529', cost: '$54,100', cumul: '$473,000 (incl. Y1)', style: 'fc-month-past' },
+          { month: 'Jul 2026', note: 'ISE ZT Ph.2 active', hrs: '178', cost: '$18,200', cumul: '$491,200', style: 'fc-month-current' },
+          { month: 'Aug 2026', note: 'ISE ZT Ph.2 completion', hrs: '216', cost: '$22,100', cumul: '$513,300', style: '' },
+          { month: 'Sep 2026', note: 'ISE ZT Ph.3 kickoff', hrs: '196', cost: '$20,000', cumul: '$533,300', style: '' },
+          { month: 'Oct 2026', note: 'ISE ZT Ph.3 active', hrs: '210', cost: '$21,500', cumul: '$554,800', style: '' },
+          { month: 'Nov 2026', note: 'Transition / QBR prep', hrs: '100', cost: '$10,200', cumul: '$565,000', style: '' },
+          { month: 'Dec 2026', note: 'Holiday — reduced pace', hrs: '78', cost: '$8,000', cumul: '$573,000', style: '' },
+          { month: 'Jan 2027', note: 'Catalyst Center start', hrs: '196', cost: '$20,000', cumul: '$593,000', style: '' },
+          { month: 'Feb 2027', note: 'Catalyst Center active', hrs: '235', cost: '$24,000', cumul: '$617,000', style: '' },
+          { month: 'Mar 2027', note: 'Wrap-up + final QBR', hrs: '137', cost: '$14,000', cumul: '$631,000', style: '' },
+          { month: 'Year 2 Total', note: '', hrs: '1,929', cost: '', cumul: '<span class="fc-highlight-green">$157,500</span> — forecast', style: '' },
+        ]
+      },
+      rows: [], // populated dynamically from rowsByYear
+      assumptions: ['Burn rate based on 90-day GPPR rolling average', 'ISE Ph.3 begins Sep 2026 pending Ph.2 completion', 'Catalyst Center NCE resource secured by Jul 20 (4-wk lead time)', 'Holiday reduction assumes 50% capacity Dec 22 – Jan 2']
+    }
+  },
+
+  sas: {
+    title: '28-Day Cost Forecast — Harbor Medical Center',
+    subtitle: 'SAS · PID-1051203 · Subscription project — cost forecast only',
+    hasCost: true, hasRevenue: false,
+    footerNote: 'Revenue recognition is automatic monthly invoicing — no revenue forecast required for SAS.',
+    cost: {
+      narrative: 'NCE hours are 70% consumed with <strong>34 hrs remaining</strong> (approx. 2.8 weeks at current pace). At current burn, NCE hours will be exhausted by ~<strong>Aug 5</strong>, leaving 56 days on the contract with no NCE capacity. PM hours are healthy at 42% consumed. <span style="color:#f59e0b;font-weight:600;">Action required: scope remaining work or plan for a graceful handoff before hour depletion.</span>',
+      budgetLabel: 'NCE Budget: 112 hrs · PM Budget: 38 hrs', actualLabel: 'NCE Used: 78 hrs · PM Used: 16 hrs',
+      columns: ['Month', 'Activity', 'NCE Hrs', 'PM Hrs', 'Est. Cost'],
+      rows: [
+        { month: 'Through Jun 2026', note: 'Actuals', hrs: '78 NCE', cost: '16 PM', cumul: '—', style: 'fc-month-past', editable: false },
+        { month: 'Jul 2026', note: 'SIG tunnel validation', hrs: '26 NCE', cost: '6 PM', cumul: '$5,710', style: 'fc-month-current', editable: true },
+        { month: 'Aug 2026', note: 'KT + customer sign-off', hrs: '8 NCE', cost: '8 PM', cumul: '$2,680', style: '', editable: true },
+        { month: 'Sep 2026', note: 'Contract closeout', hrs: '0 NCE', cost: '4 PM', cumul: '$600', style: '', editable: true },
+        { month: 'EAC Total', note: '', hrs: '112 NCE', cost: '34 PM', cumul: '<span class="fc-highlight-yellow">$8,990 remaining</span>', style: '', editable: false },
+      ],
+      assumptions: ['NCE rate: ~$185/hr blended · PM rate: ~$150/hr', '⚠ NCE hours will exhaust ~Aug 5 at current pace — KT session at risk', 'Remaining 56 contract days (Aug–Sep) carry PM-only cost', 'No additional NCE hours can be added to SAS contract type']
+    }
+  },
+
+  pdi: {
+    title: '28-Day Forecast — Westbrook Network Refresh',
+    subtitle: 'PDI · PID-1038774 · Transaction project — cost + revenue forecast required',
+    hasCost: true, hasRevenue: true,
+    footerNote: 'Revenue recognized when MCC is signed and submitted. Forecast month = expected MCC completion month.',
+    cost: {
+      narrative: 'Project is in a significant cost overrun position at <strong>$2.15M actual</strong> vs $864K budget. MS5 is 84% complete and is consuming ~$38K/month. MS6 and MS7 are estimated at $185K and $130K respectively based on remaining scope. <span style="color:#ef4444;font-weight:600;">EAC: $2.36M — overrun will increase unless scope is formally adjusted via Change Request.</span>',
+      budgetLabel: 'Cost Budget: $864K', actualLabel: 'Actual to Date: $2,150,000 (249% of budget)',
+      columns: ['Month', 'Milestone Activity', 'Est. Hours', 'Est. Cost', 'Cumul. Cost'],
+      rows: [
+        { month: 'Through Jun 2026', note: 'Historical actuals', hrs: '—', cost: '—', cumul: '$2,150,000', style: 'fc-month-past', editable: false },
+        { month: 'Jul 2026', note: 'MS5 completion + MCC', hrs: '310', cost: '$38,000', cumul: '$2,188,000', style: 'fc-month-current', editable: true },
+        { month: 'Aug 2026', note: 'MS6 Site Rollout Ph.2 start', hrs: '375', cost: '$45,500', cumul: '$2,233,500', style: '', editable: true },
+        { month: 'Sep 2026', note: 'MS6 active delivery', hrs: '340', cost: '$41,500', cumul: '$2,275,000', style: '', editable: true },
+        { month: 'Oct 2026', note: 'MS6 complete + MS7 start', hrs: '290', cost: '$35,000', cumul: '$2,310,000', style: '', editable: true },
+        { month: 'Nov 2026', note: 'MS7 Cutover active', hrs: '230', cost: '$28,000', cumul: '$2,338,000', style: '', editable: true },
+        { month: 'Dec 2026', note: 'MS7 Handoff + close', hrs: '165', cost: '$20,000', cumul: '$2,358,000', style: '', editable: true },
+        { month: 'EAC Total', note: '', hrs: '—', cost: '', cumul: '<span class="fc-highlight-red">$2,358,000</span> vs $864K budget', style: '', editable: false },
+      ],
+      assumptions: ['MS5 requires ~2 more weeks to resolve certificate chain issue before MCC', 'MS6 estimated at 1,005 hrs based on 3× MS5 site scope', 'MS7 estimated at 395 hrs — cutover + documentation + handoff', '⚠ Formal Change Request or project closure required to address overrun']
+    },
+    revenue: {
+      narrative: 'Revenue is recognized when each MCC is signed and submitted to RAO. MS5 MCC signature is pending from customer — targeting <strong>July 2026</strong> recognition. MS6 and MS7 forecasted based on estimated completion dates. <span style="color:#f59e0b;font-weight:600;">Note: All revenue is already under contract ($1.6M) — this forecast estimates the timing of recognition only.</span>',
+      budgetLabel: 'Total Contract Revenue: $1,600,000', actualLabel: 'Recognized to Date: $800,000',
+      columns: ['Month', 'Milestone', 'MCC Amount', 'Status', 'Forecasted Recognition'],
+      rows: [
+        { month: 'FY24–FY25', note: 'MS1–MS4', hrs: '$800,000', cost: 'Recognized', cumul: '$800,000', style: 'fc-month-past', editable: false },
+        { month: 'Jul 2026', note: 'MS5 — Site Rollout Ph.1', hrs: '$320,000', cost: '<span class="badge badge-yellow">MCC Pending</span>', cumul: '$1,120,000', style: 'fc-month-current', editable: true },
+        { month: 'Sep 2026', note: 'MS6 — Site Rollout Ph.2', hrs: '$240,000', cost: '<span class="badge badge-gray">Forecasted</span>', cumul: '$1,360,000', style: '', editable: true },
+        { month: 'Nov 2026', note: 'MS7 — Cutover & Handoff', hrs: '$240,000', cost: '<span class="badge badge-gray">Forecasted</span>', cumul: '$1,600,000', style: '', editable: true },
+        { month: 'Total', note: '', hrs: '$1,600,000', cost: '', cumul: '<span class="fc-highlight-green">$1,600,000</span> — full contract value', style: '', editable: false },
+      ],
+      assumptions: ['MS5 MCC awaiting customer signature — PM to follow up with Dana Reyes by Jul 12', 'MS6 timeline contingent on MS5 MCC signed and project extension approved', 'MS7 recognition assumes no further delays to site access', 'Fiscal close calendar applied — submissions after Jul 25 roll to August']
+    }
+  },
+
+  sme: {
+    title: '28-Day Forecast — State DOT Security',
+    subtitle: 'SME · PID-1056490 · Transaction project — cost + revenue forecast required',
+    hasCost: true, hasRevenue: true,
+    footerNote: 'SME revenue is invoiced in equal monthly installments across the contract term. No milestone events required.',
+    cost: {
+      narrative: 'At the current pace of <strong>11 hrs/week</strong>, remaining 66 hours will be consumed by approximately <strong>mid-September 2026</strong>. Cost is tracking well against budget with healthy margin. No budget risk identified. <span style="color:#10b981;font-weight:600;">EAC: ~$79,800 — within budget and on track.</span>',
+      budgetLabel: 'Cost Budget: $84,000 (est.)', actualLabel: 'Consumed to Date: $12,180 (blended ~$145/hr)',
+      columns: ['Month', 'Activity', 'Est. Hours', 'Blended Rate', 'Est. Cost'],
+      rows: [
+        { month: 'Jan–Jun 2026', note: 'Historical actuals', hrs: '84', cost: '$145/hr', cumul: '$12,180', style: 'fc-month-past', editable: false },
+        { month: 'Jul 2026', note: 'FTD policy + HA consulting', hrs: '26', cost: '$145/hr', cumul: '$3,770', style: 'fc-month-current', editable: true },
+        { month: 'Aug 2026', note: 'ISE integration advising', hrs: '22', cost: '$145/hr', cumul: '$3,190', style: '', editable: true },
+        { month: 'Sep 2026', note: 'Final sessions + wrap-up', hrs: '18', cost: '$145/hr', cumul: '$2,610', style: '', editable: true },
+        { month: 'Oct–Dec 2026', note: 'Hours fully consumed by Sep', hrs: '0', cost: '—', cumul: '$0', style: '', editable: false },
+        { month: 'EAC Total', note: '', hrs: '150 hrs', cost: '', cumul: '<span class="fc-highlight-green">$21,750</span> est. total cost', style: '', editable: false },
+      ],
+      assumptions: ['Blended rate: $145/hr (NCE $185/hr + PM $150/hr, weighted)', 'Hours pace: 11 hrs/week — customer-driven consulting cadence', 'Hours will be fully consumed by ~Sep 15 at current pace', 'No additional hours can be added without a Change Request']
+    },
+    revenue: {
+      narrative: 'SME revenue is recognized in <strong>equal monthly installments</strong> of <strong>$15,000</strong> across the 12-month contract term (Jan–Dec 2026). Total contract value: $180,000. No milestone events or MCC signatures required. <span style="color:#10b981;font-weight:600;">Revenue is fully predictable — $90K recognized, $90K remaining in H2 2026.</span>',
+      budgetLabel: 'Total Contract Revenue: $180,000', actualLabel: 'Recognized to Date: $90,000 (6 of 12 months)',
+      columns: ['Month', 'Recognition Type', 'Monthly Amount', 'Status', 'Cumulative'],
+      rows: [
+        { month: 'Jan–Jun 2026', note: 'Equal split (6 mo)', hrs: '$15,000/mo', cost: 'Recognized', cumul: '$90,000', style: 'fc-month-past', editable: false },
+        { month: 'Jul 2026', note: 'Equal split', hrs: '$15,000', cost: '<span class="badge badge-blue">This month</span>', cumul: '$105,000', style: 'fc-month-current', editable: false },
+        { month: 'Aug 2026', note: 'Equal split', hrs: '$15,000', cost: '<span class="badge badge-gray">Upcoming</span>', cumul: '$120,000', style: '', editable: false },
+        { month: 'Sep 2026', note: 'Equal split', hrs: '$15,000', cost: '<span class="badge badge-gray">Upcoming</span>', cumul: '$135,000', style: '', editable: false },
+        { month: 'Oct 2026', note: 'Equal split', hrs: '$15,000', cost: '<span class="badge badge-gray">Upcoming</span>', cumul: '$150,000', style: '', editable: false },
+        { month: 'Nov 2026', note: 'Equal split', hrs: '$15,000', cost: '<span class="badge badge-gray">Upcoming</span>', cumul: '$165,000', style: '', editable: false },
+        { month: 'Dec 2026', note: 'Equal split — final', hrs: '$15,000', cost: '<span class="badge badge-gray">Upcoming</span>', cumul: '$180,000', style: '', editable: false },
+        { month: 'Total', note: '12 months', hrs: '$180,000', cost: '', cumul: '<span class="fc-highlight-green">$180,000</span> — full contract value', style: '', editable: false },
+      ],
+      assumptions: ['Monthly amount = $180,000 ÷ 12 months = $15,000 flat', 'No MCC or milestone events required', 'Revenue is automatic — no PM action needed each month', 'If contract term changes, monthly amount must be recalculated']
+    }
+  }
+};
+
+function buildRowsHtml(rows) {
+  return rows.map(r => `
+    <tr>
+      <td class="${r.style || ''}" style="white-space:nowrap;">${r.month}</td>
+      <td style="color:#6b7280;">${r.note}</td>
+      <td>${r.hrs}</td>
+      <td>${r.cost}</td>
+      <td>${r.cumul}</td>
+    </tr>`).join('');
+}
+
+function buildPanel(data, panelTitle, icon, isRevenue) {
+  const editHint = !isRevenue ? '<span style="font-size:11px;color:#9ca3af;font-weight:400;margin-left:6px;">· click any row to adjust</span>' : '';
+  const activeRows = data.yearToggle ? data.rowsByYear[data.activeYear] : data.rows;
+
+  const yearToggleHtml = data.yearToggle ? `
+    <div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;">
+      ${data.contractYears.map(y => `
+        <button onclick="switchFcYear('${y.key}')"
+          id="fc-yr-${y.key}"
+          style="font-size:11px;padding:4px 12px;border-radius:6px;cursor:pointer;border:1px solid ${data.activeYear===y.key?'#049FD9':'#e5e7eb'};background:${data.activeYear===y.key?'#e0f5fd':'white'};color:${data.activeYear===y.key?'#0369a1':'#6b7280'};font-weight:${data.activeYear===y.key?'700':'400'};">
+          ${y.label}
+        </button>`).join('')}
+    </div>` : '';
+
+  return `
+    <div class="fc-panel">
+      <div class="fc-panel-title">${icon} ${panelTitle}${editHint}</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:10px;">${data.budgetLabel} &nbsp;·&nbsp; ${data.actualLabel}</div>
+      <div class="fc-narrative">${data.narrative}</div>
+      ${yearToggleHtml}
+      <table class="fc-table" id="fc-cost-table">
+        <thead><tr>${data.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+        <tbody id="fc-cost-tbody">${buildRowsHtml(activeRows)}</tbody>
+      </table>
+      <div class="fc-assumptions">
+        <div style="font-weight:700;margin-bottom:6px;font-size:11px;">Key Assumptions</div>
+        <ul style="list-style:disc;padding-left:16px;margin:0;">
+          ${data.assumptions.map(a => `<li>${a}</li>`).join('')}
+        </ul>
+      </div>
+    </div>`;
+}
+
+function switchFcYear(key) {
+  const d = FORECAST_DATA.lcs.cost;
+  d.activeYear = key;
+  // Re-render toggle buttons
+  d.contractYears.forEach(y => {
+    const btn = document.getElementById('fc-yr-' + y.key);
+    if (!btn) return;
+    const active = y.key === key;
+    btn.style.borderColor = active ? '#049FD9' : '#e5e7eb';
+    btn.style.background = active ? '#e0f5fd' : 'white';
+    btn.style.color = active ? '#0369a1' : '#6b7280';
+    btn.style.fontWeight = active ? '700' : '400';
+  });
+  // Re-render rows
+  const tbody = document.getElementById('fc-cost-tbody');
+  if (tbody) tbody.innerHTML = buildRowsHtml(d.rowsByYear[key]);
+}
+
+function openForecast(type) {
+  const d = FORECAST_DATA[type];
+  document.getElementById('fc-title').textContent = d.title;
+  document.getElementById('fc-subtitle').textContent = d.subtitle;
+  document.getElementById('fc-footer-note').textContent = d.footerNote;
+
+  const panels = document.getElementById('fc-panels');
+  if (d.hasCost && d.hasRevenue) {
+    panels.style.gridTemplateColumns = '1fr 1fr';
+    panels.innerHTML =
+      buildPanel(d.cost, 'Cost Forecast', '💰', false) +
+      buildPanel(d.revenue, 'Revenue Forecast', '📈', true);
+  } else {
+    panels.style.gridTemplateColumns = '1fr';
+    panels.innerHTML = buildPanel(d.cost, 'Cost Forecast', '💰', false);
+  }
+
+  document.getElementById('fc-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeForecast() {
+  document.getElementById('fc-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeForecastOnOverlay(e) {
+  if (e.target === document.getElementById('fc-overlay')) closeForecast();
+}
+
+function showUploadModal() {
+  document.getElementById('upload-modal').style.display = 'flex';
+}
+
+function hideUploadModal() {
+  document.getElementById('upload-modal').style.display = 'none';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,918 @@
+<title>Clone a Repo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg:       #F2F6FB;
+    --surface:  #FFFFFF;
+    --text:     #1B2A3B;
+    --text-2:   #5A6E82;
+    --text-3:   #9AAFC4;
+    --accent:   #0B5ED7;
+    --acc-lt:   #E8F0FD;
+    --acc-dark: #0848AE;
+    --green:    #15803D;
+    --green-lt: #DCFCE7;
+    --rule:     #DDE5EF;
+    --warn-bg:  #FEF9EC;
+    --warn-bd:  #F59E0B;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:       #0F1A26;
+      --surface:  #172333;
+      --text:     #DDE8F4;
+      --text-2:   #7A96B2;
+      --text-3:   #4A6480;
+      --accent:   #4C9EFF;
+      --acc-lt:   #0D2040;
+      --acc-dark: #74B4FF;
+      --green:    #4ADE80;
+      --green-lt: #052E16;
+      --rule:     #1E3248;
+      --warn-bg:  #1C1506;
+      --warn-bd:  #D97706;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 32px 16px 64px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .header p {
+    font-size: 14px;
+    color: var(--text-2);
+  }
+
+  /* ── PROGRESS ── */
+  .progress {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+  }
+  .prog-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    transition: background .3s, color .3s;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .prog-dot.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .prog-dot.done {
+    background: var(--green);
+    color: #fff;
+  }
+  .prog-dot.done::after {
+    content: '✓';
+    font-size: 12px;
+  }
+  .prog-dot.done .num { display: none; }
+  .prog-line {
+    flex: 1;
+    height: 2px;
+    background: var(--rule);
+    transition: background .3s;
+    max-width: 48px;
+  }
+  .prog-line.done { background: var(--green); }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 580px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  }
+
+  .step { display: none; }
+  .step.active {
+    display: block;
+    animation: fadeIn .25s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  h2 {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    text-wrap: balance;
+    line-height: 1.3;
+  }
+
+  .step-sub {
+    font-size: 13.5px;
+    color: var(--text-2);
+    margin-bottom: 24px;
+    line-height: 1.55;
+  }
+
+  /* ── BIG CHOICE BUTTONS ── */
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .choice-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 2px solid var(--rule);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .15s, background .15s;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--accent);
+    background: var(--acc-lt);
+  }
+
+  .choice-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    width: 36px;
+    text-align: center;
+  }
+
+  .choice-text { flex: 1; }
+  .choice-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .choice-desc {
+    font-size: 12px;
+    color: var(--text-2);
+    display: block;
+  }
+
+  /* ── URL INPUT ── */
+  .url-section { margin-top: 16px; display: none; }
+  .url-section.show { display: block; }
+
+  .url-section label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-2);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .url-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--rule);
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color .15s;
+  }
+
+  .url-input:focus { border-color: var(--accent); }
+
+  /* ── REPO GRID ── */
+  .repo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .repo-card {
+    border: 2px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: var(--surface);
+  }
+
+  .repo-card:hover {
+    border-color: var(--accent);
+    background: var(--acc-lt);
+  }
+
+  .repo-card.selected {
+    border-color: var(--accent);
+    background: var(--acc-lt);
+  }
+
+  .repo-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .repo-desc {
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.4;
+  }
+
+  /* ── OS CHOICE ── */
+  .os-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .os-btn {
+    border: 2px solid var(--rule);
+    border-radius: 10px;
+    padding: 24px 16px;
+    cursor: pointer;
+    text-align: center;
+    background: var(--surface);
+    transition: border-color .15s, background .15s;
+    font-family: inherit;
+  }
+
+  .os-btn:hover {
+    border-color: var(--accent);
+    background: var(--acc-lt);
+  }
+
+  .os-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+  .os-label { font-size: 15px; font-weight: 600; color: var(--text); display: block; }
+  .os-sub { font-size: 11.5px; color: var(--text-2); display: block; margin-top: 3px; }
+
+  /* ── PRIMARY BUTTON ── */
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background .15s;
+  }
+
+  .btn-primary:hover { background: var(--acc-dark); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+  .btn-back {
+    background: none;
+    border: none;
+    color: var(--text-2);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px 0 0;
+    display: block;
+    margin: 0 auto;
+    text-decoration: underline;
+  }
+
+  .btn-back:hover { color: var(--text); }
+
+  /* ── INSTRUCTIONS ── */
+  .instruction-steps { display: flex; flex-direction: column; gap: 0; }
+
+  .inst-step {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .inst-step:last-child { border-bottom: none; }
+
+  .inst-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    min-width: 22px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .inst-body h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .inst-body p {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 8px;
+    line-height: 1.55;
+  }
+
+  .inst-body p:last-child { margin-bottom: 0; }
+
+  /* ── CODE COPY BLOCK ── */
+  .copy-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1E2D3D;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 8px 0;
+  }
+
+  .copy-block code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #B8D4E8;
+    flex: 1;
+    word-break: break-all;
+    background: none;
+    padding: 0;
+  }
+
+  .copy-btn {
+    background: #2A3F55;
+    border: none;
+    color: #8ABBD4;
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+    transition: background .15s, color .15s;
+  }
+
+  .copy-btn:hover { background: var(--accent); color: #fff; }
+  .copy-btn.copied { background: var(--green); color: #fff; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--warn-bg);
+    border-left: 3px solid var(--warn-bd);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--text-2);
+    margin: 12px 0;
+    line-height: 1.55;
+  }
+
+  .success-callout {
+    background: var(--green-lt);
+    border-left: 3px solid var(--green);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 500;
+    margin-top: 12px;
+  }
+
+  .start-over {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    text-decoration: underline;
+  }
+
+  @media (max-width: 480px) {
+    .repo-grid, .os-choices { grid-template-columns: 1fr; }
+    .card { padding: 24px 18px; }
+  }
+</style>
+
+<div class="header">
+  <h1>Clone a Repository</h1>
+  <p>A step-by-step guide — no technical experience needed</p>
+</div>
+
+<div class="progress" id="progress">
+  <div class="prog-dot active" id="dot-1"><span class="num">1</span></div>
+  <div class="prog-line" id="line-1"></div>
+  <div class="prog-dot" id="dot-2"><span class="num">2</span></div>
+  <div class="prog-line" id="line-2"></div>
+  <div class="prog-dot" id="dot-3"><span class="num">3</span></div>
+  <div class="prog-line" id="line-3"></div>
+  <div class="prog-dot" id="dot-4"><span class="num">4</span></div>
+  <div class="prog-line" id="line-4"></div>
+  <div class="prog-dot" id="dot-5"><span class="num">5</span></div>
+</div>
+
+<div class="card">
+
+  <!-- STEP 1: Which space? -->
+  <div class="step active" id="step-1">
+    <div class="step-label">Step 1 of 5</div>
+    <h2>Where is the repo you want to clone?</h2>
+    <p class="step-sub">Most USPS PMs will use the team space. If your repo lives somewhere else, select the second option and paste the link.</p>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectSpace('usps')">
+        <div class="choice-icon">🏢</div>
+        <div class="choice-text">
+          <span class="choice-title">USPS PMO Team Space</span>
+          <span class="choice-desc">wwwin-github.cisco.com/orgs/cx-usps-auto/teams/usps-pmo</span>
+        </div>
+      </button>
+      <button class="choice-btn" onclick="selectSpace('gesc')">
+        <div class="choice-icon">🏛️</div>
+        <div class="choice-text">
+          <span class="choice-title">CX AMER GESC PMO — Agent Skills</span>
+          <span class="choice-desc">wwwin-github.cisco.com/CX-AMER-GESC-PMO/Agent-skills</span>
+        </div>
+      </button>
+      <button class="choice-btn" onclick="selectSpace('custom')">
+        <div class="choice-icon">🔗</div>
+        <div class="choice-text">
+          <span class="choice-title">A different space</span>
+          <span class="choice-desc">I'll paste the link to my GitHub org or team page</span>
+        </div>
+      </button>
+    </div>
+    <div class="url-section" id="custom-space-input">
+      <label>Paste your GitHub space or org URL:</label>
+      <input type="text" class="url-input" id="custom-space-url" placeholder="https://wwwin-github.cisco.com/orgs/your-org/..." />
+      <button class="btn-primary" onclick="goToStep2()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Which repo? -->
+  <div class="step" id="step-2">
+    <div class="step-label">Step 2 of 5</div>
+    <h2 id="step2-heading">Which repo do you want to clone?</h2>
+    <p class="step-sub" id="step2-sub">Select the repo below, or paste its URL if you don't see it listed.</p>
+
+    <div class="repo-grid" id="repo-grid">
+      <div class="repo-card" onclick="selectRepo(this, 'meeting-minutes', 'Meeting Minutes')">
+        <div class="repo-name">📋 Meeting Minutes</div>
+        <div class="repo-desc">Generate and file meeting notes automatically</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'USPS-PMO-Training', 'USPS PMO Training')">
+        <div class="repo-name">🎓 PMO Training</div>
+        <div class="repo-desc">Onboarding and training materials for USPS PMs</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'meeting-notes-action-items-workflow', 'Meeting Notes Action Items Workflow')">
+        <div class="repo-name">✅ Action Items</div>
+        <div class="repo-desc">Track and manage action items from meetings</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'Close-a-PID', 'Close a PID')">
+        <div class="repo-name">🔒 Close a PID</div>
+        <div class="repo-desc">Automated project closure tool for Oracle + SDC</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'pm-workbook', 'PM Workbook')">
+        <div class="repo-name">📓 PM Workbook</div>
+        <div class="repo-desc">PM templates and planning tools</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'meeting-brief-skill', 'Meeting Brief Skill')">
+        <div class="repo-name">📄 Meeting Brief</div>
+        <div class="repo-desc">Pre-meeting brief generator for Claude</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'rao-submission-aide', 'RAO Submission Aide')">
+        <div class="repo-name">📝 RAO Submission</div>
+        <div class="repo-desc">Automates RAO form submission</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'abc-quote-automation-', 'ABC Quote Automation')">
+        <div class="repo-name">💬 Quote Automation</div>
+        <div class="repo-desc">Quote generation automation tools</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'cx-pm-tracker', 'CX PM Tracker')">
+        <div class="repo-name">📊 CX PM Tracker</div>
+        <div class="repo-desc">Project tracking and portfolio management</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'my-performance', 'My Performance')">
+        <div class="repo-name">⭐ My Performance</div>
+        <div class="repo-desc">Personal performance tracking resources</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'webex-90day-mcp-setup', 'Webex 90-Day MCP Setup')">
+        <div class="repo-name">🔑 Webex MCP Setup</div>
+        <div class="repo-desc">90-day auth token setup guide for Webex + Claude</div>
+      </div>
+      <div class="repo-card" onclick="selectRepo(this, 'sharepoint-claude-setup', 'SharePoint + Claude Setup')">
+        <div class="repo-name">📁 SharePoint Setup</div>
+        <div class="repo-desc">Connect Claude to your SharePoint</div>
+      </div>
+    </div>
+
+    <div id="custom-repo-section">
+      <label style="font-size:12.5px;font-weight:500;color:var(--text-2);display:block;margin-bottom:6px">Or paste the repo URL directly:</label>
+      <input type="text" class="url-input" id="custom-repo-url" placeholder="https://wwwin-github.cisco.com/org/repo-name" oninput="handleCustomRepoInput()" />
+    </div>
+
+    <button class="btn-primary" id="step2-next" onclick="goToStep3()" disabled>Continue →</button>
+    <button class="btn-back" onclick="goBack(2)">← Back</button>
+  </div>
+
+  <!-- STEP 3: Which OS? -->
+  <div class="step" id="step-3">
+    <div class="step-label">Step 3 of 5</div>
+    <h2>What kind of computer are you on?</h2>
+    <p class="step-sub">This changes the instructions slightly.</p>
+    <div class="os-choices">
+      <button class="os-btn" onclick="selectOS('windows')">
+        <span class="os-icon">🪟</span>
+        <span class="os-label">Windows</span>
+        <span class="os-sub">Windows 10 or 11</span>
+      </button>
+      <button class="os-btn" onclick="selectOS('mac')">
+        <span class="os-icon">🍎</span>
+        <span class="os-label">Mac</span>
+        <span class="os-sub">macOS</span>
+      </button>
+    </div>
+    <button class="btn-back" onclick="goBack(3)">← Back</button>
+  </div>
+
+  <!-- STEP 4: Which method? -->
+  <div class="step" id="step-4">
+    <div class="step-label">Step 4 of 5</div>
+    <h2>How do you want to clone it?</h2>
+    <p class="step-sub">Both options end up with the same result — a folder on your computer with all the repo files inside.</p>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectMethod('desktop')">
+        <div class="choice-icon">🖥️</div>
+        <div class="choice-text">
+          <span class="choice-title">GitHub Desktop <span style="font-size:11px;background:var(--green-lt);color:var(--green);padding:1px 6px;border-radius:3px;font-weight:600;margin-left:4px">Easier</span></span>
+          <span class="choice-desc">Uses a visual app — no typing commands. Recommended if you're new to GitHub.</span>
+        </div>
+      </button>
+      <button class="choice-btn" onclick="selectMethod('vscode')">
+        <div class="choice-icon">💙</div>
+        <div class="choice-text">
+          <span class="choice-title">VS Code</span>
+          <span class="choice-desc">Clone directly inside VS Code using the built-in Git tools — no extra app needed.</span>
+        </div>
+      </button>
+      <button class="choice-btn" onclick="selectMethod('terminal')">
+        <div class="choice-icon">⌨️</div>
+        <div class="choice-text">
+          <span class="choice-title">Terminal / Command Line</span>
+          <span class="choice-desc">Type one command. Faster once you've done it before.</span>
+        </div>
+      </button>
+    </div>
+    <button class="btn-back" onclick="goBack(4)">← Back</button>
+  </div>
+
+  <!-- STEP 5: Instructions -->
+  <div class="step" id="step-5">
+    <div class="step-label">Step 5 of 5 — Your Instructions</div>
+    <h2 id="inst-heading">Clone instructions</h2>
+    <p class="step-sub" id="inst-sub"></p>
+    <div class="instruction-steps" id="inst-steps"></div>
+    <div class="success-callout" id="success-msg" style="display:none">
+      ✓ That's it — the repo is now on your computer as a regular folder.
+    </div>
+    <button class="start-over" onclick="startOver()">Start over</button>
+  </div>
+
+</div>
+
+<script>
+  const state = {
+    space: null,       // 'usps' | 'custom'
+    spaceUrl: 'https://wwwin-github.cisco.com/orgs/cx-usps-auto/teams/usps-pmo',
+    repoSlug: null,
+    repoName: null,
+    repoUrl: null,
+    os: null,          // 'windows' | 'mac'
+    method: null,      // 'desktop' | 'terminal'
+  };
+
+  const ORG = 'cx-usps-auto';
+  const BASE = 'https://wwwin-github.cisco.com';
+
+  function updateProgress(current) {
+    for (let i = 1; i <= 5; i++) {
+      const dot = document.getElementById('dot-' + i);
+      dot.className = 'prog-dot' + (i < current ? ' done' : i === current ? ' active' : '');
+      dot.innerHTML = i < current ? '' : '<span class="num">' + i + '</span>';
+      if (i < 5) {
+        document.getElementById('line-' + i).className = 'prog-line' + (i < current ? ' done' : '');
+      }
+    }
+  }
+
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    updateProgress(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // STEP 1
+  function selectSpace(type) {
+    state.space = type;
+    if (type === 'usps') {
+      state.spaceUrl = BASE + '/orgs/' + ORG + '/teams/usps-pmo';
+      showStep(2);
+      setupStep2ForUSPS();
+    } else if (type === 'gesc') {
+      state.spaceUrl = 'https://wwwin-github.cisco.com/CX-AMER-GESC-PMO/Agent-skills';
+      state.repoSlug = 'Agent-skills';
+      state.repoName = 'Agent Skills';
+      state.repoUrl = 'https://wwwin-github.cisco.com/CX-AMER-GESC-PMO/Agent-skills.git';
+      showStep(3);
+    } else {
+      document.getElementById('custom-space-input').classList.add('show');
+    }
+  }
+
+  function goToStep2() {
+    const url = document.getElementById('custom-space-url').value.trim();
+    if (!url) return;
+    state.spaceUrl = url;
+    showStep(2);
+    setupStep2ForCustom(url);
+  }
+
+  // STEP 2
+  function setupStep2ForUSPS() {
+    document.getElementById('step2-heading').textContent = 'Which repo do you want to clone?';
+    document.getElementById('step2-sub').textContent = 'Select from the USPS PMO team repos below, or paste a URL if you don\'t see yours.';
+    document.getElementById('repo-grid').style.display = 'grid';
+  }
+
+  function setupStep2ForCustom(url) {
+    document.getElementById('step2-heading').textContent = 'Which repo do you want to clone?';
+    document.getElementById('step2-sub').textContent = 'Paste the full URL of the specific repo you want to clone.';
+    document.getElementById('repo-grid').style.display = 'none';
+    document.getElementById('custom-repo-url').placeholder = 'https://wwwin-github.cisco.com/org/repo-name';
+  }
+
+  function selectRepo(el, slug, name) {
+    document.querySelectorAll('.repo-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    state.repoSlug = slug;
+    state.repoName = name;
+    state.repoUrl = BASE + '/' + ORG + '/' + slug + '.git';
+    document.getElementById('step2-next').disabled = false;
+  }
+
+  function handleCustomRepoInput() {
+    const val = document.getElementById('custom-repo-url').value.trim();
+    if (val.startsWith('http') && val.length > 20) {
+      state.repoUrl = val.endsWith('.git') ? val : val + '.git';
+      state.repoName = val.split('/').pop().replace('.git', '');
+      state.repoSlug = state.repoName;
+      document.getElementById('step2-next').disabled = false;
+    } else {
+      document.getElementById('step2-next').disabled = true;
+    }
+  }
+
+  function goToStep3() {
+    if (!state.repoUrl && !state.repoSlug) return;
+    showStep(3);
+  }
+
+  // STEP 3
+  function selectOS(os) {
+    state.os = os;
+    showStep(4);
+  }
+
+  // STEP 4
+  function selectMethod(method) {
+    state.method = method;
+    buildInstructions();
+    showStep(5);
+  }
+
+  // STEP 5
+  function buildInstructions() {
+    const { os, method, repoName, repoUrl } = state;
+    const cloneUrl = repoUrl;
+    const heading = document.getElementById('inst-heading');
+    const sub = document.getElementById('inst-sub');
+    const container = document.getElementById('inst-steps');
+    const success = document.getElementById('success-msg');
+
+    heading.textContent = 'Cloning "' + repoName + '"';
+    sub.textContent = (os === 'windows' ? 'Windows' : 'Mac') + ' · ' + (method === 'desktop' ? 'GitHub Desktop' : 'Terminal');
+    container.innerHTML = '';
+
+    let steps = [];
+
+    if (method === 'vscode') {
+      steps = [
+        {
+          title: 'Open VS Code',
+          body: 'Open Visual Studio Code. You don\'t need to open any file or folder first.',
+        },
+        {
+          title: 'Open the Command Palette',
+          body: (os === 'windows'
+            ? 'Press <strong>Ctrl + Shift + P</strong> on your keyboard.'
+            : 'Press <strong>Cmd + Shift + P</strong> on your keyboard.')
+            + ' A search bar will appear at the top of VS Code.',
+        },
+        {
+          title: 'Click this link to open VS Code directly in clone mode',
+          body: 'Click the button below — it opens VS Code and automatically starts the clone process for this repo. VS Code will immediately ask you where to save the folder.',
+          vscodeLaunch: 'vscode://vscode.git/clone?url=' + encodeURIComponent(cloneUrl),
+          vscodeFallback: cloneUrl,
+        },
+        {
+          title: 'Choose where to save it',
+          body: 'A file browser will open. Navigate to where you want the folder saved — your Desktop or Documents folder works well. Click <strong>Select as Repository Destination</strong>.',
+        },
+        {
+          title: 'Open the cloned repo',
+          body: 'VS Code will ask if you want to open the cloned repository. Click <strong>Open</strong>. The repo is now open in VS Code and saved as a folder on your computer.',
+        },
+      ];
+    } else if (method === 'desktop') {
+
+      steps = [
+        {
+          title: 'Download GitHub Desktop (if you haven\'t already)',
+          body: 'Go to <strong>desktop.github.com</strong> and download the app for ' + (os === 'windows' ? 'Windows' : 'Mac') + '. Install it and sign in with your Cisco GitHub account (<strong>wwwin-github.cisco.com</strong>).',
+        },
+        {
+          title: 'Open the Clone dialog',
+          body: 'In GitHub Desktop, click <strong>File</strong> in the top menu, then click <strong>Clone Repository…</strong>',
+        },
+        {
+          title: 'Choose the URL tab and paste the repo link',
+          body: 'Click the <strong>URL</strong> tab at the top of the dialog. Paste this URL into the box:',
+          code: cloneUrl,
+        },
+        {
+          title: 'Choose where to save it',
+          body: 'Under <strong>Local Path</strong>, choose a folder on your computer — your Desktop or Documents folder works well. Then click <strong>Clone</strong>.',
+        },
+        {
+          title: 'Done',
+          body: 'GitHub Desktop will download the repo. When it finishes, the folder will appear in the location you chose. Open it in File Explorer (Windows) or Finder (Mac) like any normal folder.',
+        },
+      ];
+    } else {
+      // Terminal
+      const openTerminal = os === 'windows'
+        ? 'Press the <strong>Windows key</strong>, type <strong>PowerShell</strong>, and press Enter.'
+        : 'Press <strong>Cmd + Space</strong>, type <strong>Terminal</strong>, and press Enter.';
+
+      const cdCmd = os === 'windows' ? 'cd Desktop' : 'cd ~/Desktop';
+      const cdNote = 'This moves you to your Desktop so the cloned folder appears there. You can use a different folder if you prefer.';
+
+      steps = [
+        {
+          title: 'Check Git is installed',
+          body: (os === 'windows' ? 'Open PowerShell' : 'Open Terminal') + ' and run this command. If you see a version number, you\'re ready. If not, download Git from <strong>git-scm.com</strong>.',
+          code: 'git --version',
+        },
+        {
+          title: 'Open ' + (os === 'windows' ? 'PowerShell' : 'Terminal'),
+          body: openTerminal,
+        },
+        {
+          title: 'Navigate to where you want the folder saved',
+          body: cdNote,
+          code: cdCmd,
+        },
+        {
+          title: 'Clone the repo',
+          body: 'Copy and paste this command exactly, then press Enter:',
+          code: 'git clone ' + cloneUrl,
+        },
+        {
+          title: 'Done',
+          body: 'A new folder named <strong>' + repoName + '</strong> will appear on your Desktop. Open it like any normal folder — everything from the repo is inside.',
+        },
+      ];
+    }
+
+    steps.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'inst-step';
+      div.innerHTML = `
+        <div class="inst-num">0${i+1}</div>
+        <div class="inst-body">
+          <h3>${s.title}</h3>
+          <p>${s.body}</p>
+          ${s.code ? `<div class="copy-block"><code id="code-${i}">${s.code}</code><button class="copy-btn" onclick="copyCode('code-${i}', this)">Copy</button></div>` : ''}
+      ${s.vscodeLaunch ? `
+        <a href="${s.vscodeLaunch}" style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:10px 16px;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none;font-size:13.5px;font-weight:600;">
+          💙 Open in VS Code &amp; Clone
+        </a>
+        <div style="margin-top:16px;background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;">
+          <div style="font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">Button not working? Do it manually instead:</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="font-size:13px;color:var(--text-2);"><span style="font-weight:600;color:var(--text);">1.</span> In VS Code, press <kbd style="background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:2px 6px;font-family:'IBM Plex Mono',monospace;font-size:12px;">${os === 'windows' ? 'Ctrl + Shift + P' : 'Cmd + Shift + P'}</kbd> to open the Command Palette — a search bar appears at the top of VS Code.</div>
+            <div style="font-size:13px;color:var(--text-2);"><span style="font-weight:600;color:var(--text);">2.</span> Type <strong>Git: Clone</strong> — it appears as a suggestion. Click it.
+              <div class="copy-block" style="margin-top:6px;"><code id="code-gitclone-${i}">Git: Clone</code><button class="copy-btn" onclick="copyCode('code-gitclone-${i}', this)">Copy</button></div>
+            </div>
+            <div style="font-size:13px;color:var(--text-2);"><span style="font-weight:600;color:var(--text);">3.</span> A <strong>new input box</strong> appears at the top of VS Code asking for a repository URL. Paste this there and press <kbd style="background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:2px 6px;font-family:'IBM Plex Mono',monospace;font-size:12px;">Enter</kbd>:
+              <div class="copy-block" style="margin-top:6px;"><code id="code-vsc-${i}">${s.vscodeFallback}</code><button class="copy-btn" onclick="copyCode('code-vsc-${i}', this)">Copy</button></div>
+            </div>
+          </div>
+        </div>` : ''}
+        </div>`;
+      container.appendChild(div);
+    });
+
+    success.style.display = 'block';
+  }
+
+  function copyCode(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function goBack(from) {
+    showStep(from - 1);
+    if (from === 2) {
+      document.getElementById('custom-space-input').classList.remove('show');
+    }
+  }
+
+  function startOver() {
+    state.space = null; state.repoSlug = null; state.repoName = null;
+    state.repoUrl = null; state.os = null; state.method = null;
+    document.querySelectorAll('.repo-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('step2-next').disabled = true;
+    document.getElementById('custom-space-url').value = '';
+    document.getElementById('custom-repo-url').value = '';
+    document.getElementById('repo-grid').style.display = 'grid';
+    document.getElementById('success-msg').style.display = 'none';
+    showStep(1);
+  }
+</script>

@@ -1,0 +1,381 @@
+<!doctype html>
+<title>F51119 October 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+/* layout: sticky header / calendar-grid + slide-in detail panel */
+:root {
+  --bg:       #F5F3EF;
+  --surface:  #FFFFFF;
+  --surf2:    #EDEBE7;
+  --border:   #DDD9D2;
+  --text:     #1B1814;
+  --muted:    #726C65;
+  --accent:   #C07A18;
+  --accentBg: #FEF1D4;
+  --navy:     #0D2640;
+  --navy2:    #1A3A5C;
+
+  --s-sdwan:   #1D5BD4;
+  --s-lcs:     #0A7490;
+  --s-code:    #6D28D9;
+  --s-cat:     #047857;
+  --s-aaas:    #BE185D;
+  --s-aci:     #C2410C;
+  --s-meraki:  #3730A3;
+  --s-iq:      #374151;
+  --s-hpw:     #0369A1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg:       #091828;
+    --surface:  #102234;
+    --surf2:    #182D44;
+    --border:   #21395A;
+    --text:     #EDE9E3;
+    --muted:    #8BA3BA;
+    --accent:   #D4952F;
+    --accentBg: #241A07;
+    --navy:     #3A8EC8;
+    --navy2:    #2A7AB4;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:       #091828;
+  --surface:  #102234;
+  --surf2:    #182D44;
+  --border:   #21395A;
+  --text:     #EDE9E3;
+  --muted:    #8BA3BA;
+  --accent:   #D4952F;
+  --accentBg: #241A07;
+  --navy:     #3A8EC8;
+  --navy2:    #2A7AB4;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100%}
+
+/* ── Header ── */
+.hdr{background:var(--navy);padding:16px 20px 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.hdr-titles{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:19px;font-weight:700;color:#fff;letter-spacing:-0.2px}
+.pid{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:var(--accent);background:rgba(192,122,24,.18);border:1px solid rgba(192,122,24,.3);padding:2px 8px;border-radius:4px}
+.theme-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:6px;padding:5px 10px;font-family:'IBM Plex Sans',sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.theme-btn:hover{background:rgba(255,255,255,.22)}
+.stats-row{display:flex;gap:0;flex-wrap:wrap}
+.stat{padding-right:20px;margin-right:20px;border-right:1px solid rgba(255,255,255,.14)}
+.stat:last-child{border-right:none}
+.stat-n{font-size:21px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1}
+.stat-l{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.07em}
+
+/* ── Layout ── */
+.main{display:flex;align-items:flex-start;gap:14px;padding:16px;max-width:1180px;margin:0 auto}
+.cal-wrap{flex:1;min-width:0}
+
+/* ── Calendar ── */
+.day-hdrs{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
+.dh{text-align:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:4px 0}
+.dh.we{opacity:.45}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+
+/* ── Cells ── */
+.cell{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 5px 5px;min-height:112px}
+.cell.empty{background:transparent;border-color:transparent}
+.cell.we{background:var(--surf2)}
+.cell.today{border:2px solid var(--accent)}
+.dn{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;font-variant-numeric:tabular-nums;line-height:1}
+.cell.today .dn{color:var(--accent)}
+.cell.has-m .dn{color:var(--text)}
+
+/* ── Chips ── */
+.chip{display:block;border-radius:4px;padding:3px 5px;margin-bottom:3px;cursor:pointer;font-size:10px;font-weight:600;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:none;text-align:left;width:100%;transition:filter .12s,transform .1s}
+.chip:hover{filter:brightness(1.13);transform:translateY(-1px)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip.active{outline:2px solid #fff;outline-offset:1px;filter:brightness(1.18)}
+.chip-t{font-family:'IBM Plex Mono',monospace;font-size:9px;opacity:.8;display:block;margin-top:1px}
+.cs-sdwan{background:var(--s-sdwan)}
+.cs-lcs{background:var(--s-lcs)}
+.cs-code{background:var(--s-code)}
+.cs-cat{background:var(--s-cat)}
+.cs-aaas{background:var(--s-aaas)}
+.cs-aci{background:var(--s-aci)}
+.cs-meraki{background:var(--s-meraki)}
+.cs-iq{background:var(--s-iq)}
+.cs-hpw{background:var(--s-hpw)}
+
+/* ── Detail panel ── */
+.detail{width:310px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:sticky;top:calc(env(safe-area-inset-top,0px) + 96px);display:none}
+.detail.open{display:block}
+.d-stripe{height:4px}
+.d-body{padding:14px 15px}
+.d-date{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
+.d-subj{font-size:14.5px;font-weight:700;line-height:1.3;color:var(--text);margin-bottom:12px;text-wrap:balance}
+.d-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:12.5px}
+.d-ico{width:14px;flex-shrink:0;color:var(--muted);text-align:center;margin-top:1px;font-style:normal}
+.d-val{color:var(--text);line-height:1.4}
+.d-mono{font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+.d-sec{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:12px 0 5px}
+.atts{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px}
+.att{font-size:10px;background:var(--surf2);color:var(--muted);border-radius:3px;padding:2px 5px}
+.d-prev{font-size:11.5px;color:var(--muted);line-height:1.5;font-style:italic;background:var(--surf2);border-radius:5px;padding:8px 10px}
+.d-acts{display:flex;gap:6px;margin-top:14px}
+.btn-join{flex:1;background:var(--navy);color:#fff;border:none;border-radius:6px;padding:8px 12px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;display:block;transition:background .15s}
+.btn-join:hover{background:var(--navy2)}
+.btn-dis{background:var(--surf2);color:var(--muted);cursor:default}
+.btn-x{background:var(--surf2);color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12.5px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:background .12s}
+.btn-x:hover{background:var(--border)}
+
+/* ── Legend ── */
+.legend{max-width:1180px;margin:0 auto;padding:10px 16px 28px}
+.leg-hd{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px}
+.leg-items{display:flex;flex-wrap:wrap;gap:7px 14px}
+.li{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.li-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── Responsive ── */
+@media(max-width:720px){
+  .main{flex-direction:column;padding:10px 8px}
+  .detail{width:100%;position:static}
+  .chip-t{display:none}
+  .cell{min-height:80px;padding:5px 3px}
+  .chip{font-size:9px}
+}
+@media(max-width:420px){
+  h1{font-size:16px}
+  .stat-n{font-size:17px}
+  .cell{min-height:65px}
+}
+</style>
+
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-titles">
+      <h1>City of Houston — October 2026</h1>
+      <span class="pid">F51119</span>
+    </div>
+    <button class="theme-btn" id="themeBtn">&#9790; Dark</button>
+  </div>
+  <div class="stats-row" id="statsRow"></div>
+</header>
+
+<div class="main">
+  <div class="cal-wrap">
+    <div class="day-hdrs">
+      <div class="dh">Mon</div><div class="dh">Tue</div><div class="dh">Wed</div>
+      <div class="dh">Thu</div><div class="dh">Fri</div>
+      <div class="dh we">Sat</div><div class="dh we">Sun</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <aside class="detail" id="detailPanel" aria-label="Meeting details"></aside>
+</div>
+<div class="legend" id="legendArea"></div>
+
+<script>
+const MEETINGS = [
+  {subject:"SDWAN Support Sessions [External] F51119",start:"2026-10-01T11:00",end:"2026-10-01T12:00",duration:60,required:"Houston Downs (hodowns); DeHoyos, Aida - IT (Contractor); Graham, James - IT; Nealy, Reginald - IT; Lewally, Salim - IT; chi.vu@houstontx.gov; Westmoreland, Alexis - IT; Sakowitz, Mark - IT; Dan Beynon (dabeynon); Ankur Ruhal (aruhal)",location:"https://cisco.webex.com/cisco/j.php?MTID=m82a3816f7b241f45b817f438e903abb2",body:"Action items: DMVPN to SDWAN Pilot (Dedicated Slide) Not started — Standardization/Scalability. Integration to Cisco ISE Not Started — Operational Efficiency."},
+  {subject:"Meraki: Questions for Digital Signage Approval — 13333 Northwest Freeway F51119 [EXTERNAL]",start:"2026-10-05T10:00",end:"2026-10-05T11:00",duration:60,required:"Houston Downs (hodowns); Neelesh Mallavarapu (mneelesh); Abhishek Mehrotra (abhimehr); Lonabaugh, Eugene - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m5175970af0474b4f6c4658ce9955204a",body:"Problem Statement: Two devices whitelisted. One device stays connected to the same AP; the other bounces between three APs. Review AP placement and client balancing settings."},
+  {subject:"Weekly CoH LCS Status Review [EXTERNAL] F51119",start:"2026-10-06T10:15",end:"2026-10-06T11:00",duration:45,required:"Houston Downs (hodowns); Omar Saffouri (osaffour); Jonathan Nissao (jnissao); Quarfordt, Bert - IT; Peter Comeaux (pcomeaux); Westmoreland, Alexis - IT; Nealy, Reginald - IT; Jarrett Davidson (jardavid)",location:"https://cisco.webex.com/cisco/j.php?MTID=m79faeba1ec75e82cc41d7716bbe83616",body:"Agenda: 1. ISR 1109 reboot/high CPU — TAC case status (Orestes). 2. Git repository update (Jonathan/Omar). 3. SD-WAN Thursday call results. 4. Open action items review."},
+  {subject:"SDWAN As Code Lab bi-monthly [EXTERNAL] F51119 City of Houston",start:"2026-10-06T15:00",end:"2026-10-06T16:00",duration:60,required:"Houston Downs (hodowns); Omar Saffouri (osaffour); Dan Carr (danicarr); SNOW - HITS Network Services",location:"https://cisco.webex.com/cisco/j.php?MTID=mfe597b3f66131cea4ea7f4287c42b3d7",body:"Bi-monthly series to establish a production lab and review service-as-code automation for SD-WAN configuration management."},
+  {subject:"Cat Center Review Sessions [External] F51119 City of Houston",start:"2026-10-07T11:00",end:"2026-10-07T12:00",duration:60,required:"Houston Downs (hodowns); Alec Franco (alecfran); Lonabaugh, Eugene - IT; Rivero, Orestes - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m68dd56da88bbe4c790545a78179b6a3a",body:"Agenda: Demo pure-CLI templates added to composite sequence; simulation results. Decision on domain name/NTP: network settings vs. CLI template. Work through templates requiring advanced logic."},
+  {subject:"Architect As A Service Session [External] F51119",start:"2026-10-07T12:15",end:"2026-10-07T12:55",duration:40,required:"Houston Downs (hodowns); Nizami Mammadov (nmammado); SNOW - HITS Network Services",location:"https://cisco.webex.com/cisco/j.php?MTID=m06f7a9ac17cc0069d56b6f5d16c749fd",body:"Agenda: 3. Nizami — StackWise/ROMmon: coordination with Amit/TAC complete? Defect confirmed or ruled out? 4. Salim / Nizami — HPL BGP session: scheduled? Carrier AS filter confirmed with ISP?"},
+  {subject:"ACI Office Hours: F51119 [EXTERNAL]",start:"2026-10-07T14:00",end:"2026-10-07T15:00",duration:60,required:"Houston Downs (hodowns); Kennie Albritton (kalbritt); Nealy, Reginald - IT; Lewally, Salim - IT; Gillis, Christopher - IT; Persino, Byron - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m143d77a5f2a26279fb64dc8597ed862c",body:"ACI LCS initiatives. Tonight's change scope: Port group from VMM to DVS switches. UCM Overlapping VLAN Resolution timeline. Ten-fabric milestone review."},
+  {subject:"HPW UCS & ACI Review Session — VMM Migration ACI [EXTERNAL] F51119",start:"2026-10-09T11:00",end:"2026-10-09T12:00",duration:60,required:"Houston Downs (hodowns); drew.calhoun@houstontx.gov; salim.lewally@houstontx.gov; Johnny Mistichelli (johmisti); Kennie Albritton (kalbritt); Lao, Javier - HPW",location:"https://cisco.webex.com/cisco/j.php?MTID=m2337cda8b853bf2f7b5542f5e03d1829",body:"One-time session: HPW UCS & ACI Review for City of Houston. Goal: review Cisco UCS and ACI infrastructure in preparation for VMM migration to ACI."},
+  {subject:"Monthly Cisco IQ Working Session F51119 [EXTERNAL]",start:"2026-10-12T11:00",end:"2026-10-12T12:00",duration:60,required:"Houston Downs (hodowns); SNOW - HITS Network Services; Ankur Ruhal (aruhal)",location:"https://cisco.webex.com/cisco/j.php?MTID=md6fe7f6654044b82461279ce7ea319b3",body:"Agenda: Account access check-in — Reginald: MFA status. Catalyst OS upgrade status — Chi Vu: 17.15.6 batching progress. IQ dashboard review and next steps."},
+  {subject:"Weekly CoH LCS Status Review [EXTERNAL] F51119",start:"2026-10-13T10:15",end:"2026-10-13T11:00",duration:45,required:"Houston Downs (hodowns); Omar Saffouri (osaffour); Jonathan Nissao (jnissao); Quarfordt, Bert - IT; Peter Comeaux (pcomeaux); Westmoreland, Alexis - IT; Nealy, Reginald - IT; Jarrett Davidson (jardavid)",location:"https://cisco.webex.com/cisco/j.php?MTID=m79faeba1ec75e82cc41d7716bbe83616",body:"Agenda: 1. Eugene/Mustafa — MTU/Sev 3 TAC case: troubleshooting call outcomes and packet capture findings. 2. Houston — Calendar view of recurring meetings. 3. Open action items."},
+  {subject:"Meraki ATX Sessions F51119 [EXTERNAL]",start:"2026-10-14T11:00",end:"2026-10-14T12:00",duration:60,required:"Houston Downs (hodowns); Abhishek Mehrotra (abhimehr); Vu, Chi - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m78053986626ce219a0274c3e76b2d0cd",body:"Agenda: 1. Chi Vu — Monitoring update: roaming/disconnections improved after disabling client balancing? 2. Abhishek — Heat map + survey file review: AP placement confirmed? Final RF plan."},
+  {subject:"Architect As A Service Session [External] F51119",start:"2026-10-14T12:00",end:"2026-10-14T13:00",duration:60,required:"Houston Downs (hodowns); Nizami Mammadov (nmammado); SNOW - HITS Network Services",location:"https://cisco.webex.com/cisco/j.php?MTID=mc36e4596407e9494bc1aae35f641e72f",body:"Agenda: DMVPN Pilot North Belt Strategy — HW deployed, circuit availability, dual circuit timeline. Link redundancy effort: HPL-to-Databank Circuit & physical path."},
+  {subject:"ACI Office Hours: F51119 [EXTERNAL]",start:"2026-10-14T14:00",end:"2026-10-14T15:00",duration:60,required:"Houston Downs (hodowns); Kennie Albritton (kalbritt); Nealy, Reginald - IT; Lewally, Salim - IT; Gillis, Christopher - IT; Persino, Byron - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m143d77a5f2a26279fb64dc8597ed862c",body:"ACI LCS initiatives. Port group from VMM to DVS switches. UCM Overlapping VLAN Resolution timeline. Tenfab progress review."},
+  {subject:"HPW UCS & ACI Review Session Part 2 — VMM Migration ACI [EXTERNAL] F51119",start:"2026-10-15T10:00",end:"2026-10-15T11:00",duration:60,required:"Houston Downs (hodowns); Johnny Mistichelli (johmisti); drew.calhoun@houstontx.gov; salim.lewally@houstontx.gov; Kennie Albritton (kalbritt); Lao, Javier - HPW",location:"https://cisco.webex.com/cisco/j.php?MTID=mb29c7541d9dd557b9af5d36e7e13caf3",body:"Agenda: 1. Drew / Javier: distributed port group creation status — all VLANs from Kenny's spreadsheet created in HPW-DVS-01? 2. Drew: VLAN reachability test results — which port groups ping clean?"},
+  {subject:"SDWAN Support Sessions [External] F51119",start:"2026-10-15T11:00",end:"2026-10-15T12:00",duration:60,required:"Houston Downs (hodowns); DeHoyos, Aida - IT (Contractor); Graham, James - IT; Nealy, Reginald - IT; Lewally, Salim - IT; chi.vu@houstontx.gov; Westmoreland, Alexis - IT; Sakowitz, Mark - IT; Dan Beynon (dabeynon)",location:"https://cisco.webex.com/cisco/j.php?MTID=m82a3816f7b241f45b817f438e903abb2",body:"Agenda: 1. Dan Beynon — Cloud Ops vManage upgrade schedule: 20.15.6.1 timeline. 2. Dan Beynon — 82xx/83xx device upgrade failures: root cause & resolution. 3. IQ dashboard review."},
+  {subject:"Weekly CoH LCS Status Review [EXTERNAL] F51119",start:"2026-10-20T10:15",end:"2026-10-20T11:00",duration:45,required:"Houston Downs (hodowns); Omar Saffouri (osaffour); Jonathan Nissao (jnissao); Quarfordt, Bert - IT; Peter Comeaux (pcomeaux); Westmoreland, Alexis - IT; Nealy, Reginald - IT; Jarrett Davidson (jardavid)",location:"https://cisco.webex.com/cisco/j.php?MTID=m79faeba1ec75e82cc41d7716bbe83616",body:"Agenda: Project housekeeping, open action items, technology ventures priorities and next steps."},
+  {subject:"SDWAN As Code Lab bi-monthly [EXTERNAL] F51119 City of Houston",start:"2026-10-20T14:00",end:"2026-10-20T15:00",duration:60,required:"Houston Downs (hodowns); Omar Saffouri (osaffour); Dan Carr (danicarr); SNOW - HITS Network Services; Nealy, Reginald - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=mfe597b3f66131cea4ea7f4287c42b3d7",body:"Bi-monthly series to establish a production lab and review service-as-code automation for SD-WAN configuration management."},
+  {subject:"Cat Center Review Sessions [External] F51119 City of Houston",start:"2026-10-21T11:00",end:"2026-10-21T12:00",duration:60,required:"Houston Downs (hodowns); Alec Franco (alecfran); Lonabaugh, Eugene - IT; Rivero, Orestes - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m68dd56da88bbe4c790545a78179b6a3a",body:"General triage list of known initiatives ordered by priority. CLI template composite sequence review and simulation results."},
+  {subject:"Architect As A Service Session [External] F51119",start:"2026-10-21T12:00",end:"2026-10-21T13:00",duration:60,required:"Houston Downs (hodowns); Nizami Mammadov (nmammado); SNOW - HITS Network Services",location:"https://cisco.webex.com/cisco/j.php?MTID=mc36e4596407e9494bc1aae35f641e72f",body:"Agenda: DMVPN Pilot North Belt Strategy. Circuit availability and dual circuit timeline. Link redundancy effort."},
+  {subject:"ACI Office Hours: F51119 [EXTERNAL]",start:"2026-10-21T14:00",end:"2026-10-21T15:00",duration:60,required:"Houston Downs (hodowns); Kennie Albritton (kalbritt); Nealy, Reginald - IT; Lewally, Salim - IT; Gillis, Christopher - IT; Persino, Byron - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m143d77a5f2a26279fb64dc8597ed862c",body:"ACI LCS initiatives review. VMM to DVS migration progress. UCM overlapping VLAN resolution."},
+  {subject:"Weekly CoH LCS Status Review [EXTERNAL] F51119",start:"2026-10-27T10:15",end:"2026-10-27T11:00",duration:45,required:"Houston Downs (hodowns); Omar Saffouri (osaffour); Jonathan Nissao (jnissao); Quarfordt, Bert - IT; Peter Comeaux (pcomeaux); Westmoreland, Alexis - IT; Nealy, Reginald - IT; Jarrett Davidson (jardavid)",location:"https://cisco.webex.com/cisco/j.php?MTID=m79faeba1ec75e82cc41d7716bbe83616",body:"Agenda: Project housekeeping, open action items, technology ventures priorities and next steps."},
+  {subject:"Meraki ATX Sessions F51119 [EXTERNAL]",start:"2026-10-28T11:00",end:"2026-10-28T12:00",duration:60,required:"Houston Downs (hodowns); Abhishek Mehrotra (abhimehr); Vu, Chi - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m78053986626ce219a0274c3e76b2d0cd",body:"ASK THE EXPERT sessions. Cadence: discovery, then troubleshooting known issues, then configuration work."},
+  {subject:"Architect As A Service Session [External] F51119",start:"2026-10-28T12:00",end:"2026-10-28T13:00",duration:60,required:"Houston Downs (hodowns); Nizami Mammadov (nmammado); SNOW - HITS Network Services",location:"https://cisco.webex.com/cisco/j.php?MTID=mc36e4596407e9494bc1aae35f641e72f",body:"Agenda: DMVPN Pilot North Belt Strategy — continued from prior session."},
+  {subject:"ACI Office Hours: F51119 [EXTERNAL]",start:"2026-10-28T14:00",end:"2026-10-28T15:00",duration:60,required:"Houston Downs (hodowns); Kennie Albritton (kalbritt); Nealy, Reginald - IT; Lewally, Salim - IT; Gillis, Christopher - IT; Persino, Byron - IT",location:"https://cisco.webex.com/cisco/j.php?MTID=m143d77a5f2a26279fb64dc8597ed862c",body:"ACI LCS initiatives. VMM migration progress. UCM VLAN overlap resolution and milestone review."},
+  {subject:"SDWAN Support Sessions [External] F51119",start:"2026-10-29T11:00",end:"2026-10-29T12:00",duration:60,required:"Houston Downs (hodowns); DeHoyos, Aida - IT (Contractor); Graham, James - IT; Nealy, Reginald - IT; Lewally, Salim - IT; chi.vu@houstontx.gov; Westmoreland, Alexis - IT; Sakowitz, Mark - IT; Dan Beynon (dabeynon)",location:"https://cisco.webex.com/cisco/j.php?MTID=m82a3816f7b241f45b817f438e903abb2",body:"Action items: DMVPN to SDWAN Pilot — Standardization/Scalability. Integration to Cisco ISE — Operational Efficiency. IQ dashboard review."},
+];
+
+const SERIES = {
+  sdwan:  {label:"SD-WAN Support",    short:"SD-WAN Support", cls:"cs-sdwan",  color:"#1D5BD4"},
+  lcs:    {label:"Weekly LCS Review", short:"LCS Review",     cls:"cs-lcs",    color:"#0A7490"},
+  code:   {label:"SD-WAN Code Lab",   short:"Code Lab",       cls:"cs-code",   color:"#6D28D9"},
+  cat:    {label:"Cat Center",        short:"Cat Center",     cls:"cs-cat",    color:"#047857"},
+  aaas:   {label:"Architect AaaS",    short:"Arch. AaaS",     cls:"cs-aaas",   color:"#BE185D"},
+  aci:    {label:"ACI Office Hours",  short:"ACI Hours",      cls:"cs-aci",    color:"#C2410C"},
+  meraki: {label:"Meraki",            short:"Meraki",         cls:"cs-meraki", color:"#3730A3"},
+  iq:     {label:"Cisco IQ",          short:"Cisco IQ",       cls:"cs-iq",     color:"#374151"},
+  hpw:    {label:"HPW / UCS & ACI",   short:"HPW/ACI",        cls:"cs-hpw",    color:"#0369A1"},
+};
+
+function getSeries(s) {
+  const t = s.toLowerCase();
+  if (t.includes('sdwan support') || t.includes('sd-wan support')) return 'sdwan';
+  if (t.includes('lcs status review') || t.includes('coh lcs')) return 'lcs';
+  if (t.includes('as code lab') || t.includes('sdwan as code')) return 'code';
+  if (t.includes('cat center')) return 'cat';
+  if (t.includes('architect as a service')) return 'aaas';
+  if (t.includes('aci office')) return 'aci';
+  if (t.includes('meraki')) return 'meraki';
+  if (t.includes('cisco iq') || t.includes('iq working')) return 'iq';
+  if (t.includes('hpw') || (t.includes('ucs') && t.includes('review'))) return 'hpw';
+  return 'other';
+}
+
+function fmtTime(iso) {
+  const m = iso.match(/T(\d{2}):(\d{2})/);
+  const h = parseInt(m[1]), mn = parseInt(m[2]);
+  const ap = h >= 12 ? 'PM' : 'AM', h12 = h % 12 || 12;
+  return h12 + (mn ? ':' + String(mn).padStart(2,'0') : '') + ' ' + ap;
+}
+
+function fmtDay(iso) {
+  const [,yr,mo,dy] = iso.match(/(\d{4})-(\d{2})-(\d{2})/);
+  const d = new Date(+yr, +mo-1, +dy);
+  const dns = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mns = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return dns[d.getDay()] + ', ' + mns[d.getMonth()] + ' ' + +dy;
+}
+
+function fmtDur(m) {
+  const h = Math.floor(m/60), mn = m%60;
+  return h ? (h+'h'+(mn?' '+mn+'m':'')) : mn+'m';
+}
+
+function cleanSubject(s) {
+  return s.replace(/\[EXTERNAL\]/gi,'').replace(/\[External\]/g,'').replace(/\bF51119\b/g,'').replace(/\bCity of Houston\b/gi,'').replace(/\s{2,}/g,' ').trim().replace(/^[:—\-\s]+|[:—\-\s]+$/g,'');
+}
+
+function parseAtts(str) {
+  if (!str) return [];
+  return str.split(';').map(s => s.trim()).filter(Boolean)
+    .map(s => s.includes('@') ? s : s.replace(/\s*\([^)]+\)$/,'').replace(/\s*-\s*IT(\s*\(.*\))?$/i,'').replace(/\s*\(Contractor\)/i,'').trim())
+    .filter(s => s && !/houston downs/i.test(s) && !/^SNOW\s/i.test(s));
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── Stats ── */
+(function(){
+  const total = MEETINGS.length;
+  const mins = MEETINGS.reduce((a,m) => a+m.duration, 0);
+  const h = Math.floor(mins/60), mn = mins%60;
+  const timeStr = h+'h'+(mn?' '+mn+'m':'');
+  const dowCount = {};
+  MEETINGS.forEach(m => {
+    const [,yr,mo,dy] = m.start.match(/(\d{4})-(\d{2})-(\d{2})/);
+    const dow = new Date(+yr,+mo-1,+dy).getDay();
+    dowCount[dow] = (dowCount[dow]||0)+1;
+  });
+  const topDow = Object.entries(dowCount).sort((a,b)=>b[1]-a[1])[0];
+  const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('statsRow').innerHTML =
+    `<div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Meetings</div></div>`+
+    `<div class="stat"><div class="stat-n">${timeStr}</div><div class="stat-l">Scheduled</div></div>`+
+    `<div class="stat"><div class="stat-n">${new Set(MEETINGS.map(m=>getSeries(m.subject))).size}</div><div class="stat-l">Series</div></div>`+
+    `<div class="stat"><div class="stat-n">${dowNames[topDow[0]]}</div><div class="stat-l">Busiest (${topDow[1]} total)</div></div>`;
+})();
+
+/* ── Calendar ── */
+(function(){
+  const grid = document.getElementById('calGrid');
+  // Oct 1 2026 = Thursday; Mon-first grid: offset = (4+6)%7 = 3
+  const startOffset = 3;
+  const byDay = {};
+  MEETINGS.forEach(m => { const d = +m.start.slice(8,10); (byDay[d]||(byDay[d]=[])).push(m); });
+
+  for (let i = 0; i < 35; i++) {
+    const dayNum = i - startOffset + 1;
+    const cell = document.createElement('div');
+    if (dayNum < 1 || dayNum > 31) { cell.className = 'cell empty'; grid.appendChild(cell); continue; }
+    const dow = i % 7;
+    const isWe = dow >= 5;
+    const isToday = dayNum === 13; // Oct 13, 2026
+    const ms = byDay[dayNum] || [];
+    cell.className = ['cell', isWe?'we':'', isToday?'today':'', ms.length?'has-m':''].filter(Boolean).join(' ');
+    const dn = document.createElement('div');
+    dn.className = 'dn'; dn.textContent = dayNum;
+    cell.appendChild(dn);
+    ms.sort((a,b) => a.start.localeCompare(b.start));
+    ms.forEach(m => {
+      const sk = getSeries(m.subject);
+      const sd = SERIES[sk] || {short:'Meeting',cls:'cs-iq'};
+      const btn = document.createElement('button');
+      btn.className = 'chip ' + sd.cls;
+      btn.setAttribute('aria-label', m.subject);
+      btn.innerHTML = esc(sd.short) + '<span class="chip-t">' + fmtTime(m.start) + '</span>';
+      btn.addEventListener('click', e => { e.stopPropagation(); openDetail(m, btn, sk); });
+      cell.appendChild(btn);
+    });
+    grid.appendChild(cell);
+  }
+})();
+
+/* ── Detail panel ── */
+let activeBtn = null;
+window.closeDetail = function() {
+  if (activeBtn) activeBtn.classList.remove('active');
+  activeBtn = null;
+  const p = document.getElementById('detailPanel');
+  p.classList.remove('open'); p.innerHTML = '';
+};
+
+function openDetail(m, btn, sk) {
+  if (activeBtn === btn) { closeDetail(); return; }
+  if (activeBtn) activeBtn.classList.remove('active');
+  activeBtn = btn; btn.classList.add('active');
+  const sd = SERIES[sk] || {label:'Meeting',color:'#374151'};
+  const atts = parseAtts(m.required);
+  const webex = m.location && m.location.includes('webex');
+  const p = document.getElementById('detailPanel');
+  p.innerHTML =
+    `<div class="d-stripe" style="background:${sd.color}"></div>`+
+    `<div class="d-body">`+
+      `<div class="d-date">${fmtDay(m.start)}</div>`+
+      `<div class="d-subj">${esc(cleanSubject(m.subject))}</div>`+
+      `<div class="d-row"><i class="d-ico">&#9200;</i><div class="d-val d-mono">${fmtTime(m.start)} &ndash; ${fmtTime(m.end)} &nbsp;<span style="opacity:.55">${fmtDur(m.duration)}</span></div></div>`+
+      `<div class="d-row"><i class="d-ico">&#9632;</i><div class="d-val">${esc(sd.label)}</div></div>`+
+      (atts.length ? `<div class="d-sec">Attendees</div><div class="atts">${atts.slice(0,8).map(a=>`<span class="att">${esc(a)}</span>`).join('')}${atts.length>8?`<span class="att">+${atts.length-8} more</span>`:''}</div>` : '')+
+      (m.body ? `<div class="d-sec">Agenda</div><div class="d-prev">${esc(m.body.slice(0,200))}${m.body.length>200?'&hellip;':''}</div>` : '')+
+      `<div class="d-acts">`+
+        (webex ? `<a href="${m.location}" target="_blank" rel="noopener" class="btn-join">&#9654; Join Webex</a>` : `<button class="btn-join btn-dis" disabled>No link</button>`)+
+        `<button class="btn-x" onclick="closeDetail()">&#10005;</button>`+
+      `</div>`+
+    `</div>`;
+  p.classList.add('open');
+  if (window.innerWidth < 720) p.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+document.addEventListener('click', e => { if (!e.target.closest('.detail') && !e.target.closest('.chip')) closeDetail(); });
+
+/* ── Legend ── */
+(function(){
+  const used = [...new Set(MEETINGS.map(m => getSeries(m.subject)))];
+  document.getElementById('legendArea').innerHTML =
+    `<div class="leg-hd">Meeting Series</div>`+
+    `<div class="leg-items">${used.filter(k=>SERIES[k]).map(k=>`<div class="li"><div class="li-dot" style="background:${SERIES[k].color}"></div><span>${esc(SERIES[k].label)}</span></div>`).join('')}</div>`;
+})();
+
+/* ── Theme toggle ── */
+(function(){
+  const btn = document.getElementById('themeBtn');
+  const root = document.documentElement;
+  try { const s = localStorage.getItem('t-f51'); if(s){root.setAttribute('data-theme',s);btn.textContent=s==='dark'?'☀ Light':'☽ Dark';} } catch(e){}
+  btn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    const nxt = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', nxt);
+    btn.textContent = nxt === 'dark' ? '☀ Light' : '☽ Dark';
+    try { localStorage.setItem('t-f51', nxt); } catch(e){}
+  });
+})();
+</script>

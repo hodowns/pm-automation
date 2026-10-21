@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Credentials and tokens — never commit these
+pm-agent-system/config/webex-token.txt
+*.token
+*.key
+.env
+.env.*
+
+# Large generated/binary data
+poster_b64.txt
+push_payload.json
+
+# Debug and screenshot artifacts
+debug_*.png
+checkin_*.png
+teamspace_*.png
+teamspace_landing.png
+teamspace_profile/
+
+# VS Code workspace (machine-specific)
+*.code-workspace
+
+# Temp and build artifacts
+*.tmp
+*.log
+build/
+dist/
+
+# Instructional reference folder (contains Chrome browser profile with sensitive data)
+Claude How To/
+
+# Embedded git repos — each already has its own remote on Cisco GitHub
+# Exclude to avoid git submodule complexity; back them up via their own repos
+Close a PID Gen 3/
+Meeting Minutes Recap and File/
+Reverse-plans/
+Simple Meeting Recap/
+USPS PMO Training/
+USPS-PMO-Training/
+abc-quote-automation-/
+claude-skills-reverseplan/
+pm-agent-system/
