@@ -18,6 +18,12 @@ from difflib import SequenceMatcher
 import win32com.client
 
 try:
+    import requests as _requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
+try:
     from bs4 import BeautifulSoup
     HAS_BS4 = True
 except ImportError:
@@ -26,6 +32,24 @@ except ImportError:
 # ── Config ───────────────────────────────────────────────────────────────────
 LOOKBACK_DAYS   = 60
 EMAIL_SUBJECT   = "Trainings Due"
+
+# Webex — token loaded from ~/.claude/training_secrets.env (never committed)
+# To set up: add WEBEX_BOT_TOKEN=<your bot token> to that file
+def _load_secrets():
+    import pathlib
+    env_file = pathlib.Path.home() / '.claude' / 'training_secrets.env'
+    vals = {}
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            line = line.strip()
+            if '=' in line and not line.startswith('#'):
+                k, _, v = line.partition('=')
+                vals[k.strip()] = v.strip()
+    return vals
+
+_secrets = _load_secrets()
+WEBEX_BOT_TOKEN = _secrets.get('WEBEX_BOT_TOKEN', '')
+WEBEX_TO_EMAIL  = _secrets.get('WEBEX_TO_EMAIL', 'hodowns@cisco.com')
 
 
 def get_current_user_email():
@@ -401,12 +425,56 @@ def create_draft(html_body, recipient):
     print(f'To: {recipient}')
 
 
-# ── 50-day gate ───────────────────────────────────────────────────────────────
+# ── Webex DM ─────────────────────────────────────────────────────────────────
+
+def send_webex_dm(trainings):
+    """Send a Webex DM from the Personal Training Bot summarising due trainings."""
+    if not HAS_REQUESTS or not WEBEX_BOT_TOKEN:
+        return
+
+    due      = [t for t in trainings if t['status'] == 'due']
+    optional = [t for t in trainings if t['status'] == 'optional']
+
+    lines = ["**📚 Training Check**"]
+    def fmt_item(t):
+        date_str = f" — due {t['due_date']}" if t['due_date'] else ""
+        if t['links']:
+            label, url = t['links'][0]
+            return f"• [{t['name']}]({url}){date_str}"
+        return f"• {t['name']}{date_str}"
+
+    if due:
+        lines.append(f"\n**Required ({len(due)})**")
+        for t in due:
+            lines.append(fmt_item(t))
+    if optional:
+        lines.append(f"\n**Optional / No Due Date ({len(optional)})**")
+        for t in optional:
+            lines.append(fmt_item(t))
+    if not due and not optional:
+        lines.append("\nNo outstanding trainings found — you're all clear! ✅")
+
+    lines.append(f"\n_Scanned {LOOKBACK_DAYS}-day Outlook window · check your email for full details_")
+
+    try:
+        resp = _requests.post(
+            "https://webexapis.com/v1/messages",
+            headers={"Authorization": f"Bearer {WEBEX_BOT_TOKEN}",
+                     "Content-Type": "application/json"},
+            json={"toPersonEmail": WEBEX_TO_EMAIL, "markdown": "\n".join(lines)},
+            timeout=10,
+        )
+        print(f"Webex DM: HTTP {resp.status_code}")
+    except Exception as e:
+        print(f"Webex DM failed: {e}")
+
+
+# ── 21-day gate ───────────────────────────────────────────────────────────────
 
 import os, pathlib
 
 LAST_RUN_FILE  = pathlib.Path.home() / '.claude' / 'training_check_last_run.txt'
-SCHEDULE_DAYS  = 50    # only do real work when this many days have passed
+SCHEDULE_DAYS  = 21    # only do real work when this many days have passed (3 weeks)
 FORCE_FLAG     = '--force'   # bypass gate: python training_check.py --force
 
 
@@ -455,6 +523,7 @@ def main():
 
     html_body = build_html(trainings)
     create_draft(html_body, recipient)
+    send_webex_dm(trainings)
     mark_last_run()
 
 
