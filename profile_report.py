@@ -37,6 +37,7 @@ CUSTOMER_DOMAINS_BY_PID: dict[str, set] = {
     "F24373": {"uchicagomedicine.org", "meridianitinc.com"},
     "F22532": {"accenture.com"},
     "F29426": {"jaxsheriff.org"},
+    "F59190": {"houstontx.gov"},
     "F49302": set(),   # NSO — add domains when known
     "F48852": {"maryland.gov"},
     "C16507": {"state.mn.us"},
