@@ -35,6 +35,10 @@ dist/
 # Instructional reference folder (contains Chrome browser profile with sensitive data)
 Claude How To/
 
+# Browser profiles — contain SSO session cookies, never commit
+rr_sdc_profile/
+*_sdc_profile/
+
 # Embedded git repos — each already has its own remote on Cisco GitHub
 # Exclude to avoid git submodule complexity; back them up via their own repos
 Close a PID Gen 3/

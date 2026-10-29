@@ -1,5 +1,32 @@
 # Claude Projects VS CODE — Workflow Triggers
 
+## Request a Resource in SDC
+**Trigger:** "Request a Resource" / "Resource Request" / "Submit RR"
+
+Before running, ask if not specified: **project-level or task-level?**
+
+```
+py -3 -u -X utf8 "C:\Users\hodowns\Claude Projects VS CODE\submit_resource_request.py" \
+  --pid [PID] --role [Role] --work-description "[desc]" \
+  --start-date YYYY-MM-DD --end-date YYYY-MM-DD --hours [N] \
+  --architecture [arch] --technology "[tech]" --grade [8|10|11|12] \
+  --milestone "[Milestone Name]" \
+  [--suggested-resource "Full Name"] \
+  [--task-level]   # add for task-level; omit for project-level
+```
+
+Add `--dry-run` to stop at the review page without submitting.
+Work Description is auto-generated from `Scoping/` folder when possible.
+
+**Hardcoded defaults (change in script if org differs):**
+- Resource Allocation Reason: `Assign new resource`
+- Onsite Requirement: `No`
+- Citizenship Requirement: `No`
+- Time Zone Requirement: `No`
+- Security Clearance: `No`
+- Start Date Flexibility: `Ontime`
+- Scheduling Mode (task-level): `Scheduled`
+
 ## Cost Forecast
 **Trigger:** "Cost Forecast"
 
@@ -9,6 +36,27 @@ python -u -X utf8 "C:\Users\hodowns\Claude Projects VS CODE\op_cost_forecast.py"
 ```
 Opens Edge, waits for SSO login, then automatically: Select_All_Shown → Submit → Yes.
 After running, verify Last Submitted resets to 0 in Oracle Projects.
+
+## Cost Revenue Compliance
+**Trigger:** "Cost Revenue Compliance" / "Cost and Revenue Compliance"
+
+Follow the workflow in `pm-agent-system/agents/cost-revenue-compliance-agent.md`.
+Replaces Oracle Projects cost forecast (op_cost_forecast.py retired 2026-10-25).
+Navigates to each active SDC project and executes per-project compliance steps.
+
+**Step 1 — Fetch active PIDs:**
+Call `sfdc_get_my_projects(phase="Active")` and extract all PIDs.
+
+**Step 2 — Run (discovery mode first):**
+```
+python -u -X utf8 "C:\Users\hodowns\Claude Projects VS CODE\cost_revenue_compliance.py" [PID1] [PID2] ...
+```
+Output: `Desktop\SDC Compliance Discovery\discovery_report.html`
+
+**Step 3 — Run automation mode (after selectors confirmed):**
+```
+python -u -X utf8 "C:\Users\hodowns\Claude Projects VS CODE\cost_revenue_compliance.py" --run [PID1] [PID2] ...
+```
 
 ## Secretary Agent
 **Trigger:** "Secretary Agent"
