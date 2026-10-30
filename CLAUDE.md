@@ -16,7 +16,12 @@ py -3 -u -X utf8 "C:\Users\hodowns\Claude Projects VS CODE\submit_resource_reque
 ```
 
 Add `--dry-run` to stop at the review page without submitting.
-Work Description is auto-generated from `Scoping/` folder when possible.
+
+**Work Description — Scoping folder offer:**
+After the PID is known, check if a `Scoping/` folder exists for that PID
+(root: `C:\Users\hodowns\Cisco\SLED United CX Delivery Team - CUSTOMER PROJECTS\[STATE]\[PID folder]\Scoping\`).
+If it does, ask: *"I found a Scoping folder for [PID]. Want me to read the SOW and build a Work Description from it?"*
+Only ask when the work description wasn't fully specified upfront.
 
 **Hardcoded defaults (change in script if org differs):**
 - Resource Allocation Reason: `Assign new resource`

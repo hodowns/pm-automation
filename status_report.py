@@ -1138,20 +1138,29 @@ Return ONLY valid JSON, no explanation."""
         print(f"  AI enrichment failed: {e}", flush=True)
         return state
 
+    today_str = datetime.today().strftime("%m/%d")
+
+    def _text(b):
+        return b.get("text", "") if isinstance(b, dict) else b
+
+    def _is_raw_ref(b):
+        t = _text(b)
+        return t.startswith("[Email ") or t.startswith("[Webex ")
+
+    def _wrap(items):
+        return [{"text": s, "added": today_str} if isinstance(s, str) else s for s in items]
+
     updated = 0
     for track in tracks:
         data = enriched.get(track["title"], {})
         if not data:
             continue
         if data.get("project_status"):
-            # Prepend AI-extracted status — push any existing user bullets below
-            existing = [b for b in track.get("project_status", [])
-                        if not b.startswith("[Email ") and not b.startswith("[Webex ")]
-            track["project_status"] = data["project_status"] + existing
+            existing = [b for b in track.get("project_status", []) if not _is_raw_ref(b)]
+            track["project_status"] = _wrap(data["project_status"]) + existing
         if data.get("next_steps"):
-            existing_ns = [b for b in track.get("next_steps", [])
-                           if not b.startswith("[Email ") and not b.startswith("[Webex ")]
-            track["next_steps"] = data["next_steps"] + existing_ns
+            existing_ns = [b for b in track.get("next_steps", []) if not _is_raw_ref(b)]
+            track["next_steps"] = _wrap(data["next_steps"]) + existing_ns
         updated += 1
 
     print(f"  AI enrichment: updated {updated}/{len(tracks)} slides from meeting notes", flush=True)
@@ -1204,6 +1213,22 @@ def _gh_api(url: str, token: str, data: dict | None = None, method: str = "GET")
     except Exception as e:
         print(f"    GitHub request error: {e}", flush=True)
         return {}, 0
+
+
+def pull_state_from_github(org: str, repo: str, branch: str, token: str, pid: str) -> dict | None:
+    """Fetch the current state.json from GitHub and return it, or None on failure."""
+    if not token:
+        return None
+    file_path = f"data/{pid}_state.json"
+    url       = f"{GH_API}/repos/{org}/{repo}/contents/{file_path}?ref={branch}"
+    result, code = _gh_api(url, token)
+    if code != 200:
+        return None
+    try:
+        raw = base64.b64decode(result["content"].replace("\n", "")).decode("utf-8")
+        return json.loads(raw)
+    except Exception:
+        return None
 
 
 def push_state_to_github(state: dict, org: str, repo: str, branch: str, token: str) -> bool:
@@ -1333,6 +1358,16 @@ def main():
     print(f"Scanning from: {since.strftime('%Y-%m-%d')}", flush=True)
 
     state_file = OUTPUT_DIR / f"{pid}_state.json"
+
+    # When pushing to GitHub, pull the live GitHub state first so any edits
+    # the manager made in the browser are preserved as the base for this run.
+    if args.push or args.deploy_pages:
+        gh_token_early = gh_get_token(getattr(args, 'gh_token', ''))
+        if gh_token_early:
+            gh_state = pull_state_from_github(args.gh_org, args.gh_repo, args.gh_branch, gh_token_early, pid)
+            if gh_state:
+                print("  Pulled live state from GitHub (browser edits preserved)", flush=True)
+                state_file.write_text(json.dumps(gh_state, indent=2, ensure_ascii=False), encoding="utf-8")
 
     # Load previous state or build fresh
     if state_file.exists():

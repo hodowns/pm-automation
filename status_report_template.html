@@ -1,35 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <title>LCS Status Report</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* ── TOKENS — Champions dark palette ─────────────────────────── */
+/* ── TOKENS — Light palette (greys + bright blues) ───────────── */
 /* Layout: sticky top-nav + stacked full-height slides           */
 :root {
-  color-scheme: dark;
-  --navy:    #06080f;
-  --blue:    #00e5ff;
-  --blue-lt: #071422;
-  --green:   #00ff88;
-  --amber:   #ffb800;
-  --red:     #ff2d7a;
-  --teal:    #00e5c0;
-  --surface: #0c1119;
-  --bg:      #06080f;
-  --text:    #b0c8e8;
-  --muted:   #4a6580;
-  --border:  #18253c;
-  --head-bg: #0c1119;
-  --head-fg: #b0c8e8;
-  --nav-bg:  #06080f;
-  --nav-fg:  #b0c8e8;
-  --glow-c:  rgba(0,229,255,.4);
-  --badge-ns-bg: #121e2e; --badge-ns-fg: #6a9ab8;
-  --badge-ip-bg: #071a2a; --badge-ip-fg: #00e5ff;
-  --badge-cp-bg: #051a10; --badge-cp-fg: #00ff88;
-  --badge-oh-bg: #1e1000; --badge-oh-fg: #ffb800;
-  --badge-cl-bg: #0e1620; --badge-cl-fg: #4a6580;
-  --badge-pl-bg: #041624; --badge-pl-fg: #00e5c0;
-  --badge-og-bg: #051a10; --badge-og-fg: #00ff88;
+  color-scheme: light;
+  --navy:    #f0f4f8;
+  --blue:    #1a6fc4;
+  --blue-lt: #e8f3fc;
+  --green:   #16a34a;
+  --amber:   #d97706;
+  --red:     #dc2626;
+  --teal:    #0891b2;
+  --surface: #ffffff;
+  --bg:      #f3f6f9;
+  --text:    #1a2636;
+  --muted:   #6b7c93;
+  --border:  #d1dbe8;
+  --head-bg: #eef2f7;
+  --head-fg: #1a2636;
+  --nav-bg:  #ffffff;
+  --nav-fg:  #1a2636;
+  --glow-c:  rgba(26,111,196,.18);
+  --badge-ns-bg: #f0f4f8; --badge-ns-fg: #6b7c93;
+  --badge-ip-bg: #dbeafe; --badge-ip-fg: #1a6fc4;
+  --badge-cp-bg: #dcfce7; --badge-cp-fg: #16a34a;
+  --badge-oh-bg: #fef3c7; --badge-oh-fg: #d97706;
+  --badge-cl-bg: #f0f4f8; --badge-cl-fg: #6b7c93;
+  --badge-pl-bg: #cffafe; --badge-pl-fg: #0891b2;
+  --badge-og-bg: #dcfce7; --badge-og-fg: #16a34a;
   --ff-display: 'Rajdhani', system-ui, sans-serif;
   --ff-body:    'Inter', system-ui, sans-serif;
   --ff-mono:    'JetBrains Mono', monospace;
@@ -47,12 +51,7 @@ body {
   padding-right: max(0px, env(safe-area-inset-right, 0px));
   position: relative;
 }
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 4px);
-  pointer-events: none; z-index: 0;
-}
+body::after { display: none; }
 #report-nav, #slides, .modal-overlay { position: relative; z-index: 1; }
 [contenteditable]:focus { outline: 1px solid var(--blue); outline-offset: 1px; border-radius: 2px; box-shadow: 0 0 6px var(--glow-c); }
 [hidden] { display: none !important; }
@@ -83,8 +82,8 @@ button { cursor: pointer; font-family: var(--ff-body); }
 #nav-title { flex: 1; font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--blue); letter-spacing: .04em; text-transform: uppercase; }
 #nav-counter { color: var(--muted); white-space: nowrap; font-size: 11px; }
 .nav-btn {
-  background: rgba(0,229,255,.08);
-  border: 1px solid rgba(0,229,255,.2);
+  background: rgba(26,111,196,.07);
+  border: 1px solid rgba(26,111,196,.25);
   color: var(--blue);
   padding: 4px 10px;
   border-radius: 3px;
@@ -95,11 +94,11 @@ button { cursor: pointer; font-family: var(--ff-body); }
   text-transform: uppercase;
   transition: background .15s, box-shadow .15s;
 }
-.nav-btn:hover { background: rgba(0,229,255,.18); box-shadow: 0 0 8px rgba(0,229,255,.2); }
-.nav-btn.print-btn { background: rgba(0,229,255,.15); border-color: var(--blue); }
-.nav-btn.print-btn:hover { background: rgba(0,229,255,.28); box-shadow: 0 0 12px var(--glow-c); }
+.nav-btn:hover { background: rgba(26,111,196,.15); box-shadow: 0 0 8px rgba(26,111,196,.15); }
+.nav-btn.print-btn { background: rgba(26,111,196,.12); border-color: var(--blue); }
+.nav-btn.print-btn:hover { background: rgba(26,111,196,.22); box-shadow: 0 0 10px var(--glow-c); }
 #nav-arrows { display: flex; gap: 4px; }
-#nav-arrows button { background: rgba(0,229,255,.06); border: 1px solid var(--border); color: var(--muted); width: 28px; height: 28px; border-radius: 3px; font-size: 12px; display: grid; place-items: center; transition: color .15s, border-color .15s; }
+#nav-arrows button { background: rgba(26,111,196,.05); border: 1px solid var(--border); color: var(--muted); width: 28px; height: 28px; border-radius: 3px; font-size: 12px; display: grid; place-items: center; transition: color .15s, border-color .15s; }
 #nav-arrows button:hover { color: var(--blue); border-color: var(--blue); }
 
 /* ── SLIDES ───────────────────────────────────────────────────── */
@@ -113,7 +112,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 
 /* ── SLIDE HEADERS ────────────────────────────────────────────── */
 .slide-header {
-  background: var(--head-bg);
+  background: linear-gradient(135deg, var(--head-bg) 0%, #dbeafe 100%);
   color: var(--head-fg);
   margin: -48px -24px 32px;
   padding: 16px 24px 14px;
@@ -136,15 +135,15 @@ button { cursor: pointer; font-family: var(--ff-body); }
   font-weight: 700;
   letter-spacing: .04em;
   text-wrap: balance;
-  color: #dce8f5;
-  text-shadow: 0 0 24px rgba(0,229,255,.12);
+  color: #1a2636;
+  text-shadow: none;
 }
 .slide-header .meta { font-family: var(--ff-mono); font-size: 10.5px; color: var(--muted); text-align: right; line-height: 1.7; }
 .slide-header .meta strong { color: var(--text); display: block; font-size: 11px; }
 
 /* ── SLIDE 1: QUOTE ───────────────────────────────────────────── */
 #slide-1 {
-  background: var(--navy);
+  background: linear-gradient(160deg, #f0f4f8 0%, #dbeafe 60%, #e0f2fe 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -157,8 +156,8 @@ button { cursor: pointer; font-family: var(--ff-body); }
 #slide-1::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 70% 30%, rgba(0,229,255,.12) 0%, transparent 55%),
-              radial-gradient(ellipse at 20% 80%, rgba(0,255,136,.06) 0%, transparent 45%);
+  background: radial-gradient(ellipse at 70% 30%, rgba(26,111,196,.08) 0%, transparent 55%),
+              radial-gradient(ellipse at 20% 80%, rgba(8,145,178,.05) 0%, transparent 45%);
   pointer-events: none;
 }
 .quote-header {
@@ -175,11 +174,11 @@ button { cursor: pointer; font-family: var(--ff-body); }
   font-family: var(--ff-display);
   font-size: clamp(20px, 3vw, 32px);
   font-weight: 600;
-  color: #dce8f5;
+  color: #1a2636;
   line-height: 1.45;
   max-width: 820px;
   text-wrap: balance;
-  text-shadow: 0 0 40px rgba(0,229,255,.08);
+  text-shadow: none;
 }
 .quote-text::before { content: '\201C'; color: var(--blue); opacity: .6; }
 .quote-text::after  { content: '\201D'; color: var(--blue); opacity: .6; }
@@ -193,16 +192,16 @@ button { cursor: pointer; font-family: var(--ff-body); }
 }
 .quote-edit-btns { margin-top: 20px; display: flex; gap: 8px; }
 .ghost-btn {
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.2);
-  color: rgba(255,255,255,.8);
+  background: rgba(26,111,196,.08);
+  border: 1px solid rgba(26,111,196,.25);
+  color: var(--blue);
   padding: 5px 14px;
   border-radius: 4px;
   font-size: 12px;
   font-family: var(--ff-body);
   transition: background .15s;
 }
-.ghost-btn:hover { background: rgba(255,255,255,.2); }
+.ghost-btn:hover { background: rgba(26,111,196,.15); }
 
 /* ── SLIDE 2: TOP OF MIND ─────────────────────────────────────── */
 .tom-list { list-style: none; display: flex; flex-direction: column; gap: 10px; max-width: 960px; }
@@ -249,7 +248,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 
 /* ── SLIDE 3: TOKEN CONSUMPTION ───────────────────────────────── */
 .token-summary { display: flex; gap: 24px; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; }
-.token-summary .total-label { font-family: var(--ff-display); font-size: 28px; font-weight: 700; color: var(--blue); text-shadow: 0 0 20px var(--glow-c); }
+.token-summary .total-label { font-family: var(--ff-display); font-size: 28px; font-weight: 700; color: var(--blue); text-shadow: none; }
 .token-summary .meta-pill {
   background: var(--blue-lt);
   color: var(--blue);
@@ -360,7 +359,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
   border-radius: 4px;
   font-size: 12px;
 }
-.toggle-completed-btn.active { background: rgba(0,229,255,.15); color: var(--blue); border-color: var(--blue); }
+.toggle-completed-btn.active { background: rgba(26,111,196,.12); color: var(--blue); border-color: var(--blue); }
 .complete-badge {
   display: inline-block;
   background: var(--badge-cp-bg);
@@ -408,7 +407,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
   text-align: left;
   padding: 7px 10px;
   opacity: .7;
-  border-bottom: 1px solid rgba(0,229,255,.15);
+  border-bottom: 1px solid rgba(26,111,196,.2);
 }
 .ka-table td {
   padding: 7px 10px;
@@ -421,6 +420,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 .ka-table .status-col { width: 110px; }
 .ka-table .del-col { width: 28px; }
 .ka-table td[contenteditable="true"]:empty::before { content: attr(data-placeholder); color: var(--border); }
+[data-s4-sub]:empty::before { content: attr(data-placeholder); color: var(--border); font-style: italic; }
 
 /* Status badges */
 .status-badge {
@@ -454,7 +454,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 }
 .bullet-list li::before { content: '▸'; color: var(--blue); flex-shrink: 0; margin-top: 1px; font-size: 11px; }
 .bullet-list li .item-text { flex: 1; min-width: 0; }
-.item-date { font-size: 9px; color: #c0c0c0; flex-shrink: 0; white-space: nowrap; padding: 0 4px; font-style: italic; align-self: center; }
+.item-date { font-size: 9px; color: #9eafc2; flex-shrink: 0; white-space: nowrap; padding: 0 4px; font-style: italic; align-self: center; }
 .bullet-list li[contenteditable] { cursor: text; }
 .ns-list li::before { content: '→'; color: var(--amber); }
 
@@ -489,7 +489,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
   font-weight: 700;
   letter-spacing: 0;
   color: var(--blue);
-  text-shadow: 0 0 10px var(--glow-c);
+  text-shadow: none;
   opacity: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -514,8 +514,8 @@ button { cursor: pointer; font-family: var(--ff-body); }
   left: 0; top: 0;
   height: 100%;
   border-radius: 2px;
-  background: var(--blue);
-  box-shadow: 0 0 8px rgba(0,229,255,.5);
+  background: linear-gradient(90deg, var(--blue), #38bdf8);
+  box-shadow: none;
   pointer-events: none;
   transition: width .05s;
 }
@@ -525,16 +525,16 @@ button { cursor: pointer; font-family: var(--ff-body); }
   width: 14px; height: 14px;
   margin-left: -7px;
   border-radius: 50%;
-  background: var(--bg);
+  background: #ffffff;
   border: 2px solid var(--blue);
-  box-shadow: 0 0 10px var(--glow-c);
+  box-shadow: 0 1px 4px rgba(26,111,196,.3);
   transform: translateY(-50%);
   cursor: grab;
   transition: box-shadow .15s, transform .1s;
   z-index: 2;
 }
 .prog-thumb:hover, .prog-thumb.dragging {
-  box-shadow: 0 0 16px var(--glow-c), 0 0 4px var(--blue);
+  box-shadow: 0 2px 8px rgba(26,111,196,.4);
 }
 .prog-thumb.dragging { cursor: grabbing; transform: translateY(-50%) scale(1.2); }
 
@@ -554,7 +554,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 tr:hover .chk-btn, li:hover .chk-btn { opacity: .6; }
 .chk-btn:hover { color: var(--green) !important; opacity: 1 !important; }
 tr.row-done td { opacity: .5; }
-tr.row-done .status-badge.s-cp { opacity: 1; box-shadow: 0 0 6px rgba(0,255,136,.3); }
+tr.row-done .status-badge.s-cp { opacity: 1; box-shadow: 0 0 4px rgba(22,163,74,.25); }
 li.bullet-done .item-text { text-decoration: line-through; opacity: .45; }
 li.bullet-done::before { content: '✓' !important; color: var(--green) !important; opacity: 1; }
 /* .tom-item checkmark */
@@ -571,7 +571,7 @@ li.bullet-done::before { content: '✓' !important; color: var(--green) !importa
 .sc-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
 .sc-cell { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 5px 4px 4px; min-height: 78px; }
 .sc-cell.empty { background: transparent; border-color: transparent; }
-.sc-cell.we { background: rgba(255,255,255,.02); }
+.sc-cell.we { background: rgba(0,0,0,.02); }
 .sc-cell.today { border-color: var(--blue); }
 .sc-dn { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
 .sc-cell.today .sc-dn { color: var(--blue); }
@@ -679,7 +679,7 @@ li.bullet-done::before { content: '✓' !important; color: var(--green) !importa
   .ka-table th, .ka-table td { padding: 4px 6px; }
   .bullet-list li { font-size: 8pt; }
   .track-body { gap: 14pt; }
-  #slide-1 { background: #06080f !important; }
+  #slide-1 { background: linear-gradient(160deg, #f0f4f8 0%, #dbeafe 100%) !important; }
   .quote-text { font-size: 18pt; }
   .token-grid { grid-template-columns: repeat(4, 1fr); gap: 8pt; }
   .initiatives-grid { gap: 16pt; }
@@ -691,7 +691,7 @@ li.bullet-done::before { content: '✓' !important; color: var(--green) !importa
   width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
   background: var(--muted); transition: background .3s, box-shadow .3s;
 }
-#gh-dot.saved    { background: var(--green); box-shadow: 0 0 6px rgba(0,255,136,.5); }
+#gh-dot.saved    { background: var(--green); box-shadow: 0 0 5px rgba(22,163,74,.4); }
 #gh-dot.saving   { background: var(--amber); animation: gh-pulse .8s infinite; }
 #gh-dot.unsaved  { background: var(--amber); }
 #gh-dot.error    { background: var(--red); }
@@ -706,14 +706,14 @@ li.bullet-done::before { content: '✓' !important; color: var(--green) !importa
   border-bottom: 1px solid var(--border);
 }
 .gh-banner.visible { display: flex; }
-#gh-refresh-banner { background: rgba(0,229,255,.08); color: var(--blue); border-color: rgba(0,229,255,.2); }
-#gh-conflict-banner { background: rgba(255,45,122,.08); color: var(--red); border-color: rgba(255,45,122,.2); }
+#gh-refresh-banner { background: #eff6ff; color: var(--blue); border-color: #bfdbfe; }
+#gh-conflict-banner { background: #fff1f2; color: var(--red); border-color: #fecdd3; }
 .gh-banner button {
-  background: rgba(255,255,255,.1); border: 1px solid currentColor;
+  background: rgba(255,255,255,.7); border: 1px solid currentColor;
   color: inherit; padding: 3px 10px; border-radius: 3px;
   font-family: var(--ff-mono); font-size: 10px; cursor: pointer;
 }
-.gh-banner button:hover { background: rgba(255,255,255,.18); }
+.gh-banner button:hover { background: rgba(255,255,255,.95); }
 
 /* PDF capture mode — hides editing UI while html2pdf renders */
 body.pdf-mode #report-nav,
@@ -731,9 +731,11 @@ body.pdf-mode .ka-table tfoot,
 body.pdf-mode .prog-slider-wrap,
 body.pdf-mode .gh-banner { display: none !important; }
 body.pdf-mode [contenteditable] { outline: none !important; box-shadow: none !important; }
-body.pdf-mode .item-date { color: #aaa !important; }
+body.pdf-mode .item-date { color: #9eafc2 !important; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
+</head>
+<body>
 
 <!-- ── LAYOUT ───────────────────────────────────────────────────── -->
 <nav id="report-nav">
@@ -967,9 +969,9 @@ function weekKey() {
   const w = Math.ceil((((d - start) / 86400000) + start.getDay() + 1) / 7);
   return y + 'W' + String(w).padStart(2, '0');
 }
-// Key includes the generated date so each fresh script run starts clean.
-// Old keys from previous runs are orphaned (harmless, browser GCs them).
-const STORAGE_KEY = 'sr_' + PID + '_' + ((REPORT_DATA.meta||{}).generated || weekKey());
+// Stable key — edits persist across weekly regenerations. New content from
+// REPORT_DATA is merged in by migrateState() after load.
+const STORAGE_KEY = 'sr_' + PID;
 
 let state;
 function loadState() {
@@ -1212,8 +1214,13 @@ function renderSlide4() {
     </div>`;
   }).join('');
 
-  const subs = (d.in_flight || []).map(init =>
-    `<li><strong>${esc(init.name)}</strong><br><span style="color:var(--muted)">${esc(init.sub||'')}</span></li>`
+  const subs = (d.in_flight || []).map((init, i) =>
+    `<li>
+      <strong contenteditable="true" data-s4-name="${i}" style="display:block">${esc(init.name)}</strong>
+      <span contenteditable="true" data-s4-sub="${i}"
+            style="color:var(--muted);display:block;min-height:1.4em"
+            data-placeholder="Add description…">${esc(init.sub||'')}</span>
+    </li>`
   ).join('');
 
   let completedHtml = '';
@@ -1704,6 +1711,11 @@ document.getElementById('slides').addEventListener('blur', function(e) {
     const init = (state.slide4.in_flight||[])[parseInt(t.dataset.s4Name)];
     if (init) { init.name = val; scheduleSave(); } return;
   }
+  // Slide 4 initiative sub-description
+  if (t.dataset.s4Sub !== undefined) {
+    const init = (state.slide4.in_flight||[])[parseInt(t.dataset.s4Sub)];
+    if (init) { init.sub = val; scheduleSave(); } return;
+  }
   // Track header fields
   if (t.dataset.trh) {
     const track = findTrack(t.dataset.trh);
@@ -2078,33 +2090,91 @@ document.getElementById('gh-pat-save').onclick = async function() {
 
 // ── INIT ────────────────────────────────────────────────────────────
 loadState();
-// Migrate legacy strings + sync dates from REPORT_DATA (overrides stale localStorage dates)
-(function migrateBullets(){
-  const lfs = ['project_status','next_steps'];
-  const rdTracks = (REPORT_DATA.tracks||[]).concat(REPORT_DATA.completed_tracks||[]);
-  const allTracks = (state.tracks||[]).concat(state.completed_tracks||[]);
-  allTracks.forEach(function(t){
-    const rdt = rdTracks.find(function(r){return r.id===t.id;});
+// Merge new REPORT_DATA content into loaded state so manual edits persist
+// week-over-week while fresh scan content is still picked up.
+(function migrateState(){
+  // ── 1. Always refresh scan-derived / rotation fields from REPORT_DATA ──
+  if (REPORT_DATA.slide_cal) state.slide_cal = JSON.parse(JSON.stringify(REPORT_DATA.slide_cal));
+  if (REPORT_DATA.meta) {
+    if (!state.meta) state.meta = {};
+    state.meta.generated = REPORT_DATA.meta.generated;
+    state.meta.period    = REPORT_DATA.meta.period;
+  }
+  if (REPORT_DATA.slide1) {
+    if (!state.slide1) state.slide1 = {};
+    state.slide1.quote  = REPORT_DATA.slide1.quote;
+    state.slide1.author = REPORT_DATA.slide1.author;
+    state.slide1.header = REPORT_DATA.slide1.header;
+  }
+
+  // ── 2. Add new tracks that appeared in this week's scan ──
+  if (!state.tracks)           state.tracks = [];
+  if (!state.completed_tracks) state.completed_tracks = [];
+  var stateIds = new Set(
+    state.tracks.concat(state.completed_tracks).map(function(t){return t.id;})
+  );
+  (REPORT_DATA.tracks||[]).forEach(function(t){
+    if (!stateIds.has(t.id)) { state.tracks.push(JSON.parse(JSON.stringify(t))); stateIds.add(t.id); }
+  });
+  (REPORT_DATA.completed_tracks||[]).forEach(function(t){
+    if (!stateIds.has(t.id)) { state.completed_tracks.push(JSON.parse(JSON.stringify(t))); stateIds.add(t.id); }
+  });
+
+  // ── 3. Merge bullets (project_status / next_steps) for each track ──
+  var lfs = ['project_status','next_steps'];
+  var rdTracks = (REPORT_DATA.tracks||[]).concat(REPORT_DATA.completed_tracks||[]);
+  state.tracks.concat(state.completed_tracks).forEach(function(t){
+    var rdt = rdTracks.find(function(r){return r.id===t.id;});
     lfs.forEach(function(lf){
-      if(!t[lf]) return;
+      if (!t[lf]) t[lf] = [];
+      // normalise legacy plain strings
       t[lf] = t[lf].map(function(b){
         return typeof b==='string' ? {text:b, added:'10/14'} : b;
       });
-      if(rdt && rdt[lf]){
+      if (rdt && rdt[lf]) {
+        // sync added-dates for existing bullets
         t[lf].forEach(function(item){
-          const match = rdt[lf].find(function(ri){
+          var match = rdt[lf].find(function(ri){
             return (typeof ri==='object'?ri.text:ri) === item.text;
           });
-          if(match && typeof match==='object' && match.added) item.added = match.added;
+          if (match && typeof match==='object' && match.added) item.added = match.added;
         });
+        // append any bullets from this run that aren't already present
         rdt[lf].forEach(function(ri){
-          const riText = typeof ri==='object' ? ri.text : ri;
-          const exists = t[lf].some(function(b){ return b.text===riText; });
-          if(!exists) t[lf].push(typeof ri==='object' ? ri : {text:ri, added:'10/19'});
+          var riText = typeof ri==='object' ? ri.text : ri;
+          var exists = t[lf].some(function(b){return b.text===riText;});
+          if (!exists) t[lf].push(typeof ri==='object' ? ri : {text:riText, added:REPORT_DATA.meta.generated||'10/14'});
         });
       }
     });
   });
+
+  // ── 4. Add new slide2 (Top of Mind) items ──
+  if (!state.slide2)        state.slide2 = {items:[]};
+  if (!state.slide2.items)  state.slide2.items = [];
+  var s2set = new Set(state.slide2.items.map(function(i){return typeof i==='object'?i.text:i;}));
+  ((REPORT_DATA.slide2||{}).items||[]).forEach(function(item){
+    var txt = typeof item==='object' ? item.text : item;
+    if (!s2set.has(txt)) { state.slide2.items.push(item); s2set.add(txt); }
+  });
+
+  // ── 5. Add new slide3 token tiles ──
+  if (!state.slide3)         state.slide3 = {};
+  if (!state.slide3.tracks)  state.slide3.tracks = [];
+  var s3ids = new Set(state.slide3.tracks.map(function(t){return t.id;}));
+  ((REPORT_DATA.slide3||{}).tracks||[]).forEach(function(t){
+    if (!s3ids.has(t.id)) { state.slide3.tracks.push(JSON.parse(JSON.stringify(t))); s3ids.add(t.id); }
+  });
+
+  // ── 6. Add new slide4 in-flight initiatives ──
+  if (!state.slide4)              state.slide4 = {};
+  if (!state.slide4.in_flight)    state.slide4.in_flight = [];
+  var s4names = new Set(state.slide4.in_flight.map(function(i){return i.name;}));
+  ((REPORT_DATA.slide4||{}).in_flight||[]).forEach(function(init){
+    if (!s4names.has(init.name)) { state.slide4.in_flight.push(JSON.parse(JSON.stringify(init))); s4names.add(init.name); }
+  });
 })();
 renderAll();
 </script>
+</body>
+</html>

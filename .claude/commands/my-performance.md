@@ -40,32 +40,67 @@ You are helping Houston Downs (hodowns@cisco.com), a Cisco US PS Program Manager
 
 ---
 
+## Step 0 — Chrome CDP Setup (One-Time Per Session)
+
+Before anything else, verify Chrome is running with remote debugging. If the user hasn't done this yet this session, show them the launch command:
+
+**Windows PowerShell:**
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" `
+    --remote-debugging-port=9222 `
+    --user-data-dir="$env:USERPROFILE\chrome-dev-profile"
+```
+
+In the opened Chrome window, navigate to `https://teamspace.cisco.com` and complete Cisco SSO + Duo if prompted. Once the dashboard loads, Playwright can take over via CDP — no further auth needed.
+
+> Skip this step if Chrome is already open with `--remote-debugging-port=9222` from an earlier run this session.
+
+---
+
 ## Step 1 — Pull Data
 
 Before asking any questions, silently gather context from the last 7 days:
 
 1. **Outlook calendar** — meetings Houston organized or attended (via win32com)
-2. **Outlook email** — sent items and inbox referencing any PID or customer name above
+2. **Outlook email** — sent items and inbox referencing any PID or customer name above. Also scan for emails with subjects containing: "all hands", "all-hands", "FY27 strategy", "SLED all", "CX all hands", "cockpit", "AI enablement" — these contain Cisco-wide strategic goals to carry into the Goals section
 3. **Webex** — pull recent messages broadly using the token at `C:\Users\hodowns\webex-mcp-oauth\tokens.json`
-4. **Previous check-ins** — read the most recent file in `C:\Users\hodowns\OneDrive - Cisco\Desktop\Check Ins\` to identify rolling priorities and completed items
+4. **Previous check-ins** — read the most recent file in `C:\Users\hodowns\OneDrive - Cisco\Desktop\Check Ins\`
+5. **AI Champions (Claude Code Champions) meeting notes** — primary source for improvement insights and strategic themes. Read the most recent 2–3 files from:
+   `C:\Users\hodowns\Cisco\SLED United CX Delivery Team - CUSTOMER PROJECTS\XXXX Innovation\AI Champions\Meeting Minutes\`
+   Also check: `C:\Users\hodowns\Cisco\SLED United CX Delivery Team - CUSTOMER PROJECTS\_unfiled\` for Flight School and PMO-wide sessions
+6. **Project meeting notes** — read the most recent notes from:
+   - F51119: `C:\Users\hodowns\Cisco\SLED United CX Delivery Team - CUSTOMER PROJECTS\TX\TX-COH LCS-S- F51119\Meeting Minutes\`
+   - F24373: `C:\Users\hodowns\Cisco\SLED United CX Delivery Team - CUSTOMER PROJECTS\IL\IL-S- UCMC LCS 2Yr F24373\Meeting Notes\`
+   - C16507: `C:\Users\hodowns\Cisco\SLED United CX Delivery Team - CUSTOMER PROJECTS\MN\MN - MN DOC VVS -T- C16507\Meeting Minutes\`
+   Extract improvement examples and actionable priorities from these notes.
+7. **PMO Leadership call notes** — check `C:\Users\hodowns\OneDrive - Cisco\Desktop\Thursdays PMO Leadership call.docx` for organizational priorities that may come from all-hands or leadership sessions
 
 Identify which manager(s) Houston connected with this week (calendar or email) — this will be used in the output.
 
 ---
 
-## Step 2 — Ask Five Questions
+## Step 2 — Infer Answers from Data
 
-Ask these one at a time. Enforce a **500-character limit** on free-text answers. Wait for each answer before moving to the next.
+Using the data pulled in Step 1, **automatically determine** all five answers below. Do not ask Houston interactively — derive everything from meeting notes, emails, and transcripts.
 
-1. **Top priorities this week** — What were your 2–3 most important things you accomplished or moved forward this week?
-2. **Blockers or risks** — Any blockers, escalations, or risks worth flagging? (Say "none" to skip.)
-3. **Customer highlights** — Any notable customer interactions, wins, or concerns this week?
-4. **AI / innovation work** — Did you build, test, or improve any Claude Code workflows or automations this week? If yes, estimate the time it saved or will save.
-5. **Next week's focus** — What are your top 2–3 priorities for next week?
+1. **Top priorities this week** — The 2–3 highest-impact things accomplished or moved forward, based on meeting notes, sent emails, and action items closed.
+2. **Blockers or risks** — Open action items, canceled/deferred decisions, technical unknowns, or escalation signals found in notes.
+3. **Customer highlights** — Notable wins, milestone events, or concerns surfaced in external-facing sessions or email threads.
+4. **AI / innovation work** — Cockpit/Claude Code sessions led or attended, skills tested or shipped, estimated time savings from automations.
+5. **Next week's focus** — Committed follow-ups and due-date action items from this week's meetings; carry forward any unresolved items from the previous check-in.
+
+After inferring all five, present a brief **"Here's what I found"** summary (one line per answer) and ask Houston to confirm or correct before building the document. This is the only interactive pause in the skill.
 
 ---
 
 ## Step 3 — Build the Check-In Document
+
+**Narrative voice rules — apply to every sentence:**
+- Lead every accomplishment with a strong action verb: *Drove*, *Delivered*, *Secured*, *Accelerated*, *Resolved*, *Established*, *Coordinated*, *Facilitated*, *Advanced*, *Executed*
+- Connect every activity to a business outcome: time saved, risk eliminated, revenue protected, relationship strengthened, delivery accelerated
+- Elevate routine PM work into strategic language: attending a meeting → *led governance touchpoint*; sending follow-up → *maintained delivery accountability*; fixing a config issue → *eliminated critical network stability risk*
+- Every item must trace back to one of the 5 FY27 goals explicitly
+- Tone: confident, executive-facing, portfolio-level — reads like someone managing a high-velocity book of business effortlessly
 
 Using the data pulled in Step 1 and answers from Step 2, generate the check-in document in this format:
 
@@ -144,39 +179,60 @@ Confirm the filename and path after saving.
 
 ## Step 6 — Write JSON Payload for Playwright
 
-Write the following file so the Playwright automation can fill TeamSpace automatically.
+Write `C:\Users\hodowns\Downloads\performance_data.json` as a proper JSON file (not embedded in markdown). This is what `my_performance_checkin.py` reads first.
 
-**Path:** `C:\Users\hodowns\Downloads\My_Performance.md`
+Synthesize each field from the conversation data, applying the hyper-productive narrative voice from Step 3:
 
-The file must contain exactly one JSON code block in this structure. Synthesize each field from the answers and calendar data:
+- `weekly_accomplishments` — key accomplishments + customer highlights (Q1 + Q3); bullet symbols (•) with semicolons; **max 490 chars; no literal newlines**
+- `improvement_insight` — the **strongest 1–2 items** found in transcripts that answer "What's one improvement you made last week—for yourself, your team, or your customers?" Pull from AI Champions calls first (files in `XXXX Innovation\AI Champions\Meeting Minutes\`), then F51119/F24373/C16507 meeting notes. Frame using executive language. **Max 490 chars; no newlines.** Examples of strong improvement items: "Drove GitHub Champions membership from 22→42 in one week through structured Champion-led outreach, accelerating PMO AI adoption timeline"; "Delivered live issue→PR→merge Claude demo at 50+ PMO session, establishing GitHub as the standard workflow for skill contributions"; "Identified Haiku model as drop-in replacement for routine tasks at 50% of Sonnet cost, reducing PMO token spend without quality degradation"
+- `top_priorities_next_week` — Q5 priorities, numbered; **max 490 chars**
+- `customer_impact_value` — one strong sentence from Q3
+- `blockers_and_support_needed` — Q2, or `"None at this time."` if skipped
+- `internal_leadership_contributions` — Q4, or `"No activity this week."` if skipped
+- `new_priorities` — array of 4–6 priority objects extracted from transcripts/emails, each mapped to the best-fit FY27 goal. Use judgment on priority ranking.
 
-- `weekly_accomplishments` — concise bullet summary of Q1 + Q3 answers, max 490 chars, no newlines (single paragraph with semicolons as separators)
-- `top_priorities_next_week` — Q5 answers, 2–3 lines, max 490 chars
-- `customer_impact_value` — one sentence from Q3 (customer highlights)
-- `blockers_and_support_needed` — Q2 answer, or `"None identified this week."` if skipped
-- `internal_leadership_contributions` — Q4 answer, or `"No activity this week."` if skipped
+For `new_goals`: extract 2–4 broad, organization-level strategic goals from PMO Leadership call notes, AI Champions sessions, Flight School notes, or all-hands emails found in Step 1. These are **Cisco-wide priorities, not personal goals** — executive strategy language, broad scope. If no explicit all-hands source is found, derive from the themes in recent AI Champions and PMO leadership sessions. Include only goals not already in the system.
+
+**Reference goals found in Champions/Flight School content (use as starting point, refine from latest session notes):**
+- *Scale AI-Led Delivery Across US PS PMO* — Embed AI-assisted workflows (Claude Code, Cockpit) into standard delivery practice for all Program Managers, targeting measurable reduction in administrative overhead and increased capacity for customer-facing work
+- *Drive Customer Outcome Velocity* — Compress time-to-value for all active SLED PS engagements through proactive health metrics, structured QBR cadences, and outcome tracking tied to contract milestones  
+- *PMO Enablement & Capability Building* — Establish a sustainable knowledge-sharing infrastructure (Champions program, training dashboards, shared workflow libraries) that scales AI adoption beyond early adopters to the full PMO population
 
 ```json
 {
+  "employee_name": "Houston Downs",
+  "employee_email": "hodowns@cisco.com",
+  "role": "Customer Program Manager",
+  "organization": "SLED West PMO | Cisco Customer Experience (CX)",
+  "reporting_period": "Week Ending [date from check-in]",
+  "new_goals": [
+    { "title": "...", "description": "One-sentence strategic objective — broad, org-level, executive tone" },
+    { "title": "...", "description": "..." }
+  ],
   "fields": {
     "weekly_accomplishments": "...",
+    "improvement_insight": "...",
     "top_priorities_next_week": "...",
     "customer_impact_value": "...",
     "blockers_and_support_needed": "...",
-    "internal_leadership_contributions": "..."
+    "internal_leadership_contributions": "...",
+    "new_priorities": [
+      { "text": "...", "goal": "Goal title here" },
+      { "text": "...", "goal": "Goal title here" }
+    ]
   }
 }
 ```
 
-After writing, confirm: `Payload written to C:\Users\hodowns\Downloads\My_Performance.md`
+Confirm: `Payload written → C:\Users\hodowns\Downloads\performance_data.json`
 
 ---
 
 ## Step 7 — Run Playwright Automation
 
-Offer to auto-fill TeamSpace now:
+Confirm Chrome CDP is running (Step 0), then offer:
 
-> "Payload ready. Run `my_performance_checkin.py` to auto-fill the portal?"
+> "Payload written. Ready to auto-fill TeamSpace via Playwright?"
 
 If Houston confirms, run:
 
@@ -184,4 +240,19 @@ If Houston confirms, run:
 python -u -X utf8 "C:\Users\hodowns\Claude Projects VS CODE\my_performance_checkin.py"
 ```
 
-The script opens Chrome, navigates to `https://myperformance.cisco.com`, fills Step 1 (Reflect) and Step 2 (Plan), and saves as draft. Watch the output for ✓/✗ per field and screenshot paths if debugging is needed.
+The script connects to Chrome on port 9222, navigates to `teamspace.cisco.com`, then executes the full wizard:
+
+**Step 1 — Reflect:**
+1. Selects **Chat/Email** for "When you communicated with your leader last week, which was most helpful?"
+2. Fills the improvement textarea from `improvement_insight`
+3. Resolves all last week's priorities (checks each checkbox)
+4. Clicks **Save & continue**
+
+**Step 2 — Plan:**
+1. Clicks **Add Priority** for each item in `new_priorities` (4–6 items), maps each to its goal
+2. Clicks **Save & continue**
+
+**Step 3 — Review & Submit:**
+1. Clicks **Submit** (full submission — not draft)
+
+Watch the output for `✓`/`✗` per field. Screenshots saved to the script directory. If CDP fails, re-run Step 0.

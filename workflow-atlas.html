@@ -1,0 +1,421 @@
+<title>Workflow Atlas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0C1016;overflow:hidden;font-family:'Inter',sans-serif;color:#E2E8F2}
+
+header{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.75rem 1.75rem;
+  background:rgba(12,16,22,.85);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.hdr-title{font-size:.85rem;font-weight:600;letter-spacing:-.01em}
+.hdr-sub{font-size:.65rem;color:#5A6880;letter-spacing:.08em;text-transform:uppercase;margin-top:.1rem}
+.legend{display:flex;gap:1.25rem;align-items:center}
+.leg{display:flex;align-items:center;gap:.35rem;font-size:.65rem;color:#8892A4;letter-spacing:.04em;text-transform:uppercase}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+
+#map-wrap{
+  position:fixed;inset:0;top:48px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+svg#map{width:100%;height:100%;overflow:visible}
+
+/* Tooltip */
+#tip{
+  position:fixed;pointer-events:none;z-index:100;
+  background:rgba(16,22,32,.96);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;
+  padding:.85rem 1.05rem;
+  max-width:260px;
+  opacity:0;transition:opacity .15s;
+  backdrop-filter:blur(8px);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+#tip.show{opacity:1}
+.tip-name{font-size:.82rem;font-weight:600;margin-bottom:.3rem}
+.tip-trigger{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:#60A5FA;
+  background:rgba(96,165,250,.1);
+  padding:.18rem .45rem;border-radius:4px;
+  display:inline-block;margin-bottom:.5rem;
+}
+.tip-desc{font-size:.73rem;color:#8892A4;line-height:1.55}
+.tip-badge{
+  display:inline-block;margin-top:.5rem;
+  font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;
+  padding:.12rem .4rem;border-radius:3px;font-weight:600;
+}
+
+/* Ring labels */
+.ring-label{font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;fill:#3A4558;pointer-events:none}
+
+/* coming-soon pulse */
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.coming-soon-node{animation:pulse 2.5s ease-in-out infinite}
+
+/* Animate lines in */
+@keyframes dash-in{from{stroke-dashoffset:600}to{stroke-dashoffset:0}}
+.conn-line{stroke-dasharray:600;animation:dash-in .8s ease forwards}
+</style>
+
+<header>
+  <div>
+    <div class="hdr-title">Houston Downs — Workflow Atlas</div>
+    <div class="hdr-sub">Claude Code · US PS Program Manager · 21 Workflows</div>
+  </div>
+  <div class="legend">
+    <span class="leg"><span class="leg-dot" style="background:#3B82F6"></span>Meeting</span>
+    <span class="leg"><span class="leg-dot" style="background:#8B5CF6"></span>Reporting</span>
+    <span class="leg"><span class="leg-dot" style="background:#F59E0B"></span>Admin</span>
+    <span class="leg"><span class="leg-dot" style="background:#10B981"></span>Compliance</span>
+    <span class="leg"><span class="leg-dot" style="background:#475569"></span>Coming Soon</span>
+  </div>
+</header>
+
+<div id="map-wrap"><svg id="map"></svg></div>
+<div id="tip"></div>
+
+<script>
+const WORKFLOWS = [
+  // ── Ring 1: Simple ──────────────────────────────────────────────────────
+  {
+    name:"Cost Forecast", trigger:"Cost Forecast",
+    cat:"compliance", ring:1, angle:-90,
+    desc:"Opens Oracle Projects in Edge, clicks Select_All_Shown → Submit → Yes automatically. Bulk-publishes all PIDs in under 60 seconds — no manual interaction needed. (Oracle Projects closes Oct 2026; legacy workflow.)"
+  },
+  {
+    name:"Training Check", trigger:"what trainings are due?",
+    cat:"compliance", ring:1, angle:0,
+    desc:"Scans Outlook inbox (last 60 days) for training obligations. Cross-references completion emails so finished trainings aren't listed as due. Opens an Outlook draft to yourself with a table of Training Name | Link | Due Date. Also runs automatically every 50 days via Task Scheduler."
+  },
+  {
+    name:"Simple Recap", trigger:"simple recap for [meeting]",
+    cat:"meeting", ring:1, angle:90,
+    desc:"Searches Outlook for the Webex bot email matching a meeting name, parses the AI summary and action items, and opens a pre-filled draft addressed to your calendar invitees."
+  },
+
+  // ── Ring 2: Moderate ───────────────────────────────────────────────────
+  {
+    name:"EOD Recap", trigger:"send end of day recap",
+    cat:"meeting", ring:2, angle:-90,
+    desc:"Scans today's calendar for all hosted [Internal]/[External] meetings, matches each to its Webex recap email, opens a draft per meeting, and files HTML copies to SharePoint."
+  },
+  {
+    name:"Nudge Agent", trigger:"Nudge",
+    cat:"meeting", ring:2, angle:-54,
+    desc:"Scans meeting notes and Webex recap emails for other people's open action items. Opens one Outlook draft per person — a concise table of their outstanding items with due dates and source meetings. Runs automatically Tue/Fri 9 AM via Task Scheduler."
+  },
+  {
+    name:"Profile Report", trigger:"Profile report [PID]",
+    cat:"reporting", ring:2, angle:-18,
+    desc:"Searches 180 days of Outlook calendar and email to build a Project Contact List for any PID. Classifies contacts as Customer, Cisco, or UNCLASSIFIED and saves the Excel file to SharePoint."
+  },
+  {
+    name:"Schedule Requester", trigger:"Schedule Requester",
+    cat:"admin", ring:2, angle:18,
+    desc:"Prompts for meeting name, PID, customer recipients, and Cisco SMEs. Checks mutual Outlook availability for all parties, then opens a scheduling email with three time-slot options (Option A/B/C). Subject format 'Schedule Request: [Name] [EXTERNAL] [PID]' enables future reply-detection."
+  },
+  {
+    name:"MCC Billing", trigger:"MCC Billing [...]",
+    cat:"compliance", ring:2, angle:54,
+    desc:"Monitors the MCC Tracking spreadsheet and FY27 Fiscal Calendar for upcoming milestone billing dates and fiscal deadlines across your active project portfolio. Weekly Webex alert runs every Monday at 10:30 AM."
+  },
+  {
+    name:"Pre-Meeting Brief", trigger:"pre-meeting brief for [meeting]",
+    cat:"reporting", ring:2, angle:126,
+    desc:"Reads the 3 most recent meeting notes for a project, surfaces all open action items with their age, and generates a recommended agenda to prep you for the upcoming call."
+  },
+  {
+    name:"Weekly Check-In", trigger:"/weekly-checkin",
+    cat:"reporting", ring:2, angle:198,
+    desc:"Pulls Outlook and Webex activity for the week, asks 5 guided questions, then saves a structured check-in document aligned to your 4 FY26 goals to Desktop\\Check Ins."
+  },
+  {
+    name:"Schedule Booker", trigger:"Schedule Booker",
+    cat:"admin", ring:2, angle:234,
+    desc:"Scans inbox for all 'Re: Schedule Request:' replies, detects which option (A/B/C) each person confirmed, checks if the meeting is already on your calendar, then opens a draft recurring or one-time invite for review."
+  },
+
+  // ── Ring 3: Complex ────────────────────────────────────────────────────
+  {
+    name:"Weekly Summary", trigger:"Weekly Summary [PID]",
+    cat:"reporting", ring:3, angle:18,
+    desc:"Reads 7 days of meeting notes, Webex API, and Outlook email for any PID to build a full self-contained HTML report: KPI tiles, workstream status, action items table, recording links, and draft agendas."
+  },
+  {
+    name:"Status Report", trigger:"Status Report [PID]",
+    cat:"reporting", ring:3, angle:54,
+    desc:"Scans Outlook and Webex for account email traffic; generates an interactive multi-slide HTML report for all technology tracks. Saved to Desktop\\Status Reports\\. Supports live GitHub Pages collaboration for DM co-editing with 30-second browser polling."
+  },
+  {
+    name:"Secretary Agent", trigger:"Secretary Agent",
+    cat:"reporting", ring:3, angle:90,
+    desc:"Scans all sources (Webex recaps, meeting notes, Outlook inbox/sent) for action items you own — including training, compliance, and admin. Produces an interactive HTML dashboard with color-coded due dates, persistent checkboxes, and an Admin group."
+  },
+  {
+    name:"My Performance", trigger:"/my-performance",
+    cat:"admin", ring:3, angle:126,
+    desc:"Full wizard automation: builds performance narrative and JSON from Outlook, AI Champions meeting notes, and guided questions. Uses Playwright to fill in the Goals tab and Check-ins (priorities, insights, submission) in the Cisco performance system."
+  },
+  {
+    name:"Close a PID", trigger:"close project [PID]",
+    cat:"compliance", ring:3, angle:162,
+    desc:"8-step Playwright automation in Salesforce SDC: searches the project, adds and publishes a Lessons Learned article, sets Oracle Project Status to Delivery Close, opens the Project Closure Checklist, and submits to PCT."
+  },
+  {
+    name:"Fin Report", trigger:"Fin Report",
+    cat:"reporting", ring:3, angle:198,
+    desc:"Builds the weekly USPS SLED Financial Report from GPPR and Expenditure CSVs: refreshes Excel pivot tables, fixes Labor filter, builds formatted sheets, uploads to DocCentral, and opens an Outlook draft with the link. Phase 2 adds Playwright Tableau automation."
+  },
+  {
+    name:"Webex Enricher", trigger:"webex-enricher for [meeting]",
+    cat:"coming", ring:3, angle:234,
+    desc:"Will append attendee join/leave times, meeting duration, and recording link to any meeting note by pulling directly from the Webex API. Currently a stub — coming soon."
+  },
+  {
+    name:"Reverse Plan", trigger:"reverse-plan for [PID]",
+    cat:"coming", ring:3, angle:270,
+    desc:"Web-based dashboard replacing Excel reverse plans (GitHub Pages). PM-facing UI — tracks milestone status, last-updated banners, history feed, and issue log with no Excel or JSON required. PMO leadership demo complete; full rollout coming."
+  },
+  {
+    name:"Meeting Minutes", trigger:"meeting minutes [name]",
+    cat:"meeting", ring:3, angle:306,
+    desc:"Pulls Webex recap email + full transcript, generates a structured markdown note with action items, key decisions, and timestamps. Files to SharePoint and opens an Outlook draft to all calendar + Webex attendees."
+  },
+  {
+    name:"Agenda Generator", trigger:"Create Agenda: [meeting]",
+    cat:"meeting", ring:3, angle:342,
+    desc:"Scans recent emails, last meeting notes, and open action items; builds a categorized agenda filtered by attendee specialization; injects it into the next calendar occurrence. Also runs automatically as Step 11 of every Meeting Minutes session."
+  },
+];
+
+const CAT = {
+  meeting:    {color:"#3B82F6", glow:"rgba(59,130,246,.35)",  label:"Meeting"},
+  reporting:  {color:"#8B5CF6", glow:"rgba(139,92,246,.35)", label:"Reporting"},
+  compliance: {color:"#10B981", glow:"rgba(16,185,129,.35)", label:"Compliance"},
+  admin:      {color:"#F59E0B", glow:"rgba(245,158,11,.35)", label:"Admin"},
+  coming:     {color:"#475569", glow:"rgba(71,85,105,.25)",  label:"Coming Soon"},
+};
+
+const RINGS = {1:{r:145,label:"Simple"},2:{r:275,label:"Moderate"},3:{r:415,label:"Complex"}};
+const NODE_R = 34;
+
+const svg = document.getElementById("map");
+const tip = document.getElementById("tip");
+
+function toRad(deg){return deg * Math.PI / 180}
+
+function getCenter(){
+  const w = svg.clientWidth || window.innerWidth;
+  const h = (svg.clientHeight || window.innerHeight) - 48;
+  return {x:w/2, y:h/2};
+}
+
+function nodePos(ring, angleDeg){
+  const {x,y} = getCenter();
+  const r = RINGS[ring].r;
+  return {
+    x: x + r * Math.cos(toRad(angleDeg)),
+    y: y + r * Math.sin(toRad(angleDeg))
+  };
+}
+
+function makeSVGEl(tag, attrs={}){
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for(const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+  return el;
+}
+
+function buildMap(){
+  svg.innerHTML = "";
+  const {x:cx, y:cy} = getCenter();
+
+  // ── Defs (filters) ───────────────────────────────────────────────────────
+  const defs = makeSVGEl("defs");
+  [1,2,3].forEach(i => {
+    const f = makeSVGEl("filter",{id:`glow${i}`,x:"-50%",y:"-50%",width:"200%",height:"200%"});
+    const b = makeSVGEl("feGaussianBlur",{stdDeviation:"4",result:"blur"});
+    const m = makeSVGEl("feComposite",{in:"SourceGraphic",in2:"blur",operator:"over"});
+    f.appendChild(b); f.appendChild(m); defs.appendChild(f);
+  });
+  // center glow
+  const cf = makeSVGEl("filter",{id:"centerglow",x:"-80%",y:"-80%",width:"260%",height:"260%"});
+  const cb = makeSVGEl("feGaussianBlur",{stdDeviation:"12",result:"blur"});
+  const cm = makeSVGEl("feComposite",{in:"SourceGraphic",in2:"blur",operator:"over"});
+  cf.appendChild(cb); cf.appendChild(cm); defs.appendChild(cf);
+  svg.appendChild(defs);
+
+  // ── Rings ────────────────────────────────────────────────────────────────
+  [1,2,3].forEach(i => {
+    const r = RINGS[i].r;
+    // Glow ring
+    svg.appendChild(makeSVGEl("circle",{cx,cy,r:r+2,fill:"none",stroke:"rgba(255,255,255,.03)",strokeWidth:"8"}));
+    // Main ring
+    svg.appendChild(makeSVGEl("circle",{
+      cx,cy,r,fill:"none",
+      stroke:"rgba(255,255,255,.07)",
+      strokeWidth:"1",
+      strokeDasharray:"4 6"
+    }));
+    // Label on left side
+    const lx = cx - r - 10;
+    const lbl = makeSVGEl("text",{
+      x:lx, y:cy,
+      "text-anchor":"end",
+      "dominant-baseline":"middle",
+      class:"ring-label"
+    });
+    lbl.textContent = RINGS[i].label;
+    svg.appendChild(lbl);
+  });
+
+  // ── Connection lines ──────────────────────────────────────────────────────
+  WORKFLOWS.forEach((w, idx) => {
+    const p = nodePos(w.ring, w.angle);
+    const cat = CAT[w.cat];
+    const delay = idx * 0.05;
+    const line = makeSVGEl("line",{
+      x1:cx, y1:cy, x2:p.x, y2:p.y,
+      stroke: cat.color,
+      "stroke-opacity":"0.2",
+      "stroke-width":"1.5",
+      class:"conn-line",
+      style:`animation-delay:${delay}s`
+    });
+    svg.appendChild(line);
+  });
+
+  // ── Nodes ──────────────────────────────────────────────────────────────────
+  WORKFLOWS.forEach((w, idx) => {
+    const p = nodePos(w.ring, w.angle);
+    const cat = CAT[w.cat];
+    const delay = idx * 0.05 + 0.3;
+
+    const g = makeSVGEl("g",{
+      class:`node${w.cat==="coming"?" coming-soon-node":""}`,
+      style:`cursor:pointer;opacity:0;animation:fadeIn .4s ease ${delay}s forwards`,
+      "data-idx":idx
+    });
+
+    // Glow behind
+    g.appendChild(makeSVGEl("circle",{
+      cx:p.x, cy:p.y, r:NODE_R+10,
+      fill:cat.glow, filter:"url(#glow1)"
+    }));
+
+    // Border ring
+    g.appendChild(makeSVGEl("circle",{
+      cx:p.x, cy:p.y, r:NODE_R+2,
+      fill:"none",
+      stroke:cat.color,
+      "stroke-opacity":"0.3",
+      "stroke-width":"1",
+      "stroke-dasharray": w.cat==="coming" ? "3 3" : "none"
+    }));
+
+    // Main circle
+    g.appendChild(makeSVGEl("circle",{
+      cx:p.x, cy:p.y, r:NODE_R,
+      fill:"#0C1016",
+      stroke:cat.color,
+      "stroke-width":"1.5"
+    }));
+
+    // Name text (wrap manually by word count)
+    const words = w.name.split(" ");
+    const lines = [];
+    let cur = "";
+    words.forEach(word => {
+      if((cur + " " + word).trim().length > 10 && cur.length > 0){
+        lines.push(cur.trim()); cur = word;
+      } else { cur = (cur + " " + word).trim(); }
+    });
+    if(cur) lines.push(cur);
+
+    const lineH = 11;
+    const totalH = lines.length * lineH;
+    const startY = p.y - totalH/2 + lineH/2;
+
+    lines.forEach((line, li) => {
+      const t = makeSVGEl("text",{
+        x:p.x, y:startY + li*lineH,
+        "text-anchor":"middle",
+        "dominant-baseline":"middle",
+        fill:cat.color,
+        "font-family":"Inter,sans-serif",
+        "font-size":"9.5",
+        "font-weight":"600"
+      });
+      t.textContent = line;
+      g.appendChild(t);
+    });
+
+    // Hover interaction
+    g.addEventListener("mouseenter", e => showTip(e, w));
+    g.addEventListener("mousemove",  e => moveTip(e));
+    g.addEventListener("mouseleave", hideTip);
+
+    svg.appendChild(g);
+  });
+
+  // ── Center node ───────────────────────────────────────────────────────────
+  // Glow
+  svg.appendChild(makeSVGEl("circle",{cx,cy,r:70,fill:"rgba(59,130,246,.08)",filter:"url(#centerglow)"}));
+  svg.appendChild(makeSVGEl("circle",{cx,cy,r:52,fill:"none",stroke:"rgba(59,130,246,.2)","stroke-width":"1","stroke-dasharray":"3 4"}));
+  svg.appendChild(makeSVGEl("circle",{cx,cy,r:46,fill:"#111827",stroke:"#3B82F6","stroke-width":"2"}));
+
+  const init = makeSVGEl("text",{x:cx,y:cy-7,"text-anchor":"middle","dominant-baseline":"middle",fill:"#93C5FD","font-family":"Inter,sans-serif","font-size":"17","font-weight":"700"});
+  init.textContent = "HD";
+  svg.appendChild(init);
+  const sub = makeSVGEl("text",{x:cx,y:cy+10,"text-anchor":"middle","dominant-baseline":"middle",fill:"#4B6080","font-family":"Inter,sans-serif","font-size":"7.5","letter-spacing":"0.08em"});
+  sub.textContent = "YOU";
+  svg.appendChild(sub);
+}
+
+// ── Tooltip ──────────────────────────────────────────────────────────────────
+let tipTimeout;
+function showTip(e, w){
+  clearTimeout(tipTimeout);
+  const cat = CAT[w.cat];
+  tip.innerHTML = `
+    <div class="tip-name" style="color:${cat.color}">${w.name}</div>
+    <span class="tip-trigger">${w.trigger}</span>
+    <div class="tip-desc">${w.desc}</div>
+    <span class="tip-badge" style="background:${cat.color}22;color:${cat.color}">${cat.label}</span>
+  `;
+  moveTip(e);
+  tip.classList.add("show");
+}
+function moveTip(e){
+  const pad = 16;
+  let x = e.clientX + pad;
+  let y = e.clientY - pad;
+  const tw = tip.offsetWidth || 260;
+  const th = tip.offsetHeight || 120;
+  if(x + tw > window.innerWidth - pad) x = e.clientX - tw - pad;
+  if(y + th > window.innerHeight - pad) y = e.clientY - th - pad;
+  tip.style.left = x + "px";
+  tip.style.top  = y + "px";
+}
+function hideTip(){
+  tipTimeout = setTimeout(()=>tip.classList.remove("show"), 80);
+}
+
+// ── Fade-in keyframe ─────────────────────────────────────────────────────────
+const style = document.createElement("style");
+style.textContent = `@keyframes fadeIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}`;
+document.head.appendChild(style);
+
+// ── Init & resize ─────────────────────────────────────────────────────────────
+buildMap();
+window.addEventListener("resize", buildMap);
+</script>
