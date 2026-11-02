@@ -617,11 +617,62 @@ async def open_modal_project_level(page) -> bool:
     return True
 
 
-async def open_modal_task_level(page, milestone_hint: str) -> bool:
+async def _scan_and_click_link(page, hint: str, label: str):
+    """Scan all frames for a link matching hint, click it. Returns (frame, text) or (None, None)."""
+    keywords = [w for w in hint.split() if len(w) > 3] or hint.split()
+    best_link = None
+    best_score = 0.0
+    best_txt = ""
+    best_frame = None
+
+    for frame in page.frames:
+        for kw in keywords:
+            try:
+                candidates = frame.locator(f"a:has-text('{kw}')")
+                count = await candidates.count()
+                for i in range(count):
+                    try:
+                        txt = (await candidates.nth(i).inner_text(timeout=300)).strip()
+                        if not txt or len(txt) > 120:
+                            continue
+                        score = milestone_similarity(hint, txt)
+                        if score > 0.3:
+                            print(f"    Frame {frame.name!r}: {txt!r}  score={score:.2f}")
+                        if score > best_score:
+                            best_score = score
+                            best_link = candidates.nth(i)
+                            best_txt = txt
+                            best_frame = frame
+                    except Exception:
+                        continue
+            except Exception:
+                continue
+        if best_score >= 0.6:
+            break
+
+    if best_link is None or best_score < 0.4:
+        print(f"  ERROR: No {label} matching {hint!r} (best={best_score:.2f})")
+        await screenshot(page, f"error_no_{label.replace(' ', '_')}")
+        return None, None
+
+    print(f"  Clicking {label}: {best_txt!r} (score={best_score:.2f})")
+    await best_link.click()
+    return best_frame, best_txt
+
+
+async def open_modal_task_level(page, task_path) -> bool:
     """
-    Work Planner → click milestone → click sub-task 'Create Resource Request' icon → modal open.
-    milestone_hint is used to fuzzy-match the right milestone row.
+    Work Planner → navigate task path → click 'Create Resource Request' icon → modal open.
+    task_path: str (single hint) or list of str (hierarchical path, e.g.
+               ["Outcome Packages", "Solution Design Development", "ACI Architectural Review"]).
+    Intermediate levels are clicked to expand the tree; the CRR icon is clicked at the last level.
     """
+    if isinstance(task_path, str):
+        task_path = [task_path] if task_path else []
+    if not task_path:
+        print("  ERROR: task_path is empty")
+        return False
+
     print("  [Task-level] Opening Work Planner...")
     # Three buttons share "Work Planner" — use the neutral-style launch button specifically
     # If Work Planner tab is already open, just wait for it to be visible
@@ -648,14 +699,21 @@ async def open_modal_task_level(page, milestone_hint: str) -> bool:
     except Exception:
         await asyncio.sleep(3)
 
-    # Find milestone link — Work Planner content lives in a Salesforce console frame,
-    # not on the top-level page. Scan every frame for a link matching the hint.
-    print(f"  Scanning milestones for: {milestone_hint!r}")
-    best_link = None
-    best_score = 0.0
-    best_txt = ""
+    # Navigate intermediate levels (all but the last) by clicking each link to expand the tree
+    for i, level in enumerate(task_path[:-1]):
+        print(f"  Expanding level {i+1}/{len(task_path)-1}: {level!r}")
+        frame_ref, _ = await _scan_and_click_link(page, level, f"level-{i+1}")
+        if frame_ref is None:
+            return False
+        await asyncio.sleep(4)
+        await screenshot(page, f"task_level_{i+1}_opened")
+
+    # Final level: find "Create Resource Requests" icon in the correct frame.
+    # Re-scan all frames to locate the frame containing the target task after navigation.
+    milestone_hint = task_path[-1]
+    print(f"  Scanning for final task: {milestone_hint!r}")
+    keywords = [w for w in milestone_hint.split() if len(w) > 3] or milestone_hint.split()
     best_frame = None
-    keywords = [w for w in milestone_hint.split() if len(w) > 3]
 
     for frame in page.frames:
         for kw in keywords:
@@ -665,31 +723,39 @@ async def open_modal_task_level(page, milestone_hint: str) -> bool:
                 for i in range(count):
                     try:
                         txt = (await candidates.nth(i).inner_text(timeout=300)).strip()
-                        if not txt or len(txt) > 120:
-                            continue
-                        score = milestone_similarity(milestone_hint, txt)
-                        if score > 0.3:
-                            print(f"    Frame {frame.name!r}: {txt!r}  score={score:.2f}")
-                        if score > best_score:
-                            best_score = score
-                            best_link = candidates.nth(i)
-                            best_txt = txt
-                            best_frame = frame
+                        if txt and len(txt) <= 120:
+                            score = milestone_similarity(milestone_hint, txt)
+                            if score >= 0.4:
+                                best_frame = frame
+                                print(f"    Final task found in frame {frame.name!r}: {txt!r}")
+                                break
                     except Exception:
                         continue
             except Exception:
                 continue
-        if best_score >= 0.6:
+            if best_frame:
+                break
+        if best_frame:
             break
 
-    if best_link is None or best_score < 0.4:
-        print(f"  ERROR: No milestone matching {milestone_hint!r} (best={best_score:.2f})")
-        await screenshot(page, "error_no_milestone")
+    # Fallback: use any frame that has CRR icons
+    if best_frame is None:
+        print("  Final task link not found by name — falling back to frame with CRR icons")
+        for frame in page.frames:
+            try:
+                crr_count = await frame.locator('lightning-icon[title="Create Resource Requests"]').count()
+                if crr_count > 0:
+                    best_frame = frame
+                    print(f"    CRR icons found in frame {frame.name!r} ({crr_count} icon(s))")
+                    break
+            except Exception:
+                continue
+
+    if best_frame is None:
+        print(f"  ERROR: Could not locate frame for {milestone_hint!r} after navigation")
+        await screenshot(page, "error_no_final_frame")
         return False
 
-    print(f"  Clicking milestone: {best_txt!r} (score={best_score:.2f})")
-    await best_link.click()
-    await asyncio.sleep(4)
     await screenshot(page, "task_milestone_opened")
 
     # Milestone detail loaded — sub-tasks appear with 'Create Resource Request' icons.
@@ -770,7 +836,9 @@ async def submit_resource_request(page, args) -> bool:
     # Choose navigation path
     # task-level returns the VF frame (modal is inside it); project-level returns True
     if args.task_level:
-        result = await open_modal_task_level(page, args.milestone or "")
+        # Build task_path: prefer --task-path (list), else fall back to --milestone (str)
+        task_path = getattr(args, "task_path", None) or ([args.milestone] if args.milestone else [])
+        result = await open_modal_task_level(page, task_path)
         if not result:
             return False
         ctx = result  # frame containing the modal
@@ -1182,11 +1250,19 @@ async def main():
     parser.add_argument("--onsite", default="No", help="Yes / No")
     parser.add_argument("--grade", default="", help="Resource grade e.g. 10")
     parser.add_argument("--milestone", default="", help="Activity milestone name")
+    parser.add_argument("--task-path", default="",
+                        help="Comma-separated task path for task-level navigation, e.g. "
+                             "'Outcome Packages,Solution Design Development,ACI Architectural Review'")
     parser.add_argument("--task-level", action="store_true",
                         help="Use Work Planner task-level navigation instead of Resources tab")
     parser.add_argument("--dry-run", action="store_true",
                         help="Fill the form and reach review page but do NOT click Submit")
     args = parser.parse_args()
+    # Convert --task-path CSV string to list; strip whitespace around each component
+    if args.task_path:
+        args.task_path = [t.strip() for t in args.task_path.split(",") if t.strip()]
+    else:
+        args.task_path = []
 
     os.makedirs(PROFILE_DIR, exist_ok=True)
 
