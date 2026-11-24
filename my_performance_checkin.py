@@ -8,10 +8,15 @@ Prerequisites:
     Log into teamspace.cisco.com in that window, then run this script.
 
 Usage:
-    python my_performance_checkin.py
+    python my_performance_checkin.py                          # DRAFT mode: fills + saves every step, does NOT submit
     python my_performance_checkin.py "C:\\path\\to\\performance_data.json"
+    python my_performance_checkin.py --submit                 # also clicks Submit on Step 3 (irreversible)
+
+Safety: Submit is only clicked when --submit is passed AND the page does not look
+already-submitted. Without --submit the script stops at the Review step.
 """
 
+import argparse
 import asyncio
 import json
 import os
@@ -27,7 +32,8 @@ SCRIPT_DIR      = os.path.dirname(os.path.abspath(__file__))
 PROFILE_DIR     = os.path.join(SCRIPT_DIR, "teamspace_profile")
 CDP_URL         = "http://localhost:9222"
 # Chrome must be launched first: chrome.exe --remote-debugging-port=9222 --user-data-dir="%USERPROFILE%\chrome-dev-profile"
-DEFAULT_PAYLOAD = r"C:\Users\hodowns\Downloads\performance_data.json"
+DATA_DIR        = os.path.join(SCRIPT_DIR, "my-performance-data")  # gitignored; holds personal check-in payloads
+DEFAULT_PAYLOAD = os.path.join(DATA_DIR, "performance_data.json")
 DEFAULT_MD      = r"C:\Users\hodowns\Downloads\My_Performance.md"  # fallback (md with embedded json)
 
 # ── Label text patterns for each form field ───────────────────────────────────
@@ -423,7 +429,6 @@ async def save_draft(page) -> bool:
         "button:has-text('Save as Draft')",
         "button:has-text('Save Draft')",
         "button:has-text('Save as draft')",
-        "button:has-text('Submit')",
         "[data-testid*='save-draft']",
         "[data-testid*='saveDraft']",
         "a:has-text('Save as Draft')",
@@ -440,10 +445,44 @@ async def save_draft(page) -> bool:
     return False
 
 
+# ── Submit guard ──────────────────────────────────────────────────────────────
+ALREADY_SUBMITTED_RE = re.compile(
+    r"already\s+submitted|check-?in\s+(has\s+been\s+|was\s+)?submitted|submitted\s+(on|at)\b",
+    re.I,
+)
+
+
+async def already_submitted(page) -> bool:
+    """Best-effort heuristic: does the visible page text say this check-in is already submitted?
+
+    Wording on the portal is not verified, so this can miss a submitted state or (rarely)
+    match unrelated text; either way a match only BLOCKS submission (fail-safe). The
+    authoritative check is the portal's own state, read before running this script.
+    """
+    try:
+        text = await page.inner_text("body", timeout=5000)
+    except Exception:
+        return False
+    return bool(ALREADY_SUBMITTED_RE.search(text))
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Fill the weekly My Performance check-in via CDP.")
+    parser.add_argument("payload", nargs="?", help="Path to performance_data.json (default: my-performance-data/performance_data.json)")
+    parser.add_argument(
+        "--submit",
+        action="store_true",
+        help="Click Submit on Step 3 (irreversible). Without this flag the script fills and saves "
+             "every step but never submits.",
+    )
+    return parser.parse_args()
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 async def main():
-    if len(sys.argv) > 1:
-        payload_path = sys.argv[1]
+    args = parse_args()
+    if args.payload:
+        payload_path = args.payload
     elif Path(DEFAULT_PAYLOAD).exists():
         payload_path = DEFAULT_PAYLOAD
     else:
@@ -936,13 +975,21 @@ async def main():
         print(f"Screenshot (filled):  {ss_filled}")
 
         # ── Step 3: Review & Submit ───────────────────────────────────────────
-        print("\nSubmitting check-in...")
         submitted = False
-        for sub_loc in [
+        allow_submit = args.submit
+        if allow_submit and await already_submitted(page):
+            print("\n  ✗ Page text suggests this check-in is ALREADY SUBMITTED — not clicking Submit.")
+            allow_submit = False
+        if allow_submit:
+            print("\nSubmitting check-in (--submit given)...")
+        else:
+            print("\nDRAFT MODE: all steps filled and saved; Submit was NOT clicked.")
+            print("  Review the browser, then re-run with --submit (or click Submit yourself).")
+        for sub_loc in ([
             page.locator("hbr-button").filter(has_text=re.compile(r"^submit$", re.I)).first,
             page.get_by_role("button", name=re.compile(r"^submit$", re.I)).first,
             page.locator("button").filter(has_text=re.compile(r"^submit$", re.I)).first,
-        ]:
+        ] if allow_submit else []):
             try:
                 if await sub_loc.count() > 0:
                     await sub_loc.scroll_into_view_if_needed(timeout=3000)
@@ -953,7 +1000,7 @@ async def main():
                     break
             except Exception:
                 pass
-        if not submitted:
+        if allow_submit and not submitted:
             ok = await page.evaluate("""() => {
                 for (const el of document.querySelectorAll('hbr-button, button, [role="button"]')) {
                     const t = (el.textContent || '').trim().toLowerCase();
