@@ -16,6 +16,7 @@ import base64
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import urllib.request
@@ -1155,12 +1156,18 @@ Return ONLY valid JSON, no explanation."""
         data = enriched.get(track["title"], {})
         if not data:
             continue
+        # Never add a bullet whose text is already on the slide (re-running over the
+        # same notes must not duplicate anything, and manual edits stay untouched).
         if data.get("project_status"):
             existing = [b for b in track.get("project_status", []) if not _is_raw_ref(b)]
-            track["project_status"] = _wrap(data["project_status"]) + existing
+            have = {_text(b) for b in existing}
+            fresh = [s for s in data["project_status"] if _text(s) not in have]
+            track["project_status"] = _wrap(fresh) + existing
         if data.get("next_steps"):
             existing_ns = [b for b in track.get("next_steps", []) if not _is_raw_ref(b)]
-            track["next_steps"] = _wrap(data["next_steps"]) + existing_ns
+            have_ns = {_text(b) for b in existing_ns}
+            fresh_ns = [s for s in data["next_steps"] if _text(s) not in have_ns]
+            track["next_steps"] = _wrap(fresh_ns) + existing_ns
         updated += 1
 
     print(f"  AI enrichment: updated {updated}/{len(tracks)} slides from meeting notes", flush=True)
@@ -1322,6 +1329,23 @@ def _migrate_bullet_dates(state: dict) -> None:
                     items[i] = {"text": item, "added": today}
 
 
+def _backup_state(state_file: Path, keep: int = 10) -> None:
+    """Copy the existing state file to _backups/ (timestamped) before it is overwritten."""
+    try:
+        if not state_file.exists():
+            return
+        bdir = state_file.parent / "_backups"
+        bdir.mkdir(exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        shutil.copy2(state_file, bdir / f"{state_file.stem}_{stamp}.json")
+        old = sorted(bdir.glob(f"{state_file.stem}_*.json"))
+        for f in old[:-keep]:
+            f.unlink()
+        print(f"  Backed up previous state → _backups\\{state_file.stem}_{stamp}.json", flush=True)
+    except Exception as e:
+        print(f"  Warning: state backup failed — {e}", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description="LCS Status Report Generator")
     parser.add_argument("pid",             nargs="?", default=DEFAULT_PID, help="Project ID (default F51119)")
@@ -1435,6 +1459,7 @@ def main():
 
     # Save state for next run (preserves manual edits + new scan content)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    _backup_state(state_file)
     state_file.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
 
     # Generate HTML
@@ -1442,6 +1467,11 @@ def main():
     out_file  = OUTPUT_DIR / f"{pid}_status_{today_str}.html"
     print("\nGenerating report...", flush=True)
     generate_report(state, out_file)
+
+    # Fixed-name copy so a browser favorite always opens the newest report
+    latest_file = OUTPUT_DIR / f"{pid}_status_LATEST.html"
+    shutil.copyfile(out_file, latest_file)
+    print(f"Latest copy: {latest_file}", flush=True)
 
     # Open in browser
     subprocess.Popen(["start", "", str(out_file)], shell=True)

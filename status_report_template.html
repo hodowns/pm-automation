@@ -34,10 +34,56 @@
   --badge-cl-bg: #f0f4f8; --badge-cl-fg: #6b7c93;
   --badge-pl-bg: #cffafe; --badge-pl-fg: #0891b2;
   --badge-og-bg: #dcfce7; --badge-og-fg: #16a34a;
+  --head-grad-end: #dbeafe;
+  --title-fg:   #1a2636;
+  --hero-bg:    linear-gradient(160deg, #f0f4f8 0%, #dbeafe 60%, #e0f2fe 100%);
+  --hero-glow-1: rgba(26,111,196,.08);
+  --hero-glow-2: rgba(8,145,178,.05);
+  --item-date:  #9eafc2;
+  --banner-refresh-bg: #eff6ff; --banner-refresh-bd: #bfdbfe;
+  --banner-conflict-bg: #fff1f2; --banner-conflict-bd: #fecdd3;
   --ff-display: 'Rajdhani', system-ui, sans-serif;
   --ff-body:    'Inter', system-ui, sans-serif;
   --ff-mono:    'JetBrains Mono', monospace;
 }
+
+/* ── DARK THEME (Champions dark palette) — toggled via nav button ── */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --navy:    #06080f;
+  --blue:    #00e5ff;
+  --blue-lt: #071422;
+  --green:   #00ff88;
+  --amber:   #ffb800;
+  --red:     #ff2d7a;
+  --teal:    #00e5c0;
+  --surface: #0c1119;
+  --bg:      #06080f;
+  --text:    #b0c8e8;
+  --muted:   #4a6580;
+  --border:  #18253c;
+  --head-bg: #0c1119;
+  --head-fg: #b0c8e8;
+  --nav-bg:  #06080f;
+  --nav-fg:  #b0c8e8;
+  --glow-c:  rgba(0,229,255,.4);
+  --badge-ns-bg: #121e2e; --badge-ns-fg: #6a9ab8;
+  --badge-ip-bg: #071a2a; --badge-ip-fg: #00e5ff;
+  --badge-cp-bg: #051a10; --badge-cp-fg: #00ff88;
+  --badge-oh-bg: #1e1000; --badge-oh-fg: #ffb800;
+  --badge-cl-bg: #0e1620; --badge-cl-fg: #4a6580;
+  --badge-pl-bg: #041624; --badge-pl-fg: #00e5c0;
+  --badge-og-bg: #051a10; --badge-og-fg: #00ff88;
+  --head-grad-end: #0c1119;
+  --title-fg:   #b0c8e8;
+  --hero-bg:    linear-gradient(160deg, #06080f 0%, #0c1119 100%);
+  --hero-glow-1: rgba(0,229,255,.06);
+  --hero-glow-2: rgba(0,229,192,.04);
+  --item-date:  #4a6580;
+  --banner-refresh-bg: #071422; --banner-refresh-bd: #18253c;
+  --banner-conflict-bg: #1e0a14; --banner-conflict-bd: #4a1630;
+}
+:root[data-theme="dark"] .slide-header { background: var(--head-bg); }
 
 /* ── RESET + BASE ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -112,7 +158,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 
 /* ── SLIDE HEADERS ────────────────────────────────────────────── */
 .slide-header {
-  background: linear-gradient(135deg, var(--head-bg) 0%, #dbeafe 100%);
+  background: linear-gradient(135deg, var(--head-bg) 0%, var(--head-grad-end) 100%);
   color: var(--head-fg);
   margin: -48px -24px 32px;
   padding: 16px 24px 14px;
@@ -135,7 +181,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
   font-weight: 700;
   letter-spacing: .04em;
   text-wrap: balance;
-  color: #1a2636;
+  color: var(--title-fg);
   text-shadow: none;
 }
 .slide-header .meta { font-family: var(--ff-mono); font-size: 10.5px; color: var(--muted); text-align: right; line-height: 1.7; }
@@ -143,7 +189,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 
 /* ── SLIDE 1: QUOTE ───────────────────────────────────────────── */
 #slide-1 {
-  background: linear-gradient(160deg, #f0f4f8 0%, #dbeafe 60%, #e0f2fe 100%);
+  background: var(--hero-bg);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -156,8 +202,8 @@ button { cursor: pointer; font-family: var(--ff-body); }
 #slide-1::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 70% 30%, rgba(26,111,196,.08) 0%, transparent 55%),
-              radial-gradient(ellipse at 20% 80%, rgba(8,145,178,.05) 0%, transparent 45%);
+  background: radial-gradient(ellipse at 70% 30%, var(--hero-glow-1) 0%, transparent 55%),
+              radial-gradient(ellipse at 20% 80%, var(--hero-glow-2) 0%, transparent 45%);
   pointer-events: none;
 }
 .quote-header {
@@ -174,7 +220,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
   font-family: var(--ff-display);
   font-size: clamp(20px, 3vw, 32px);
   font-weight: 600;
-  color: #1a2636;
+  color: var(--title-fg);
   line-height: 1.45;
   max-width: 820px;
   text-wrap: balance;
@@ -454,7 +500,7 @@ button { cursor: pointer; font-family: var(--ff-body); }
 }
 .bullet-list li::before { content: '▸'; color: var(--blue); flex-shrink: 0; margin-top: 1px; font-size: 11px; }
 .bullet-list li .item-text { flex: 1; min-width: 0; }
-.item-date { font-size: 9px; color: #9eafc2; flex-shrink: 0; white-space: nowrap; padding: 0 4px; font-style: italic; align-self: center; }
+.item-date { font-size: 9px; color: var(--item-date); flex-shrink: 0; white-space: nowrap; padding: 0 4px; font-style: italic; align-self: center; }
 .bullet-list li[contenteditable] { cursor: text; }
 .ns-list li::before { content: '→'; color: var(--amber); }
 
@@ -706,8 +752,8 @@ li.bullet-done::before { content: '✓' !important; color: var(--green) !importa
   border-bottom: 1px solid var(--border);
 }
 .gh-banner.visible { display: flex; }
-#gh-refresh-banner { background: #eff6ff; color: var(--blue); border-color: #bfdbfe; }
-#gh-conflict-banner { background: #fff1f2; color: var(--red); border-color: #fecdd3; }
+#gh-refresh-banner { background: var(--banner-refresh-bg); color: var(--blue); border-color: var(--banner-refresh-bd); }
+#gh-conflict-banner { background: var(--banner-conflict-bg); color: var(--red); border-color: var(--banner-conflict-bd); }
 .gh-banner button {
   background: rgba(255,255,255,.7); border: 1px solid currentColor;
   color: inherit; padding: 3px 10px; border-radius: 3px;
@@ -735,6 +781,10 @@ body.pdf-mode .item-date { color: #9eafc2 !important; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
+<script>
+// Apply saved theme before first paint (no light→dark flash). Default: light.
+try { if (localStorage.getItem('sr_theme') === 'dark') document.documentElement.setAttribute('data-theme','dark'); } catch(e) {}
+</script>
 <body>
 
 <!-- ── LAYOUT ───────────────────────────────────────────────────── -->
@@ -746,6 +796,8 @@ body.pdf-mode .item-date { color: #9eafc2 !important; }
     <button id="btn-next" title="Next slide" aria-label="Next">▼</button>
   </div>
   <button class="nav-btn" id="btn-add-track">+ Track</button>
+  <button class="nav-btn" id="btn-theme" title="Switch between light and dark theme">🌙 Dark</button>
+  <button class="nav-btn" id="btn-autosave" title="Save your progress to disk">💾 Save progress</button>
   <button class="nav-btn" id="btn-export">Export</button>
   <button id="btn-pdf" title="Save as PDF" style="
       background:none;border:none;cursor:pointer;padding:4px 8px;
@@ -1000,8 +1052,13 @@ function loadState() {
   } catch(e) {}
   state = JSON.parse(JSON.stringify(REPORT_DATA));
 }
-function saveState() {
+// Local persistence: browser storage + (if linked) the F51119_state.json file on disk.
+function persistLocal() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  if (window.__srDiskWrite) window.__srDiskWrite();
+}
+function saveState() {
+  persistLocal();
   if (GH_ENABLED) scheduleGhSave();
 }
 let saveTimer;
@@ -2107,20 +2164,37 @@ loadState();
     state.slide1.header = REPORT_DATA.slide1.header;
   }
 
-  // ── 2. Add new tracks that appeared in this week's scan ──
+  // ── 2-6. Merge NEW scan content without undoing anything the user changed ──
+  // state._seen remembers every scan item already offered to this report, so an
+  // item you deleted or renamed stays that way. Only never-before-seen items are
+  // added. The first time this runs, everything already in the saved report and
+  // every pre-existing scan item counts as seen (your current version wins).
+  var firstRun = !Array.isArray(state._seen);
+  var seen = new Set(firstRun ? [] : state._seen);
+  var gen = (REPORT_DATA.meta && REPORT_DATA.meta.generated) || '';
+  var todayMD = gen ? gen.slice(5,7) + '/' + gen.slice(8,10) : '';
+  function btxt(b){ return (b && typeof b==='object') ? b.text : b; }
+  // True only when the item has never been offered before (and so should be added).
+  function offer(key, alreadyKnown){
+    if (firstRun && alreadyKnown) { seen.add(key); return false; }
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+  // Tracks (technology slides)
   if (!state.tracks)           state.tracks = [];
   if (!state.completed_tracks) state.completed_tracks = [];
-  var stateIds = new Set(
-    state.tracks.concat(state.completed_tracks).map(function(t){return t.id;})
-  );
+  var stateIds = new Set(state.tracks.concat(state.completed_tracks).map(function(t){return t.id;}));
   (REPORT_DATA.tracks||[]).forEach(function(t){
-    if (!stateIds.has(t.id)) { state.tracks.push(JSON.parse(JSON.stringify(t))); stateIds.add(t.id); }
+    if (offer('t:'+t.id, true) && !stateIds.has(t.id)) { state.tracks.push(clone(t)); stateIds.add(t.id); }
   });
   (REPORT_DATA.completed_tracks||[]).forEach(function(t){
-    if (!stateIds.has(t.id)) { state.completed_tracks.push(JSON.parse(JSON.stringify(t))); stateIds.add(t.id); }
+    if (offer('t:'+t.id, true) && !stateIds.has(t.id)) { state.completed_tracks.push(clone(t)); stateIds.add(t.id); }
   });
 
-  // ── 3. Merge bullets (project_status / next_steps) for each track ──
+  // Bullets (project_status / next_steps) for each track
   var lfs = ['project_status','next_steps'];
   var rdTracks = (REPORT_DATA.tracks||[]).concat(REPORT_DATA.completed_tracks||[]);
   state.tracks.concat(state.completed_tracks).forEach(function(t){
@@ -2132,48 +2206,189 @@ loadState();
         return typeof b==='string' ? {text:b, added:'10/14'} : b;
       });
       if (rdt && rdt[lf]) {
-        // sync added-dates for existing bullets
+        // keep the date stamps in step with the scan for bullets that still exist
         t[lf].forEach(function(item){
-          var match = rdt[lf].find(function(ri){
-            return (typeof ri==='object'?ri.text:ri) === item.text;
-          });
+          var match = rdt[lf].find(function(ri){ return btxt(ri) === item.text; });
           if (match && typeof match==='object' && match.added) item.added = match.added;
         });
-        // append any bullets from this run that aren't already present
-        rdt[lf].forEach(function(ri){
-          var riText = typeof ri==='object' ? ri.text : ri;
+        // add bullets from this run that have never been offered before (newest first)
+        rdt[lf].slice().reverse().forEach(function(ri){
+          var riText = btxt(ri);
+          var stamp  = (ri && typeof ri==='object') ? ri.added : '';
+          // On the very first run, anything stamped before today already existed
+          // in your report - your version (possibly edited/deleted) wins.
+          var known = !stamp || stamp !== todayMD;
+          var isNew = offer('b:'+t.id+':'+lf+':'+riText, known);
           var exists = t[lf].some(function(b){return b.text===riText;});
-          if (!exists) t[lf].push(typeof ri==='object' ? ri : {text:riText, added:REPORT_DATA.meta.generated||'10/14'});
+          if (isNew && !exists) t[lf].unshift(typeof ri==='object' ? clone(ri) : {text:riText, added:todayMD||'10/14'});
         });
       }
     });
   });
 
-  // ── 4. Add new slide2 (Top of Mind) items ──
+  // Top of MINDs items
   if (!state.slide2)        state.slide2 = {items:[]};
   if (!state.slide2.items)  state.slide2.items = [];
-  var s2set = new Set(state.slide2.items.map(function(i){return typeof i==='object'?i.text:i;}));
+  var s2set = new Set(state.slide2.items.map(btxt));
   ((REPORT_DATA.slide2||{}).items||[]).forEach(function(item){
-    var txt = typeof item==='object' ? item.text : item;
-    if (!s2set.has(txt)) { state.slide2.items.push(item); s2set.add(txt); }
+    var tx = btxt(item);
+    if (offer('s2:'+tx, true) && !s2set.has(tx)) { state.slide2.items.push(clone(item)); s2set.add(tx); }
   });
 
-  // ── 5. Add new slide3 token tiles ──
+  // Token Consumption tiles
   if (!state.slide3)         state.slide3 = {};
   if (!state.slide3.tracks)  state.slide3.tracks = [];
   var s3ids = new Set(state.slide3.tracks.map(function(t){return t.id;}));
   ((REPORT_DATA.slide3||{}).tracks||[]).forEach(function(t){
-    if (!s3ids.has(t.id)) { state.slide3.tracks.push(JSON.parse(JSON.stringify(t))); s3ids.add(t.id); }
+    if (offer('s3:'+t.id, true) && !s3ids.has(t.id)) { state.slide3.tracks.push(clone(t)); s3ids.add(t.id); }
   });
 
-  // ── 6. Add new slide4 in-flight initiatives ──
+  // Workstreams & Initiatives
   if (!state.slide4)              state.slide4 = {};
   if (!state.slide4.in_flight)    state.slide4.in_flight = [];
   var s4names = new Set(state.slide4.in_flight.map(function(i){return i.name;}));
   ((REPORT_DATA.slide4||{}).in_flight||[]).forEach(function(init){
-    if (!s4names.has(init.name)) { state.slide4.in_flight.push(JSON.parse(JSON.stringify(init))); s4names.add(init.name); }
+    if (offer('s4:'+init.name, true) && !s4names.has(init.name)) { state.slide4.in_flight.push(clone(init)); s4names.add(init.name); }
   });
+
+  // Remember everything currently in the report, so deleting or renaming any of it
+  // later is respected by future refreshes.
+  state.tracks.concat(state.completed_tracks).forEach(function(t){
+    seen.add('t:'+t.id);
+    lfs.forEach(function(lf){ (t[lf]||[]).forEach(function(b){ seen.add('b:'+t.id+':'+lf+':'+btxt(b)); }); });
+  });
+  state.slide2.items.forEach(function(i){ seen.add('s2:'+btxt(i)); });
+  state.slide3.tracks.forEach(function(t){ seen.add('s3:'+t.id); });
+  state.slide4.in_flight.forEach(function(i){ seen.add('s4:'+i.name); });
+  state._seen = Array.from(seen);
+  persistLocal();
 })();
+
+// ── THEME TOGGLE (light / dark) ─────────────────────────────────────
+(function(){
+  var root = document.documentElement, b = document.getElementById('btn-theme');
+  function isDark(){ return root.getAttribute('data-theme') === 'dark'; }
+  function paint(){ b.textContent = isDark() ? '☀ Light' : '🌙 Dark'; }
+  b.onclick = function(){
+    var toDark = !isDark();
+    if (toDark) root.setAttribute('data-theme','dark'); else root.removeAttribute('data-theme');
+    try { localStorage.setItem('sr_theme', toDark ? 'dark' : 'light'); } catch(e) {}
+    paint();
+  };
+  // Printing always uses the light palette (saves ink), then restores your theme.
+  var wasDark = false;
+  window.addEventListener('beforeprint', function(){ wasDark = isDark(); root.removeAttribute('data-theme'); });
+  window.addEventListener('afterprint',  function(){ if (wasDark) root.setAttribute('data-theme','dark'); paint(); });
+  paint();
+})();
+
+// ── DISK AUTOSAVE (Edge / Chrome: File System Access API) ───────────
+// Link once to Desktop\Status Reports\F51119_state.json. After that every edit is
+// written to that file, so the next "Status Report" run starts from your latest work.
+(function(){
+  var btn = document.getElementById('btn-autosave');
+  var DB = 'sr_fs', ST = 'h', KEY = 'state_' + PID;
+  var handle = null, writing = false, again = false;
+  function idb(){ return new Promise(function(res,rej){
+    var r = indexedDB.open(DB,1);
+    r.onupgradeneeded = function(){ r.result.createObjectStore(ST); };
+    r.onsuccess = function(){ res(r.result); };
+    r.onerror   = function(){ rej(r.error); };
+  }); }
+  function idbGet(){ return idb().then(function(db){ return new Promise(function(res){
+    var q = db.transaction(ST).objectStore(ST).get(KEY);
+    q.onsuccess = function(){ res(q.result || null); };
+    q.onerror   = function(){ res(null); };
+  }); }).catch(function(){ return null; }); }
+  function idbSet(v){ return idb().then(function(db){ return new Promise(function(res){
+    var tx = db.transaction(ST,'readwrite'); tx.objectStore(ST).put(v,KEY);
+    tx.oncomplete = res; tx.onerror = res;
+  }); }).catch(function(){}); }
+  var curMode = 'off';
+  var banner = document.createElement('div');
+  banner.id = 'sr-save-banner';
+  banner.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c62828;color:#fff;' +
+    'font:600 13px/1.4 system-ui,sans-serif;padding:8px 14px;text-align:center;cursor:pointer;';
+  banner.onclick = function(){ btn.click(); };
+  document.body.appendChild(banner);
+  function clock(){ return new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}); }
+  function ui(mode, msg){
+    curMode = mode;
+    var m = {
+      off: ['💾 Save progress',  'Click once to choose ' + PID + '_state.json — after that every edit saves automatically'],
+      on:  ['💾 Saved ' + clock(), 'All edits are saved to ' + (handle ? handle.name : 'disk') + '. Click to save again now.'],
+      ask: ['💾 Save progress',  'Click to re-enable saving to disk for this session'],
+      err: ['💾 Save failed',    msg || 'Could not write the state file']
+    }[mode];
+    btn.textContent = m[0]; btn.title = m[1];
+    btn.style.color = mode === 'on' ? 'var(--green)' : (mode === 'err' ? 'var(--red)' : '');
+    var warn = {
+      off: '⚠ Your edits are NOT saved to disk. Click here, then choose ' + PID + '_state.json (one time only).',
+      ask: '⚠ Saving is paused. Click here (or anywhere on the page) to turn it back on.',
+      err: '⚠ Save failed: ' + (msg || 'could not write the state file') + '. Click here to retry.'
+    }[mode];
+    banner.textContent = warn || '';
+    banner.style.display = warn ? 'block' : 'none';
+  }
+  window.addEventListener('beforeunload', function(e){
+    if (curMode !== 'on') { e.preventDefault(); e.returnValue = ''; }
+  });
+  async function write(){
+    if (!handle) return;
+    if (writing) { again = true; return; }
+    writing = true;
+    try {
+      var w = await handle.createWritable();
+      await w.write(JSON.stringify(state, null, 2));
+      await w.close();
+      ui('on');
+    } catch(e) { ui('err', e.message); }
+    writing = false;
+    if (again) { again = false; write(); }
+  }
+  window.__srDiskWrite = function(){ if (handle) write(); };
+  btn.onclick = async function(){
+    if (!window.showOpenFilePicker) { alert('Disk autosave needs Microsoft Edge or Google Chrome.'); return; }
+    try {
+      if (!handle) {
+        var hs = await window.showOpenFilePicker({
+          types: [{description:'Status report state', accept:{'application/json':['.json']}}],
+          multiple: false
+        });
+        var h = hs[0];
+        if (h.name !== PID + '_state.json' &&
+            !confirm('You picked "' + h.name + '". Autosave should point at ' + PID + '_state.json in Desktop\\Status Reports. Use it anyway?')) return;
+        handle = h; await idbSet(h);
+      }
+      var p = await handle.requestPermission({mode:'readwrite'});
+      if (p !== 'granted') { ui('ask'); return; }
+      await write();
+    } catch(e) { if (e.name !== 'AbortError') ui('err', e.message); }
+  };
+  ui('off');
+  // Any click on the page re-enables saving after a browser restart (browsers require a click).
+  var reconnecting = false;
+  document.addEventListener('click', async function(ev){
+    if (curMode !== 'ask' || !handle || reconnecting || ev.target === btn || ev.target === banner) return;
+    reconnecting = true;
+    try {
+      var p = await handle.requestPermission({mode:'readwrite'});
+      if (p === 'granted') await write();
+    } catch(e) {}
+    reconnecting = false;
+  }, true);
+  (async function(){
+    if (!window.showOpenFilePicker) return;
+    var h = await idbGet();
+    if (!h) return;
+    handle = h;
+    try {
+      var p = await h.queryPermission({mode:'readwrite'});
+      if (p === 'granted') { write(); } else { ui('ask'); }
+    } catch(e) { ui('ask'); }
+  })();
+})();
+
 renderAll();
 </script>
 </body>
