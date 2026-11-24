@@ -42,7 +42,13 @@ python -u -X utf8 "C:\Users\hodowns\Claude Projects VS CODE\op_cost_forecast.py"
 Opens Edge, waits for SSO login, then automatically: Select_All_Shown → Submit → Yes.
 After running, verify Last Submitted resets to 0 in Oracle Projects.
 
-## Cost Revenue Compliance
+## Forecast Validator
+**Trigger:** "validate forecast"
+
+Invoke the `forecast-validator` skill (`.claude/commands/forecast-validator.md`).
+Gets active PIDs via `sfdc_get_my_projects`, then uses Playwright MCP to open each project in SDC, go to the **Forecasting** tab, and click **Validate Forecast**. Reports per-PID results.
+
+## Cost Revenue Compliance (older discovery script)
 **Trigger:** "Cost Revenue Compliance" / "Cost and Revenue Compliance"
 
 Follow the workflow in `pm-agent-system/agents/cost-revenue-compliance-agent.md`.
